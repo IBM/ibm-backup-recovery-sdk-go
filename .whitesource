@@ -1,7 +1,7 @@
 {
   "scanSettings": {
     "configExternalURL": "",
-    "baseBranches": ["master", "staging"]
+    "baseBranches": ["main", "staging"]
   },
   "checkRunSettings": {
     "vulnerableCheckRunConclusionLevel": "failure",
