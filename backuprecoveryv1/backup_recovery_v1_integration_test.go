@@ -1,7 +1,7 @@
 //go:build integration
 
 /**
- * (C) Copyright IBM Corp. 2024.
+ * (C) Copyright IBM Corp. 2025.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1048,13 +1048,31 @@ var _ = Describe(`BackupRecoveryV1 Integration Tests`, func() {
 				PhysicalParams:         physicalSourceRegistrationParamsModel,
 			}
 
-			sourceRegistrationReponseParams, response, err := backupRecoveryService.RegisterProtectionSource(registerProtectionSourceOptions)
+			sourceRegistrationResponseParams, response, err := backupRecoveryService.RegisterProtectionSource(registerProtectionSourceOptions)
 			Expect(err).To(BeNil())
 			Expect(response.StatusCode).To(Equal(201))
-			Expect(sourceRegistrationReponseParams).ToNot(BeNil())
+			Expect(sourceRegistrationResponseParams).ToNot(BeNil())
 
-			protectionSourceIdLink = *sourceRegistrationReponseParams.ID
+			protectionSourceIdLink = *sourceRegistrationResponseParams.ID
 			fmt.Fprintf(GinkgoWriter, "Saved protectionSourceIdLink value: %v\n", protectionSourceIdLink)
+		})
+	})
+
+	Describe(`CreateAccessToken - Create Access Token`, func() {
+		BeforeEach(func() {
+			shouldSkipTest()
+		})
+		It(`CreateAccessToken(createAccessTokenOptions *CreateAccessTokenOptions)`, func() {
+			createAccessTokenOptions := &backuprecoveryv1.CreateAccessTokenOptions{
+				Username: core.StringPtr("testString"),
+				Password: core.StringPtr("testString"),
+				Domain:   core.StringPtr("testString"),
+			}
+
+			tokenResponse, response, err := backupRecoveryService.CreateAccessToken(createAccessTokenOptions)
+			Expect(err).To(BeNil())
+			Expect(response.StatusCode).To(Equal(201))
+			Expect(tokenResponse).ToNot(BeNil())
 		})
 	})
 
@@ -1269,6 +1287,50 @@ var _ = Describe(`BackupRecoveryV1 Integration Tests`, func() {
 			Expect(err).To(BeNil())
 			Expect(response.StatusCode).To(Equal(200))
 			Expect(dataSourceConnector).ToNot(BeNil())
+		})
+	})
+
+	Describe(`GetDataSourceConnectorLogs - Lists the data-source connector logs`, func() {
+		BeforeEach(func() {
+			shouldSkipTest()
+		})
+		It(`GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptions *GetDataSourceConnectorLogsOptions)`, func() {
+			getDataSourceConnectorLogsOptions := &backuprecoveryv1.GetDataSourceConnectorLogsOptions{}
+
+			dataSourceConnectorLogs, response, err := backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptions)
+			Expect(err).To(BeNil())
+			Expect(response.StatusCode).To(Equal(200))
+			Expect(dataSourceConnectorLogs).ToNot(BeNil())
+		})
+	})
+
+	Describe(`RegisterDataSourceConnector - Register a data-source connector`, func() {
+		BeforeEach(func() {
+			shouldSkipTest()
+		})
+		It(`RegisterDataSourceConnector(registerDataSourceConnectorOptions *RegisterDataSourceConnectorOptions)`, func() {
+			registerDataSourceConnectorOptions := &backuprecoveryv1.RegisterDataSourceConnectorOptions{
+				RegistrationToken: core.StringPtr("testString"),
+				ConnectorID:       core.Int64Ptr(int64(26)),
+			}
+
+			response, err := backupRecoveryService.RegisterDataSourceConnector(registerDataSourceConnectorOptions)
+			Expect(err).To(BeNil())
+			Expect(response.StatusCode).To(Equal(204))
+		})
+	})
+
+	Describe(`GetDataSourceConnectorStatus - Lists the data-source connector status`, func() {
+		BeforeEach(func() {
+			shouldSkipTest()
+		})
+		It(`GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptions *GetDataSourceConnectorStatusOptions)`, func() {
+			getDataSourceConnectorStatusOptions := &backuprecoveryv1.GetDataSourceConnectorStatusOptions{}
+
+			dataSourceConnectorLocalStatus, response, err := backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptions)
+			Expect(err).To(BeNil())
+			Expect(response.StatusCode).To(Equal(200))
+			Expect(dataSourceConnectorLocalStatus).ToNot(BeNil())
 		})
 	})
 
@@ -2761,10 +2823,10 @@ var _ = Describe(`BackupRecoveryV1 Integration Tests`, func() {
 				RequestInitiatorType: core.StringPtr("UIUser"),
 			}
 
-			sourceRegistrationReponseParams, response, err := backupRecoveryService.GetProtectionSourceRegistration(getProtectionSourceRegistrationOptions)
+			sourceRegistrationResponseParams, response, err := backupRecoveryService.GetProtectionSourceRegistration(getProtectionSourceRegistrationOptions)
 			Expect(err).To(BeNil())
 			Expect(response.StatusCode).To(Equal(200))
-			Expect(sourceRegistrationReponseParams).ToNot(BeNil())
+			Expect(sourceRegistrationResponseParams).ToNot(BeNil())
 		})
 	})
 
@@ -2809,10 +2871,10 @@ var _ = Describe(`BackupRecoveryV1 Integration Tests`, func() {
 				PhysicalParams:             physicalSourceRegistrationParamsModel,
 			}
 
-			sourceRegistrationReponseParams, response, err := backupRecoveryService.UpdateProtectionSourceRegistration(updateProtectionSourceRegistrationOptions)
+			sourceRegistrationResponseParams, response, err := backupRecoveryService.UpdateProtectionSourceRegistration(updateProtectionSourceRegistrationOptions)
 			Expect(err).To(BeNil())
 			Expect(response.StatusCode).To(Equal(200))
-			Expect(sourceRegistrationReponseParams).ToNot(BeNil())
+			Expect(sourceRegistrationResponseParams).ToNot(BeNil())
 		})
 	})
 
@@ -2827,10 +2889,10 @@ var _ = Describe(`BackupRecoveryV1 Integration Tests`, func() {
 				Environment:  core.StringPtr("kPhysical"),
 			}
 
-			sourceRegistrationReponseParams, response, err := backupRecoveryService.PatchProtectionSourceRegistration(patchProtectionSourceRegistrationOptions)
+			sourceRegistrationResponseParams, response, err := backupRecoveryService.PatchProtectionSourceRegistration(patchProtectionSourceRegistrationOptions)
 			Expect(err).To(BeNil())
 			Expect(response.StatusCode).To(Equal(200))
-			Expect(sourceRegistrationReponseParams).ToNot(BeNil())
+			Expect(sourceRegistrationResponseParams).ToNot(BeNil())
 		})
 	})
 
@@ -2847,6 +2909,230 @@ var _ = Describe(`BackupRecoveryV1 Integration Tests`, func() {
 			response, err := backupRecoveryService.RefreshProtectionSourceByID(refreshProtectionSourceByIdOptions)
 			Expect(err).To(BeNil())
 			Expect(response.StatusCode).To(Equal(204))
+		})
+	})
+
+	Describe(`GetUsers - Get Users`, func() {
+		BeforeEach(func() {
+			shouldSkipTest()
+		})
+		It(`GetUsers(getUsersOptions *GetUsersOptions)`, func() {
+			getUsersOptions := &backuprecoveryv1.GetUsersOptions{
+				SessionName:       core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo"),
+				TenantIds:         []string{"testString"},
+				AllUnderHierarchy: core.BoolPtr(true),
+				Usernames:         []string{"testString"},
+				EmailAddresses:    []string{"testString"},
+				Domain:            core.StringPtr("testString"),
+				PartialMatch:      core.BoolPtr(true),
+			}
+
+			userDetails, response, err := backupRecoveryService.GetUsers(getUsersOptions)
+			Expect(err).To(BeNil())
+			Expect(response.StatusCode).To(Equal(200))
+			Expect(userDetails).ToNot(BeNil())
+		})
+	})
+
+	Describe(`UpdateUser - Update User`, func() {
+		BeforeEach(func() {
+			shouldSkipTest()
+		})
+		It(`UpdateUser(updateUserOptions *UpdateUserOptions)`, func() {
+			adUserInfoModel := &backuprecoveryv1.AdUserInfo{
+				GroupSids:      []string{"testString"},
+				Groups:         []string{"testString"},
+				IsFloatingUser: core.BoolPtr(true),
+			}
+
+			auditLogSettingsModel := &backuprecoveryv1.AuditLogSettings{
+				ReadLogging: core.BoolPtr(true),
+			}
+
+			userClusterIdentifierModel := &backuprecoveryv1.UserClusterIdentifier{
+				ClusterID:            core.Int64Ptr(int64(26)),
+				ClusterIncarnationID: core.Int64Ptr(int64(26)),
+			}
+
+			googleAccountInfoModel := &backuprecoveryv1.GoogleAccountInfo{
+				AccountID: core.StringPtr("testString"),
+				UserID:    core.StringPtr("testString"),
+			}
+
+			idpUserInfoModel := &backuprecoveryv1.IdpUserInfo{
+				GroupSids:      []string{"testString"},
+				Groups:         []string{"testString"},
+				IdpID:          core.Int64Ptr(int64(26)),
+				IsFloatingUser: core.BoolPtr(true),
+				IssuerID:       core.StringPtr("testString"),
+				UserID:         core.StringPtr("testString"),
+				Vendor:         core.StringPtr("testString"),
+			}
+
+			mfaInfoModel := &backuprecoveryv1.MfaInfo{
+				IsUserExemptFromMfa: core.BoolPtr(true),
+			}
+
+			tenantConfigModel := &backuprecoveryv1.TenantConfig{
+				BifrostEnabled:    core.BoolPtr(true),
+				IsManagedOnHelios: core.BoolPtr(true),
+				Name:              core.StringPtr("testString"),
+				Restricted:        core.BoolPtr(true),
+				Roles:             []string{"testString"},
+				TenantID:          core.StringPtr("testString"),
+			}
+
+			usersPreferencesModel := &backuprecoveryv1.UsersPreferences{
+				Locale: core.StringPtr("testString"),
+			}
+
+			userProfileModel := &backuprecoveryv1.UserProfile{
+				ClusterIdentifiers: []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel},
+				IsActive:           core.BoolPtr(true),
+				IsDeleted:          core.BoolPtr(true),
+				RegionIds:          []string{"testString"},
+				TenantID:           core.StringPtr("testString"),
+				TenantName:         core.StringPtr("testString"),
+				TenantType:         core.StringPtr("Dmaas"),
+			}
+
+			salesforceAccountInfoModel := &backuprecoveryv1.SalesforceAccountInfo{
+				AccountID:               core.StringPtr("testString"),
+				HeliosAccessGrantStatus: core.StringPtr("testString"),
+				IsDGaaSUser:             core.BoolPtr(true),
+				IsDMaaSUser:             core.BoolPtr(true),
+				IsDRaaSUser:             core.BoolPtr(true),
+				IsRPaaSUser:             core.BoolPtr(true),
+				IsSalesUser:             core.BoolPtr(true),
+				IsSupportUser:           core.BoolPtr(true),
+				UserID:                  core.StringPtr("testString"),
+			}
+
+			spogContextModel := &backuprecoveryv1.SpogContext{
+				PrimaryClusterID:       core.Int64Ptr(int64(26)),
+				PrimaryClusterUserSid:  core.StringPtr("testString"),
+				PrimaryClusterUsername: core.StringPtr("testString"),
+			}
+
+			classificationInfoModel := &backuprecoveryv1.ClassificationInfo{
+				EndDate:     core.StringPtr("testString"),
+				IsActive:    core.BoolPtr(true),
+				IsFreeTrial: core.BoolPtr(true),
+				StartDate:   core.StringPtr("testString"),
+			}
+
+			tieringInfoModel := &backuprecoveryv1.TieringInfo{
+				BackendTiering:  core.BoolPtr(true),
+				FrontendTiering: core.BoolPtr(true),
+				MaxRetention:    core.Int64Ptr(int64(26)),
+			}
+
+			dataProtectInfoModel := &backuprecoveryv1.DataProtectInfo{
+				EndDate:                core.StringPtr("testString"),
+				IsActive:               core.BoolPtr(true),
+				IsFreeTrial:            core.BoolPtr(true),
+				IsAwsSubscription:      core.BoolPtr(true),
+				IsCohesitySubscription: core.BoolPtr(true),
+				Quantity:               core.Int64Ptr(int64(26)),
+				StartDate:              core.StringPtr("testString"),
+				Tiering:                tieringInfoModel,
+			}
+
+			dataProtectAzureInfoModel := &backuprecoveryv1.DataProtectAzureInfo{
+				EndDate:     core.StringPtr("testString"),
+				IsActive:    core.BoolPtr(true),
+				IsFreeTrial: core.BoolPtr(true),
+				Quantity:    core.Int64Ptr(int64(26)),
+				StartDate:   core.StringPtr("testString"),
+				Tiering:     tieringInfoModel,
+			}
+
+			fortKnoxInfoModel := &backuprecoveryv1.FortKnoxInfo{
+				EndDate:     core.StringPtr("testString"),
+				IsActive:    core.BoolPtr(true),
+				IsFreeTrial: core.BoolPtr(true),
+				Quantity:    core.Int64Ptr(int64(26)),
+				StartDate:   core.StringPtr("testString"),
+			}
+
+			subscriptionInfoModel := &backuprecoveryv1.SubscriptionInfo{
+				Classification:    classificationInfoModel,
+				DataProtect:       dataProtectInfoModel,
+				DataProtectAzure:  dataProtectAzureInfoModel,
+				FortKnoxAzureCool: fortKnoxInfoModel,
+				FortKnoxAzureHot:  fortKnoxInfoModel,
+				FortKnoxCold:      fortKnoxInfoModel,
+				Ransomware:        fortKnoxInfoModel,
+				SiteContinuity:    classificationInfoModel,
+				ThreatProtection:  classificationInfoModel,
+			}
+
+			tenantAccessesModel := &backuprecoveryv1.TenantAccesses{
+				ClusterIdentifiers:   []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel},
+				CreatedTimeMsecs:     core.Int64Ptr(int64(26)),
+				EffectiveTimeMsecs:   core.Int64Ptr(int64(26)),
+				ExpiredTimeMsecs:     core.Int64Ptr(int64(26)),
+				IsAccessActive:       core.BoolPtr(true),
+				IsActive:             core.BoolPtr(true),
+				IsDeleted:            core.BoolPtr(true),
+				LastUpdatedTimeMsecs: core.Int64Ptr(int64(26)),
+				Roles:                []string{"testString"},
+				TenantID:             core.StringPtr("testString"),
+				TenantName:           core.StringPtr("testString"),
+				TenantType:           core.StringPtr("Dmaas"),
+			}
+
+			updateUserOptions := &backuprecoveryv1.UpdateUserOptions{
+				SessionName:                  core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo"),
+				AdUserInfo:                   adUserInfoModel,
+				AdditionalGroupNames:         []string{"testString"},
+				AllowDsoModify:               core.BoolPtr(true),
+				AuditLogSettings:             auditLogSettingsModel,
+				AuthenticationType:           core.StringPtr("kAuthLocal"),
+				ClusterIdentifiers:           []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel},
+				CreatedTimeMsecs:             core.Int64Ptr(int64(26)),
+				CurrentPassword:              core.StringPtr("testString"),
+				Description:                  core.StringPtr("testString"),
+				Domain:                       core.StringPtr("testString"),
+				EffectiveTimeMsecs:           core.Int64Ptr(int64(26)),
+				EmailAddress:                 core.StringPtr("testString"),
+				ExpiredTimeMsecs:             core.Int64Ptr(int64(26)),
+				ForcePasswordChange:          core.BoolPtr(true),
+				GoogleAccount:                googleAccountInfoModel,
+				IdpUserInfo:                  idpUserInfoModel,
+				IntercomMessengerToken:       core.StringPtr("testString"),
+				IsAccountLocked:              core.BoolPtr(true),
+				IsActive:                     core.BoolPtr(true),
+				LastSuccessfulLoginTimeMsecs: core.Int64Ptr(int64(26)),
+				LastUpdatedTimeMsecs:         core.Int64Ptr(int64(26)),
+				MfaInfo:                      mfaInfoModel,
+				MfaMethods:                   []string{"testString"},
+				ObjectClass:                  core.StringPtr("testString"),
+				OrgMembership:                []backuprecoveryv1.TenantConfig{*tenantConfigModel},
+				Password:                     core.StringPtr("testString"),
+				Preferences:                  usersPreferencesModel,
+				PreviousLoginTimeMsecs:       core.Int64Ptr(int64(26)),
+				PrimaryGroupName:             core.StringPtr("testString"),
+				PrivilegeIds:                 []string{"kPrincipalView"},
+				Profiles:                     []backuprecoveryv1.UserProfile{*userProfileModel},
+				Restricted:                   core.BoolPtr(true),
+				Roles:                        []string{"testString"},
+				S3AccessKeyID:                core.StringPtr("testString"),
+				S3AccountID:                  core.StringPtr("testString"),
+				S3SecretKey:                  core.StringPtr("testString"),
+				SalesforceAccount:            salesforceAccountInfoModel,
+				Sid:                          core.StringPtr("testString"),
+				SpogContext:                  spogContextModel,
+				SubscriptionInfo:             subscriptionInfoModel,
+				TenantAccesses:               []backuprecoveryv1.TenantAccesses{*tenantAccessesModel},
+				TenantID:                     core.StringPtr("testString"),
+				Username:                     core.StringPtr("testString"),
+			}
+
+			userDetails, response, err := backupRecoveryService.UpdateUser(updateUserOptions)
+			Expect(err).To(BeNil())
+			Expect(response.StatusCode).To(Equal(200))
+			Expect(userDetails).ToNot(BeNil())
 		})
 	})
 

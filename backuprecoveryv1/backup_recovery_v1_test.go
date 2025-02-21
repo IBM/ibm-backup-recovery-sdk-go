@@ -1,5 +1,5 @@
 /**
- * (C) Copyright IBM Corp. 2024.
+ * (C) Copyright IBM Corp. 2025.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -159,6 +159,253 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(url).To(BeEmpty())
 			Expect(err).ToNot(BeNil())
 			fmt.Fprintf(GinkgoWriter, "Expected error: %s\n", err.Error())
+		})
+	})
+	Describe(`CreateAccessToken(createAccessTokenOptions *CreateAccessTokenOptions) - Operation response error`, func() {
+		createAccessTokenPath := "/access-tokens"
+		Context(`Using mock server endpoint with invalid JSON response`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(createAccessTokenPath))
+					Expect(req.Method).To(Equal("POST"))
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(201)
+					fmt.Fprint(res, `} this is not valid json {`)
+				}))
+			})
+			It(`Invoke CreateAccessToken with error: Operation response processing error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the CreateAccessTokenOptions model
+				createAccessTokenOptionsModel := new(backuprecoveryv1.CreateAccessTokenOptions)
+				createAccessTokenOptionsModel.Username = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Password = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Domain = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Expect response parsing to fail since we are receiving a text/plain response
+				result, response, operationErr := backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+
+				// Enable retries and test again
+				backupRecoveryService.EnableRetries(0, 0)
+				result, response, operationErr = backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`CreateAccessToken(createAccessTokenOptions *CreateAccessTokenOptions)`, func() {
+		createAccessTokenPath := "/access-tokens"
+		Context(`Using mock server endpoint with timeout`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(createAccessTokenPath))
+					Expect(req.Method).To(Equal("POST"))
+
+					// For gzip-disabled operation, verify Content-Encoding is not set.
+					Expect(req.Header.Get("Content-Encoding")).To(BeEmpty())
+
+					// If there is a body, then make sure we can read it
+					bodyBuf := new(bytes.Buffer)
+					if req.Header.Get("Content-Encoding") == "gzip" {
+						body, err := core.NewGzipDecompressionReader(req.Body)
+						Expect(err).To(BeNil())
+						_, err = bodyBuf.ReadFrom(body)
+						Expect(err).To(BeNil())
+					} else {
+						_, err := bodyBuf.ReadFrom(req.Body)
+						Expect(err).To(BeNil())
+					}
+					fmt.Fprintf(GinkgoWriter, "  Request body: %s", bodyBuf.String())
+
+					// Sleep a short time to support a timeout test
+					time.Sleep(100 * time.Millisecond)
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(201)
+					fmt.Fprintf(res, "%s", `{"accessToken": "AccessToken", "privileges": ["Privileges"], "tokenType": "TokenType"}`)
+				}))
+			})
+			It(`Invoke CreateAccessToken successfully with retries`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+				backupRecoveryService.EnableRetries(0, 0)
+
+				// Construct an instance of the CreateAccessTokenOptions model
+				createAccessTokenOptionsModel := new(backuprecoveryv1.CreateAccessTokenOptions)
+				createAccessTokenOptionsModel.Username = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Password = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Domain = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with a Context to test a timeout error
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc()
+				_, _, operationErr := backupRecoveryService.CreateAccessTokenWithContext(ctx, createAccessTokenOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+
+				// Disable retries and test again
+				backupRecoveryService.DisableRetries()
+				result, response, operationErr := backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+				// Re-test the timeout error with retries disabled
+				ctx, cancelFunc2 := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc2()
+				_, _, operationErr = backupRecoveryService.CreateAccessTokenWithContext(ctx, createAccessTokenOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(createAccessTokenPath))
+					Expect(req.Method).To(Equal("POST"))
+
+					// For gzip-disabled operation, verify Content-Encoding is not set.
+					Expect(req.Header.Get("Content-Encoding")).To(BeEmpty())
+
+					// If there is a body, then make sure we can read it
+					bodyBuf := new(bytes.Buffer)
+					if req.Header.Get("Content-Encoding") == "gzip" {
+						body, err := core.NewGzipDecompressionReader(req.Body)
+						Expect(err).To(BeNil())
+						_, err = bodyBuf.ReadFrom(body)
+						Expect(err).To(BeNil())
+					} else {
+						_, err := bodyBuf.ReadFrom(req.Body)
+						Expect(err).To(BeNil())
+					}
+					fmt.Fprintf(GinkgoWriter, "  Request body: %s", bodyBuf.String())
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(201)
+					fmt.Fprintf(res, "%s", `{"accessToken": "AccessToken", "privileges": ["Privileges"], "tokenType": "TokenType"}`)
+				}))
+			})
+			It(`Invoke CreateAccessToken successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Invoke operation with nil options model (negative test)
+				result, response, operationErr := backupRecoveryService.CreateAccessToken(nil)
+				Expect(operationErr).NotTo(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+
+				// Construct an instance of the CreateAccessTokenOptions model
+				createAccessTokenOptionsModel := new(backuprecoveryv1.CreateAccessTokenOptions)
+				createAccessTokenOptionsModel.Username = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Password = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Domain = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with valid options model (positive test)
+				result, response, operationErr = backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+			})
+			It(`Invoke CreateAccessToken with error: Operation request error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the CreateAccessTokenOptions model
+				createAccessTokenOptionsModel := new(backuprecoveryv1.CreateAccessTokenOptions)
+				createAccessTokenOptionsModel.Username = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Password = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Domain = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Invoke operation with empty URL (negative test)
+				err := backupRecoveryService.SetServiceURL("")
+				Expect(err).To(BeNil())
+				result, response, operationErr := backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring(core.ERRORMSG_SERVICE_URL_MISSING))
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint with missing response body`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Set success status code with no respoonse body
+					res.WriteHeader(201)
+				}))
+			})
+			It(`Invoke CreateAccessToken successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the CreateAccessTokenOptions model
+				createAccessTokenOptionsModel := new(backuprecoveryv1.CreateAccessTokenOptions)
+				createAccessTokenOptionsModel.Username = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Password = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Domain = core.StringPtr("testString")
+				createAccessTokenOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation
+				result, response, operationErr := backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+
+				// Verify a nil result
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
 		})
 	})
 	Describe(`DownloadAgent(downloadAgentOptions *DownloadAgentOptions)`, func() {
@@ -3108,6 +3355,492 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 				// Invoke operation
 				result, response, operationErr := backupRecoveryService.PatchDataSourceConnector(patchDataSourceConnectorOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+
+				// Verify a nil result
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptions *GetDataSourceConnectorLogsOptions) - Operation response error`, func() {
+		getDataSourceConnectorLogsPath := "/data-source-connector/logs"
+		Context(`Using mock server endpoint with invalid JSON response`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getDataSourceConnectorLogsPath))
+					Expect(req.Method).To(Equal("GET"))
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprint(res, `} this is not valid json {`)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorLogs with error: Operation response processing error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				getDataSourceConnectorLogsOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorLogsOptions)
+				getDataSourceConnectorLogsOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Expect response parsing to fail since we are receiving a text/plain response
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+
+				// Enable retries and test again
+				backupRecoveryService.EnableRetries(0, 0)
+				result, response, operationErr = backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptions *GetDataSourceConnectorLogsOptions)`, func() {
+		getDataSourceConnectorLogsPath := "/data-source-connector/logs"
+		Context(`Using mock server endpoint with timeout`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getDataSourceConnectorLogsPath))
+					Expect(req.Method).To(Equal("GET"))
+
+					// Sleep a short time to support a timeout test
+					time.Sleep(100 * time.Millisecond)
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `{"connectorLogs": [{"message": "Message", "timestampMsecs": 14, "type": "Info"}]}`)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorLogs successfully with retries`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+				backupRecoveryService.EnableRetries(0, 0)
+
+				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				getDataSourceConnectorLogsOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorLogsOptions)
+				getDataSourceConnectorLogsOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with a Context to test a timeout error
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc()
+				_, _, operationErr := backupRecoveryService.GetDataSourceConnectorLogsWithContext(ctx, getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+
+				// Disable retries and test again
+				backupRecoveryService.DisableRetries()
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+				// Re-test the timeout error with retries disabled
+				ctx, cancelFunc2 := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc2()
+				_, _, operationErr = backupRecoveryService.GetDataSourceConnectorLogsWithContext(ctx, getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getDataSourceConnectorLogsPath))
+					Expect(req.Method).To(Equal("GET"))
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `{"connectorLogs": [{"message": "Message", "timestampMsecs": 14, "type": "Info"}]}`)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorLogs successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Invoke operation with nil options model (negative test)
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorLogs(nil)
+				Expect(operationErr).NotTo(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				getDataSourceConnectorLogsOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorLogsOptions)
+				getDataSourceConnectorLogsOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with valid options model (positive test)
+				result, response, operationErr = backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+			})
+			It(`Invoke GetDataSourceConnectorLogs with error: Operation request error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				getDataSourceConnectorLogsOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorLogsOptions)
+				getDataSourceConnectorLogsOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Invoke operation with empty URL (negative test)
+				err := backupRecoveryService.SetServiceURL("")
+				Expect(err).To(BeNil())
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring(core.ERRORMSG_SERVICE_URL_MISSING))
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint with missing response body`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Set success status code with no respoonse body
+					res.WriteHeader(200)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorLogs successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				getDataSourceConnectorLogsOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorLogsOptions)
+				getDataSourceConnectorLogsOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+
+				// Verify a nil result
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`RegisterDataSourceConnector(registerDataSourceConnectorOptions *RegisterDataSourceConnectorOptions)`, func() {
+		registerDataSourceConnectorPath := "/data-source-connector/registration"
+		Context(`Using mock server endpoint`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(registerDataSourceConnectorPath))
+					Expect(req.Method).To(Equal("POST"))
+
+					// For gzip-disabled operation, verify Content-Encoding is not set.
+					Expect(req.Header.Get("Content-Encoding")).To(BeEmpty())
+
+					// If there is a body, then make sure we can read it
+					bodyBuf := new(bytes.Buffer)
+					if req.Header.Get("Content-Encoding") == "gzip" {
+						body, err := core.NewGzipDecompressionReader(req.Body)
+						Expect(err).To(BeNil())
+						_, err = bodyBuf.ReadFrom(body)
+						Expect(err).To(BeNil())
+					} else {
+						_, err := bodyBuf.ReadFrom(req.Body)
+						Expect(err).To(BeNil())
+					}
+					fmt.Fprintf(GinkgoWriter, "  Request body: %s", bodyBuf.String())
+
+					res.WriteHeader(204)
+				}))
+			})
+			It(`Invoke RegisterDataSourceConnector successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Invoke operation with nil options model (negative test)
+				response, operationErr := backupRecoveryService.RegisterDataSourceConnector(nil)
+				Expect(operationErr).NotTo(BeNil())
+				Expect(response).To(BeNil())
+
+				// Construct an instance of the RegisterDataSourceConnectorOptions model
+				registerDataSourceConnectorOptionsModel := new(backuprecoveryv1.RegisterDataSourceConnectorOptions)
+				registerDataSourceConnectorOptionsModel.RegistrationToken = core.StringPtr("testString")
+				registerDataSourceConnectorOptionsModel.ConnectorID = core.Int64Ptr(int64(26))
+				registerDataSourceConnectorOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with valid options model (positive test)
+				response, operationErr = backupRecoveryService.RegisterDataSourceConnector(registerDataSourceConnectorOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+			})
+			It(`Invoke RegisterDataSourceConnector with error: Operation validation and request error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the RegisterDataSourceConnectorOptions model
+				registerDataSourceConnectorOptionsModel := new(backuprecoveryv1.RegisterDataSourceConnectorOptions)
+				registerDataSourceConnectorOptionsModel.RegistrationToken = core.StringPtr("testString")
+				registerDataSourceConnectorOptionsModel.ConnectorID = core.Int64Ptr(int64(26))
+				registerDataSourceConnectorOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Invoke operation with empty URL (negative test)
+				err := backupRecoveryService.SetServiceURL("")
+				Expect(err).To(BeNil())
+				response, operationErr := backupRecoveryService.RegisterDataSourceConnector(registerDataSourceConnectorOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring(core.ERRORMSG_SERVICE_URL_MISSING))
+				Expect(response).To(BeNil())
+				// Construct a second instance of the RegisterDataSourceConnectorOptions model with no property values
+				registerDataSourceConnectorOptionsModelNew := new(backuprecoveryv1.RegisterDataSourceConnectorOptions)
+				// Invoke operation with invalid model (negative test)
+				response, operationErr = backupRecoveryService.RegisterDataSourceConnector(registerDataSourceConnectorOptionsModelNew)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptions *GetDataSourceConnectorStatusOptions) - Operation response error`, func() {
+		getDataSourceConnectorStatusPath := "/data-source-connector/status"
+		Context(`Using mock server endpoint with invalid JSON response`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getDataSourceConnectorStatusPath))
+					Expect(req.Method).To(Equal("GET"))
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprint(res, `} this is not valid json {`)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorStatus with error: Operation response processing error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorStatusOptions model
+				getDataSourceConnectorStatusOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorStatusOptions)
+				getDataSourceConnectorStatusOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Expect response parsing to fail since we are receiving a text/plain response
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+
+				// Enable retries and test again
+				backupRecoveryService.EnableRetries(0, 0)
+				result, response, operationErr = backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptions *GetDataSourceConnectorStatusOptions)`, func() {
+		getDataSourceConnectorStatusPath := "/data-source-connector/status"
+		Context(`Using mock server endpoint with timeout`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getDataSourceConnectorStatusPath))
+					Expect(req.Method).To(Equal("GET"))
+
+					// Sleep a short time to support a timeout test
+					time.Sleep(100 * time.Millisecond)
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `{"clusterConnectionStatus": {"isActive": true, "lastConnectedTimestampMsecs": 27, "message": "Message"}, "isCertificateValid": true, "registrationStatus": {"message": "Message", "status": "NotDone"}}`)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorStatus successfully with retries`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+				backupRecoveryService.EnableRetries(0, 0)
+
+				// Construct an instance of the GetDataSourceConnectorStatusOptions model
+				getDataSourceConnectorStatusOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorStatusOptions)
+				getDataSourceConnectorStatusOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with a Context to test a timeout error
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc()
+				_, _, operationErr := backupRecoveryService.GetDataSourceConnectorStatusWithContext(ctx, getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+
+				// Disable retries and test again
+				backupRecoveryService.DisableRetries()
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+				// Re-test the timeout error with retries disabled
+				ctx, cancelFunc2 := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc2()
+				_, _, operationErr = backupRecoveryService.GetDataSourceConnectorStatusWithContext(ctx, getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getDataSourceConnectorStatusPath))
+					Expect(req.Method).To(Equal("GET"))
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `{"clusterConnectionStatus": {"isActive": true, "lastConnectedTimestampMsecs": 27, "message": "Message"}, "isCertificateValid": true, "registrationStatus": {"message": "Message", "status": "NotDone"}}`)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorStatus successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Invoke operation with nil options model (negative test)
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorStatus(nil)
+				Expect(operationErr).NotTo(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorStatusOptions model
+				getDataSourceConnectorStatusOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorStatusOptions)
+				getDataSourceConnectorStatusOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with valid options model (positive test)
+				result, response, operationErr = backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+			})
+			It(`Invoke GetDataSourceConnectorStatus with error: Operation request error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorStatusOptions model
+				getDataSourceConnectorStatusOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorStatusOptions)
+				getDataSourceConnectorStatusOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Invoke operation with empty URL (negative test)
+				err := backupRecoveryService.SetServiceURL("")
+				Expect(err).To(BeNil())
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring(core.ERRORMSG_SERVICE_URL_MISSING))
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint with missing response body`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Set success status code with no respoonse body
+					res.WriteHeader(200)
+				}))
+			})
+			It(`Invoke GetDataSourceConnectorStatus successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetDataSourceConnectorStatusOptions model
+				getDataSourceConnectorStatusOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorStatusOptions)
+				getDataSourceConnectorStatusOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation
+				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
 				Expect(operationErr).To(BeNil())
 				Expect(response).ToNot(BeNil())
 
@@ -20068,6 +20801,1443 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			})
 		})
 	})
+	Describe(`GetUsers(getUsersOptions *GetUsersOptions) - Operation response error`, func() {
+		getUsersPath := "/irisservices/api/v1/public/users"
+		Context(`Using mock server endpoint with invalid JSON response`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getUsersPath))
+					Expect(req.Method).To(Equal("GET"))
+					Expect(req.Header["Session-Name"]).ToNot(BeNil())
+					Expect(req.Header["Session-Name"][0]).To(Equal(fmt.Sprintf("%v", "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+					// TODO: Add check for allUnderHierarchy query parameter
+					Expect(req.URL.Query()["domain"]).To(Equal([]string{"testString"}))
+					// TODO: Add check for partialMatch query parameter
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprint(res, `} this is not valid json {`)
+				}))
+			})
+			It(`Invoke GetUsers with error: Operation response processing error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetUsersOptions model
+				getUsersOptionsModel := new(backuprecoveryv1.GetUsersOptions)
+				getUsersOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				getUsersOptionsModel.TenantIds = []string{"testString"}
+				getUsersOptionsModel.AllUnderHierarchy = core.BoolPtr(true)
+				getUsersOptionsModel.Usernames = []string{"testString"}
+				getUsersOptionsModel.EmailAddresses = []string{"testString"}
+				getUsersOptionsModel.Domain = core.StringPtr("testString")
+				getUsersOptionsModel.PartialMatch = core.BoolPtr(true)
+				getUsersOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Expect response parsing to fail since we are receiving a text/plain response
+				result, response, operationErr := backupRecoveryService.GetUsers(getUsersOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+
+				// Enable retries and test again
+				backupRecoveryService.EnableRetries(0, 0)
+				result, response, operationErr = backupRecoveryService.GetUsers(getUsersOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`GetUsers(getUsersOptions *GetUsersOptions)`, func() {
+		getUsersPath := "/irisservices/api/v1/public/users"
+		Context(`Using mock server endpoint with timeout`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getUsersPath))
+					Expect(req.Method).To(Equal("GET"))
+
+					Expect(req.Header["Session-Name"]).ToNot(BeNil())
+					Expect(req.Header["Session-Name"][0]).To(Equal(fmt.Sprintf("%v", "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+					// TODO: Add check for allUnderHierarchy query parameter
+					Expect(req.URL.Query()["domain"]).To(Equal([]string{"testString"}))
+					// TODO: Add check for partialMatch query parameter
+					// Sleep a short time to support a timeout test
+					time.Sleep(100 * time.Millisecond)
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `[{"adUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "isFloatingUser": true}, "additionalGroupNames": ["AdditionalGroupNames"], "allowDsoModify": true, "auditLogSettings": {"readLogging": false}, "authenticationType": "kAuthLocal", "clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "currentPassword": "CurrentPassword", "description": "Description", "domain": "Domain", "effectiveTimeMsecs": 18, "emailAddress": "EmailAddress", "expiredTimeMsecs": 16, "forcePasswordChange": false, "googleAccount": {"accountId": "AccountID", "userId": "UserID"}, "groupRoles": ["GroupRoles"], "idpUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "idpId": 5, "isFloatingUser": true, "issuerId": "IssuerID", "userId": "UserID", "vendor": "Vendor"}, "intercomMessengerToken": "IntercomMessengerToken", "isAccountLocked": false, "isAccountMfaEnabled": false, "isActive": true, "isClusterMfaEnabled": false, "lastSuccessfulLoginTimeMsecs": 28, "lastUpdatedTimeMsecs": 20, "mfaInfo": {"isEmailOtpSetupDone": false, "isTotpSetupDone": false, "isUserExemptFromMfa": false}, "mfaMethods": ["MfaMethods"], "objectClass": "ObjectClass", "orgMembership": [{"bifrostEnabled": true, "isManagedOnHelios": false, "name": "Name", "restricted": true, "roles": ["Roles"], "tenantId": "TenantID"}], "password": "Password", "preferences": {"locale": "Locale"}, "previousLoginTimeMsecs": 22, "primaryGroupName": "PrimaryGroupName", "privilegeIds": ["kPrincipalView"], "profiles": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "isActive": true, "isDeleted": false, "regionIds": ["RegionIds"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "restricted": true, "roles": ["Roles"], "s3AccessKeyId": "S3AccessKeyID", "s3AccountId": "S3AccountID", "s3SecretKey": "S3SecretKey", "salesforceAccount": {"accountId": "AccountID", "heliosAccessGrantStatus": "HeliosAccessGrantStatus", "isDGaaSUser": false, "isDMaaSUser": false, "isDRaaSUser": false, "isRPaaSUser": false, "isSalesUser": false, "isSupportUser": false, "userId": "UserID"}, "sid": "Sid", "spogContext": {"PrimaryClusterId": 16, "PrimaryClusterUserSid": "PrimaryClusterUserSid", "PrimaryClusterUsername": "PrimaryClusterUsername"}, "subscriptionInfo": {"classification": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "dataProtect": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "isAwsSubscription": false, "isCohesitySubscription": true, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "dataProtectAzure": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "fortKnoxAzureCool": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxAzureHot": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxCold": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "ransomware": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "siteContinuity": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "threatProtection": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}}, "tenantAccesses": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "effectiveTimeMsecs": 18, "expiredTimeMsecs": 16, "isAccessActive": true, "isActive": true, "isDeleted": false, "lastUpdatedTimeMsecs": 20, "roles": ["Roles"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "tenantId": "TenantID", "username": "Username"}]`)
+				}))
+			})
+			It(`Invoke GetUsers successfully with retries`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+				backupRecoveryService.EnableRetries(0, 0)
+
+				// Construct an instance of the GetUsersOptions model
+				getUsersOptionsModel := new(backuprecoveryv1.GetUsersOptions)
+				getUsersOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				getUsersOptionsModel.TenantIds = []string{"testString"}
+				getUsersOptionsModel.AllUnderHierarchy = core.BoolPtr(true)
+				getUsersOptionsModel.Usernames = []string{"testString"}
+				getUsersOptionsModel.EmailAddresses = []string{"testString"}
+				getUsersOptionsModel.Domain = core.StringPtr("testString")
+				getUsersOptionsModel.PartialMatch = core.BoolPtr(true)
+				getUsersOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with a Context to test a timeout error
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc()
+				_, _, operationErr := backupRecoveryService.GetUsersWithContext(ctx, getUsersOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+
+				// Disable retries and test again
+				backupRecoveryService.DisableRetries()
+				result, response, operationErr := backupRecoveryService.GetUsers(getUsersOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+				// Re-test the timeout error with retries disabled
+				ctx, cancelFunc2 := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc2()
+				_, _, operationErr = backupRecoveryService.GetUsersWithContext(ctx, getUsersOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(getUsersPath))
+					Expect(req.Method).To(Equal("GET"))
+
+					Expect(req.Header["Session-Name"]).ToNot(BeNil())
+					Expect(req.Header["Session-Name"][0]).To(Equal(fmt.Sprintf("%v", "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+					// TODO: Add check for allUnderHierarchy query parameter
+					Expect(req.URL.Query()["domain"]).To(Equal([]string{"testString"}))
+					// TODO: Add check for partialMatch query parameter
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `[{"adUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "isFloatingUser": true}, "additionalGroupNames": ["AdditionalGroupNames"], "allowDsoModify": true, "auditLogSettings": {"readLogging": false}, "authenticationType": "kAuthLocal", "clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "currentPassword": "CurrentPassword", "description": "Description", "domain": "Domain", "effectiveTimeMsecs": 18, "emailAddress": "EmailAddress", "expiredTimeMsecs": 16, "forcePasswordChange": false, "googleAccount": {"accountId": "AccountID", "userId": "UserID"}, "groupRoles": ["GroupRoles"], "idpUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "idpId": 5, "isFloatingUser": true, "issuerId": "IssuerID", "userId": "UserID", "vendor": "Vendor"}, "intercomMessengerToken": "IntercomMessengerToken", "isAccountLocked": false, "isAccountMfaEnabled": false, "isActive": true, "isClusterMfaEnabled": false, "lastSuccessfulLoginTimeMsecs": 28, "lastUpdatedTimeMsecs": 20, "mfaInfo": {"isEmailOtpSetupDone": false, "isTotpSetupDone": false, "isUserExemptFromMfa": false}, "mfaMethods": ["MfaMethods"], "objectClass": "ObjectClass", "orgMembership": [{"bifrostEnabled": true, "isManagedOnHelios": false, "name": "Name", "restricted": true, "roles": ["Roles"], "tenantId": "TenantID"}], "password": "Password", "preferences": {"locale": "Locale"}, "previousLoginTimeMsecs": 22, "primaryGroupName": "PrimaryGroupName", "privilegeIds": ["kPrincipalView"], "profiles": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "isActive": true, "isDeleted": false, "regionIds": ["RegionIds"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "restricted": true, "roles": ["Roles"], "s3AccessKeyId": "S3AccessKeyID", "s3AccountId": "S3AccountID", "s3SecretKey": "S3SecretKey", "salesforceAccount": {"accountId": "AccountID", "heliosAccessGrantStatus": "HeliosAccessGrantStatus", "isDGaaSUser": false, "isDMaaSUser": false, "isDRaaSUser": false, "isRPaaSUser": false, "isSalesUser": false, "isSupportUser": false, "userId": "UserID"}, "sid": "Sid", "spogContext": {"PrimaryClusterId": 16, "PrimaryClusterUserSid": "PrimaryClusterUserSid", "PrimaryClusterUsername": "PrimaryClusterUsername"}, "subscriptionInfo": {"classification": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "dataProtect": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "isAwsSubscription": false, "isCohesitySubscription": true, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "dataProtectAzure": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "fortKnoxAzureCool": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxAzureHot": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxCold": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "ransomware": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "siteContinuity": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "threatProtection": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}}, "tenantAccesses": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "effectiveTimeMsecs": 18, "expiredTimeMsecs": 16, "isAccessActive": true, "isActive": true, "isDeleted": false, "lastUpdatedTimeMsecs": 20, "roles": ["Roles"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "tenantId": "TenantID", "username": "Username"}]`)
+				}))
+			})
+			It(`Invoke GetUsers successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Invoke operation with nil options model (negative test)
+				result, response, operationErr := backupRecoveryService.GetUsers(nil)
+				Expect(operationErr).NotTo(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+
+				// Construct an instance of the GetUsersOptions model
+				getUsersOptionsModel := new(backuprecoveryv1.GetUsersOptions)
+				getUsersOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				getUsersOptionsModel.TenantIds = []string{"testString"}
+				getUsersOptionsModel.AllUnderHierarchy = core.BoolPtr(true)
+				getUsersOptionsModel.Usernames = []string{"testString"}
+				getUsersOptionsModel.EmailAddresses = []string{"testString"}
+				getUsersOptionsModel.Domain = core.StringPtr("testString")
+				getUsersOptionsModel.PartialMatch = core.BoolPtr(true)
+				getUsersOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with valid options model (positive test)
+				result, response, operationErr = backupRecoveryService.GetUsers(getUsersOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+			})
+			It(`Invoke GetUsers with error: Operation validation and request error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetUsersOptions model
+				getUsersOptionsModel := new(backuprecoveryv1.GetUsersOptions)
+				getUsersOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				getUsersOptionsModel.TenantIds = []string{"testString"}
+				getUsersOptionsModel.AllUnderHierarchy = core.BoolPtr(true)
+				getUsersOptionsModel.Usernames = []string{"testString"}
+				getUsersOptionsModel.EmailAddresses = []string{"testString"}
+				getUsersOptionsModel.Domain = core.StringPtr("testString")
+				getUsersOptionsModel.PartialMatch = core.BoolPtr(true)
+				getUsersOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Invoke operation with empty URL (negative test)
+				err := backupRecoveryService.SetServiceURL("")
+				Expect(err).To(BeNil())
+				result, response, operationErr := backupRecoveryService.GetUsers(getUsersOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring(core.ERRORMSG_SERVICE_URL_MISSING))
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+				// Construct a second instance of the GetUsersOptions model with no property values
+				getUsersOptionsModelNew := new(backuprecoveryv1.GetUsersOptions)
+				// Invoke operation with invalid model (negative test)
+				result, response, operationErr = backupRecoveryService.GetUsers(getUsersOptionsModelNew)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint with missing response body`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Set success status code with no respoonse body
+					res.WriteHeader(200)
+				}))
+			})
+			It(`Invoke GetUsers successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the GetUsersOptions model
+				getUsersOptionsModel := new(backuprecoveryv1.GetUsersOptions)
+				getUsersOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				getUsersOptionsModel.TenantIds = []string{"testString"}
+				getUsersOptionsModel.AllUnderHierarchy = core.BoolPtr(true)
+				getUsersOptionsModel.Usernames = []string{"testString"}
+				getUsersOptionsModel.EmailAddresses = []string{"testString"}
+				getUsersOptionsModel.Domain = core.StringPtr("testString")
+				getUsersOptionsModel.PartialMatch = core.BoolPtr(true)
+				getUsersOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation
+				result, response, operationErr := backupRecoveryService.GetUsers(getUsersOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+
+				// Verify a nil result
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`UpdateUser(updateUserOptions *UpdateUserOptions) - Operation response error`, func() {
+		updateUserPath := "/irisservices/api/v1/public/users"
+		Context(`Using mock server endpoint with invalid JSON response`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(updateUserPath))
+					Expect(req.Method).To(Equal("PUT"))
+					Expect(req.Header["Session-Name"]).ToNot(BeNil())
+					Expect(req.Header["Session-Name"][0]).To(Equal(fmt.Sprintf("%v", "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprint(res, `} this is not valid json {`)
+				}))
+			})
+			It(`Invoke UpdateUser with error: Operation response processing error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the AdUserInfo model
+				adUserInfoModel := new(backuprecoveryv1.AdUserInfo)
+				adUserInfoModel.GroupSids = []string{"testString"}
+				adUserInfoModel.Groups = []string{"testString"}
+				adUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+
+				// Construct an instance of the AuditLogSettings model
+				auditLogSettingsModel := new(backuprecoveryv1.AuditLogSettings)
+				auditLogSettingsModel.ReadLogging = core.BoolPtr(true)
+
+				// Construct an instance of the UserClusterIdentifier model
+				userClusterIdentifierModel := new(backuprecoveryv1.UserClusterIdentifier)
+				userClusterIdentifierModel.ClusterID = core.Int64Ptr(int64(26))
+				userClusterIdentifierModel.ClusterIncarnationID = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the GoogleAccountInfo model
+				googleAccountInfoModel := new(backuprecoveryv1.GoogleAccountInfo)
+				googleAccountInfoModel.AccountID = core.StringPtr("testString")
+				googleAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the IdpUserInfo model
+				idpUserInfoModel := new(backuprecoveryv1.IdpUserInfo)
+				idpUserInfoModel.GroupSids = []string{"testString"}
+				idpUserInfoModel.Groups = []string{"testString"}
+				idpUserInfoModel.IdpID = core.Int64Ptr(int64(26))
+				idpUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				idpUserInfoModel.IssuerID = core.StringPtr("testString")
+				idpUserInfoModel.UserID = core.StringPtr("testString")
+				idpUserInfoModel.Vendor = core.StringPtr("testString")
+
+				// Construct an instance of the MfaInfo model
+				mfaInfoModel := new(backuprecoveryv1.MfaInfo)
+				mfaInfoModel.IsUserExemptFromMfa = core.BoolPtr(true)
+
+				// Construct an instance of the TenantConfig model
+				tenantConfigModel := new(backuprecoveryv1.TenantConfig)
+				tenantConfigModel.BifrostEnabled = core.BoolPtr(true)
+				tenantConfigModel.IsManagedOnHelios = core.BoolPtr(true)
+				tenantConfigModel.Name = core.StringPtr("testString")
+				tenantConfigModel.Restricted = core.BoolPtr(true)
+				tenantConfigModel.Roles = []string{"testString"}
+				tenantConfigModel.TenantID = core.StringPtr("testString")
+
+				// Construct an instance of the UsersPreferences model
+				usersPreferencesModel := new(backuprecoveryv1.UsersPreferences)
+				usersPreferencesModel.Locale = core.StringPtr("testString")
+
+				// Construct an instance of the UserProfile model
+				userProfileModel := new(backuprecoveryv1.UserProfile)
+				userProfileModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				userProfileModel.IsActive = core.BoolPtr(true)
+				userProfileModel.IsDeleted = core.BoolPtr(true)
+				userProfileModel.RegionIds = []string{"testString"}
+				userProfileModel.TenantID = core.StringPtr("testString")
+				userProfileModel.TenantName = core.StringPtr("testString")
+				userProfileModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the SalesforceAccountInfo model
+				salesforceAccountInfoModel := new(backuprecoveryv1.SalesforceAccountInfo)
+				salesforceAccountInfoModel.AccountID = core.StringPtr("testString")
+				salesforceAccountInfoModel.HeliosAccessGrantStatus = core.StringPtr("testString")
+				salesforceAccountInfoModel.IsDGaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDMaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDRaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsRPaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSalesUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSupportUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the SpogContext model
+				spogContextModel := new(backuprecoveryv1.SpogContext)
+				spogContextModel.PrimaryClusterID = core.Int64Ptr(int64(26))
+				spogContextModel.PrimaryClusterUserSid = core.StringPtr("testString")
+				spogContextModel.PrimaryClusterUsername = core.StringPtr("testString")
+
+				// Construct an instance of the ClassificationInfo model
+				classificationInfoModel := new(backuprecoveryv1.ClassificationInfo)
+				classificationInfoModel.EndDate = core.StringPtr("testString")
+				classificationInfoModel.IsActive = core.BoolPtr(true)
+				classificationInfoModel.IsFreeTrial = core.BoolPtr(true)
+				classificationInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the TieringInfo model
+				tieringInfoModel := new(backuprecoveryv1.TieringInfo)
+				tieringInfoModel.BackendTiering = core.BoolPtr(true)
+				tieringInfoModel.FrontendTiering = core.BoolPtr(true)
+				tieringInfoModel.MaxRetention = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the DataProtectInfo model
+				dataProtectInfoModel := new(backuprecoveryv1.DataProtectInfo)
+				dataProtectInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectInfoModel.IsAwsSubscription = core.BoolPtr(true)
+				dataProtectInfoModel.IsCohesitySubscription = core.BoolPtr(true)
+				dataProtectInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the DataProtectAzureInfo model
+				dataProtectAzureInfoModel := new(backuprecoveryv1.DataProtectAzureInfo)
+				dataProtectAzureInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectAzureInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectAzureInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectAzureInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the FortKnoxInfo model
+				fortKnoxInfoModel := new(backuprecoveryv1.FortKnoxInfo)
+				fortKnoxInfoModel.EndDate = core.StringPtr("testString")
+				fortKnoxInfoModel.IsActive = core.BoolPtr(true)
+				fortKnoxInfoModel.IsFreeTrial = core.BoolPtr(true)
+				fortKnoxInfoModel.Quantity = core.Int64Ptr(int64(26))
+				fortKnoxInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the SubscriptionInfo model
+				subscriptionInfoModel := new(backuprecoveryv1.SubscriptionInfo)
+				subscriptionInfoModel.Classification = classificationInfoModel
+				subscriptionInfoModel.DataProtect = dataProtectInfoModel
+				subscriptionInfoModel.DataProtectAzure = dataProtectAzureInfoModel
+				subscriptionInfoModel.FortKnoxAzureCool = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxAzureHot = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxCold = fortKnoxInfoModel
+				subscriptionInfoModel.Ransomware = fortKnoxInfoModel
+				subscriptionInfoModel.SiteContinuity = classificationInfoModel
+				subscriptionInfoModel.ThreatProtection = classificationInfoModel
+
+				// Construct an instance of the TenantAccesses model
+				tenantAccessesModel := new(backuprecoveryv1.TenantAccesses)
+				tenantAccessesModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				tenantAccessesModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.IsAccessActive = core.BoolPtr(true)
+				tenantAccessesModel.IsActive = core.BoolPtr(true)
+				tenantAccessesModel.IsDeleted = core.BoolPtr(true)
+				tenantAccessesModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.Roles = []string{"testString"}
+				tenantAccessesModel.TenantID = core.StringPtr("testString")
+				tenantAccessesModel.TenantName = core.StringPtr("testString")
+				tenantAccessesModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the UpdateUserOptions model
+				updateUserOptionsModel := new(backuprecoveryv1.UpdateUserOptions)
+				updateUserOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				updateUserOptionsModel.AdUserInfo = adUserInfoModel
+				updateUserOptionsModel.AdditionalGroupNames = []string{"testString"}
+				updateUserOptionsModel.AllowDsoModify = core.BoolPtr(true)
+				updateUserOptionsModel.AuditLogSettings = auditLogSettingsModel
+				updateUserOptionsModel.AuthenticationType = core.StringPtr("kAuthLocal")
+				updateUserOptionsModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				updateUserOptionsModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.CurrentPassword = core.StringPtr("testString")
+				updateUserOptionsModel.Description = core.StringPtr("testString")
+				updateUserOptionsModel.Domain = core.StringPtr("testString")
+				updateUserOptionsModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.EmailAddress = core.StringPtr("testString")
+				updateUserOptionsModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.ForcePasswordChange = core.BoolPtr(true)
+				updateUserOptionsModel.GoogleAccount = googleAccountInfoModel
+				updateUserOptionsModel.IdpUserInfo = idpUserInfoModel
+				updateUserOptionsModel.IntercomMessengerToken = core.StringPtr("testString")
+				updateUserOptionsModel.IsAccountLocked = core.BoolPtr(true)
+				updateUserOptionsModel.IsActive = core.BoolPtr(true)
+				updateUserOptionsModel.LastSuccessfulLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.MfaInfo = mfaInfoModel
+				updateUserOptionsModel.MfaMethods = []string{"testString"}
+				updateUserOptionsModel.ObjectClass = core.StringPtr("testString")
+				updateUserOptionsModel.OrgMembership = []backuprecoveryv1.TenantConfig{*tenantConfigModel}
+				updateUserOptionsModel.Password = core.StringPtr("testString")
+				updateUserOptionsModel.Preferences = usersPreferencesModel
+				updateUserOptionsModel.PreviousLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.PrimaryGroupName = core.StringPtr("testString")
+				updateUserOptionsModel.PrivilegeIds = []string{"kPrincipalView"}
+				updateUserOptionsModel.Profiles = []backuprecoveryv1.UserProfile{*userProfileModel}
+				updateUserOptionsModel.Restricted = core.BoolPtr(true)
+				updateUserOptionsModel.Roles = []string{"testString"}
+				updateUserOptionsModel.S3AccessKeyID = core.StringPtr("testString")
+				updateUserOptionsModel.S3AccountID = core.StringPtr("testString")
+				updateUserOptionsModel.S3SecretKey = core.StringPtr("testString")
+				updateUserOptionsModel.SalesforceAccount = salesforceAccountInfoModel
+				updateUserOptionsModel.Sid = core.StringPtr("testString")
+				updateUserOptionsModel.SpogContext = spogContextModel
+				updateUserOptionsModel.SubscriptionInfo = subscriptionInfoModel
+				updateUserOptionsModel.TenantAccesses = []backuprecoveryv1.TenantAccesses{*tenantAccessesModel}
+				updateUserOptionsModel.TenantID = core.StringPtr("testString")
+				updateUserOptionsModel.Username = core.StringPtr("testString")
+				updateUserOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Expect response parsing to fail since we are receiving a text/plain response
+				result, response, operationErr := backupRecoveryService.UpdateUser(updateUserOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+
+				// Enable retries and test again
+				backupRecoveryService.EnableRetries(0, 0)
+				result, response, operationErr = backupRecoveryService.UpdateUser(updateUserOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
+	Describe(`UpdateUser(updateUserOptions *UpdateUserOptions)`, func() {
+		updateUserPath := "/irisservices/api/v1/public/users"
+		Context(`Using mock server endpoint with timeout`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(updateUserPath))
+					Expect(req.Method).To(Equal("PUT"))
+
+					// For gzip-disabled operation, verify Content-Encoding is not set.
+					Expect(req.Header.Get("Content-Encoding")).To(BeEmpty())
+
+					// If there is a body, then make sure we can read it
+					bodyBuf := new(bytes.Buffer)
+					if req.Header.Get("Content-Encoding") == "gzip" {
+						body, err := core.NewGzipDecompressionReader(req.Body)
+						Expect(err).To(BeNil())
+						_, err = bodyBuf.ReadFrom(body)
+						Expect(err).To(BeNil())
+					} else {
+						_, err := bodyBuf.ReadFrom(req.Body)
+						Expect(err).To(BeNil())
+					}
+					fmt.Fprintf(GinkgoWriter, "  Request body: %s", bodyBuf.String())
+
+					Expect(req.Header["Session-Name"]).ToNot(BeNil())
+					Expect(req.Header["Session-Name"][0]).To(Equal(fmt.Sprintf("%v", "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+					// Sleep a short time to support a timeout test
+					time.Sleep(100 * time.Millisecond)
+
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `{"adUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "isFloatingUser": true}, "additionalGroupNames": ["AdditionalGroupNames"], "allowDsoModify": true, "auditLogSettings": {"readLogging": false}, "authenticationType": "kAuthLocal", "clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "currentPassword": "CurrentPassword", "description": "Description", "domain": "Domain", "effectiveTimeMsecs": 18, "emailAddress": "EmailAddress", "expiredTimeMsecs": 16, "forcePasswordChange": false, "googleAccount": {"accountId": "AccountID", "userId": "UserID"}, "groupRoles": ["GroupRoles"], "idpUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "idpId": 5, "isFloatingUser": true, "issuerId": "IssuerID", "userId": "UserID", "vendor": "Vendor"}, "intercomMessengerToken": "IntercomMessengerToken", "isAccountLocked": false, "isAccountMfaEnabled": false, "isActive": true, "isClusterMfaEnabled": false, "lastSuccessfulLoginTimeMsecs": 28, "lastUpdatedTimeMsecs": 20, "mfaInfo": {"isEmailOtpSetupDone": false, "isTotpSetupDone": false, "isUserExemptFromMfa": false}, "mfaMethods": ["MfaMethods"], "objectClass": "ObjectClass", "orgMembership": [{"bifrostEnabled": true, "isManagedOnHelios": false, "name": "Name", "restricted": true, "roles": ["Roles"], "tenantId": "TenantID"}], "password": "Password", "preferences": {"locale": "Locale"}, "previousLoginTimeMsecs": 22, "primaryGroupName": "PrimaryGroupName", "privilegeIds": ["kPrincipalView"], "profiles": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "isActive": true, "isDeleted": false, "regionIds": ["RegionIds"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "restricted": true, "roles": ["Roles"], "s3AccessKeyId": "S3AccessKeyID", "s3AccountId": "S3AccountID", "s3SecretKey": "S3SecretKey", "salesforceAccount": {"accountId": "AccountID", "heliosAccessGrantStatus": "HeliosAccessGrantStatus", "isDGaaSUser": false, "isDMaaSUser": false, "isDRaaSUser": false, "isRPaaSUser": false, "isSalesUser": false, "isSupportUser": false, "userId": "UserID"}, "sid": "Sid", "spogContext": {"PrimaryClusterId": 16, "PrimaryClusterUserSid": "PrimaryClusterUserSid", "PrimaryClusterUsername": "PrimaryClusterUsername"}, "subscriptionInfo": {"classification": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "dataProtect": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "isAwsSubscription": false, "isCohesitySubscription": true, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "dataProtectAzure": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "fortKnoxAzureCool": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxAzureHot": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxCold": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "ransomware": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "siteContinuity": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "threatProtection": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}}, "tenantAccesses": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "effectiveTimeMsecs": 18, "expiredTimeMsecs": 16, "isAccessActive": true, "isActive": true, "isDeleted": false, "lastUpdatedTimeMsecs": 20, "roles": ["Roles"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "tenantId": "TenantID", "username": "Username"}`)
+				}))
+			})
+			It(`Invoke UpdateUser successfully with retries`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+				backupRecoveryService.EnableRetries(0, 0)
+
+				// Construct an instance of the AdUserInfo model
+				adUserInfoModel := new(backuprecoveryv1.AdUserInfo)
+				adUserInfoModel.GroupSids = []string{"testString"}
+				adUserInfoModel.Groups = []string{"testString"}
+				adUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+
+				// Construct an instance of the AuditLogSettings model
+				auditLogSettingsModel := new(backuprecoveryv1.AuditLogSettings)
+				auditLogSettingsModel.ReadLogging = core.BoolPtr(true)
+
+				// Construct an instance of the UserClusterIdentifier model
+				userClusterIdentifierModel := new(backuprecoveryv1.UserClusterIdentifier)
+				userClusterIdentifierModel.ClusterID = core.Int64Ptr(int64(26))
+				userClusterIdentifierModel.ClusterIncarnationID = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the GoogleAccountInfo model
+				googleAccountInfoModel := new(backuprecoveryv1.GoogleAccountInfo)
+				googleAccountInfoModel.AccountID = core.StringPtr("testString")
+				googleAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the IdpUserInfo model
+				idpUserInfoModel := new(backuprecoveryv1.IdpUserInfo)
+				idpUserInfoModel.GroupSids = []string{"testString"}
+				idpUserInfoModel.Groups = []string{"testString"}
+				idpUserInfoModel.IdpID = core.Int64Ptr(int64(26))
+				idpUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				idpUserInfoModel.IssuerID = core.StringPtr("testString")
+				idpUserInfoModel.UserID = core.StringPtr("testString")
+				idpUserInfoModel.Vendor = core.StringPtr("testString")
+
+				// Construct an instance of the MfaInfo model
+				mfaInfoModel := new(backuprecoveryv1.MfaInfo)
+				mfaInfoModel.IsUserExemptFromMfa = core.BoolPtr(true)
+
+				// Construct an instance of the TenantConfig model
+				tenantConfigModel := new(backuprecoveryv1.TenantConfig)
+				tenantConfigModel.BifrostEnabled = core.BoolPtr(true)
+				tenantConfigModel.IsManagedOnHelios = core.BoolPtr(true)
+				tenantConfigModel.Name = core.StringPtr("testString")
+				tenantConfigModel.Restricted = core.BoolPtr(true)
+				tenantConfigModel.Roles = []string{"testString"}
+				tenantConfigModel.TenantID = core.StringPtr("testString")
+
+				// Construct an instance of the UsersPreferences model
+				usersPreferencesModel := new(backuprecoveryv1.UsersPreferences)
+				usersPreferencesModel.Locale = core.StringPtr("testString")
+
+				// Construct an instance of the UserProfile model
+				userProfileModel := new(backuprecoveryv1.UserProfile)
+				userProfileModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				userProfileModel.IsActive = core.BoolPtr(true)
+				userProfileModel.IsDeleted = core.BoolPtr(true)
+				userProfileModel.RegionIds = []string{"testString"}
+				userProfileModel.TenantID = core.StringPtr("testString")
+				userProfileModel.TenantName = core.StringPtr("testString")
+				userProfileModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the SalesforceAccountInfo model
+				salesforceAccountInfoModel := new(backuprecoveryv1.SalesforceAccountInfo)
+				salesforceAccountInfoModel.AccountID = core.StringPtr("testString")
+				salesforceAccountInfoModel.HeliosAccessGrantStatus = core.StringPtr("testString")
+				salesforceAccountInfoModel.IsDGaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDMaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDRaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsRPaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSalesUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSupportUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the SpogContext model
+				spogContextModel := new(backuprecoveryv1.SpogContext)
+				spogContextModel.PrimaryClusterID = core.Int64Ptr(int64(26))
+				spogContextModel.PrimaryClusterUserSid = core.StringPtr("testString")
+				spogContextModel.PrimaryClusterUsername = core.StringPtr("testString")
+
+				// Construct an instance of the ClassificationInfo model
+				classificationInfoModel := new(backuprecoveryv1.ClassificationInfo)
+				classificationInfoModel.EndDate = core.StringPtr("testString")
+				classificationInfoModel.IsActive = core.BoolPtr(true)
+				classificationInfoModel.IsFreeTrial = core.BoolPtr(true)
+				classificationInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the TieringInfo model
+				tieringInfoModel := new(backuprecoveryv1.TieringInfo)
+				tieringInfoModel.BackendTiering = core.BoolPtr(true)
+				tieringInfoModel.FrontendTiering = core.BoolPtr(true)
+				tieringInfoModel.MaxRetention = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the DataProtectInfo model
+				dataProtectInfoModel := new(backuprecoveryv1.DataProtectInfo)
+				dataProtectInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectInfoModel.IsAwsSubscription = core.BoolPtr(true)
+				dataProtectInfoModel.IsCohesitySubscription = core.BoolPtr(true)
+				dataProtectInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the DataProtectAzureInfo model
+				dataProtectAzureInfoModel := new(backuprecoveryv1.DataProtectAzureInfo)
+				dataProtectAzureInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectAzureInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectAzureInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectAzureInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the FortKnoxInfo model
+				fortKnoxInfoModel := new(backuprecoveryv1.FortKnoxInfo)
+				fortKnoxInfoModel.EndDate = core.StringPtr("testString")
+				fortKnoxInfoModel.IsActive = core.BoolPtr(true)
+				fortKnoxInfoModel.IsFreeTrial = core.BoolPtr(true)
+				fortKnoxInfoModel.Quantity = core.Int64Ptr(int64(26))
+				fortKnoxInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the SubscriptionInfo model
+				subscriptionInfoModel := new(backuprecoveryv1.SubscriptionInfo)
+				subscriptionInfoModel.Classification = classificationInfoModel
+				subscriptionInfoModel.DataProtect = dataProtectInfoModel
+				subscriptionInfoModel.DataProtectAzure = dataProtectAzureInfoModel
+				subscriptionInfoModel.FortKnoxAzureCool = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxAzureHot = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxCold = fortKnoxInfoModel
+				subscriptionInfoModel.Ransomware = fortKnoxInfoModel
+				subscriptionInfoModel.SiteContinuity = classificationInfoModel
+				subscriptionInfoModel.ThreatProtection = classificationInfoModel
+
+				// Construct an instance of the TenantAccesses model
+				tenantAccessesModel := new(backuprecoveryv1.TenantAccesses)
+				tenantAccessesModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				tenantAccessesModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.IsAccessActive = core.BoolPtr(true)
+				tenantAccessesModel.IsActive = core.BoolPtr(true)
+				tenantAccessesModel.IsDeleted = core.BoolPtr(true)
+				tenantAccessesModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.Roles = []string{"testString"}
+				tenantAccessesModel.TenantID = core.StringPtr("testString")
+				tenantAccessesModel.TenantName = core.StringPtr("testString")
+				tenantAccessesModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the UpdateUserOptions model
+				updateUserOptionsModel := new(backuprecoveryv1.UpdateUserOptions)
+				updateUserOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				updateUserOptionsModel.AdUserInfo = adUserInfoModel
+				updateUserOptionsModel.AdditionalGroupNames = []string{"testString"}
+				updateUserOptionsModel.AllowDsoModify = core.BoolPtr(true)
+				updateUserOptionsModel.AuditLogSettings = auditLogSettingsModel
+				updateUserOptionsModel.AuthenticationType = core.StringPtr("kAuthLocal")
+				updateUserOptionsModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				updateUserOptionsModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.CurrentPassword = core.StringPtr("testString")
+				updateUserOptionsModel.Description = core.StringPtr("testString")
+				updateUserOptionsModel.Domain = core.StringPtr("testString")
+				updateUserOptionsModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.EmailAddress = core.StringPtr("testString")
+				updateUserOptionsModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.ForcePasswordChange = core.BoolPtr(true)
+				updateUserOptionsModel.GoogleAccount = googleAccountInfoModel
+				updateUserOptionsModel.IdpUserInfo = idpUserInfoModel
+				updateUserOptionsModel.IntercomMessengerToken = core.StringPtr("testString")
+				updateUserOptionsModel.IsAccountLocked = core.BoolPtr(true)
+				updateUserOptionsModel.IsActive = core.BoolPtr(true)
+				updateUserOptionsModel.LastSuccessfulLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.MfaInfo = mfaInfoModel
+				updateUserOptionsModel.MfaMethods = []string{"testString"}
+				updateUserOptionsModel.ObjectClass = core.StringPtr("testString")
+				updateUserOptionsModel.OrgMembership = []backuprecoveryv1.TenantConfig{*tenantConfigModel}
+				updateUserOptionsModel.Password = core.StringPtr("testString")
+				updateUserOptionsModel.Preferences = usersPreferencesModel
+				updateUserOptionsModel.PreviousLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.PrimaryGroupName = core.StringPtr("testString")
+				updateUserOptionsModel.PrivilegeIds = []string{"kPrincipalView"}
+				updateUserOptionsModel.Profiles = []backuprecoveryv1.UserProfile{*userProfileModel}
+				updateUserOptionsModel.Restricted = core.BoolPtr(true)
+				updateUserOptionsModel.Roles = []string{"testString"}
+				updateUserOptionsModel.S3AccessKeyID = core.StringPtr("testString")
+				updateUserOptionsModel.S3AccountID = core.StringPtr("testString")
+				updateUserOptionsModel.S3SecretKey = core.StringPtr("testString")
+				updateUserOptionsModel.SalesforceAccount = salesforceAccountInfoModel
+				updateUserOptionsModel.Sid = core.StringPtr("testString")
+				updateUserOptionsModel.SpogContext = spogContextModel
+				updateUserOptionsModel.SubscriptionInfo = subscriptionInfoModel
+				updateUserOptionsModel.TenantAccesses = []backuprecoveryv1.TenantAccesses{*tenantAccessesModel}
+				updateUserOptionsModel.TenantID = core.StringPtr("testString")
+				updateUserOptionsModel.Username = core.StringPtr("testString")
+				updateUserOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with a Context to test a timeout error
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc()
+				_, _, operationErr := backupRecoveryService.UpdateUserWithContext(ctx, updateUserOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+
+				// Disable retries and test again
+				backupRecoveryService.DisableRetries()
+				result, response, operationErr := backupRecoveryService.UpdateUser(updateUserOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+				// Re-test the timeout error with retries disabled
+				ctx, cancelFunc2 := context.WithTimeout(context.Background(), 80*time.Millisecond)
+				defer cancelFunc2()
+				_, _, operationErr = backupRecoveryService.UpdateUserWithContext(ctx, updateUserOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring("deadline exceeded"))
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Verify the contents of the request
+					Expect(req.URL.EscapedPath()).To(Equal(updateUserPath))
+					Expect(req.Method).To(Equal("PUT"))
+
+					// For gzip-disabled operation, verify Content-Encoding is not set.
+					Expect(req.Header.Get("Content-Encoding")).To(BeEmpty())
+
+					// If there is a body, then make sure we can read it
+					bodyBuf := new(bytes.Buffer)
+					if req.Header.Get("Content-Encoding") == "gzip" {
+						body, err := core.NewGzipDecompressionReader(req.Body)
+						Expect(err).To(BeNil())
+						_, err = bodyBuf.ReadFrom(body)
+						Expect(err).To(BeNil())
+					} else {
+						_, err := bodyBuf.ReadFrom(req.Body)
+						Expect(err).To(BeNil())
+					}
+					fmt.Fprintf(GinkgoWriter, "  Request body: %s", bodyBuf.String())
+
+					Expect(req.Header["Session-Name"]).ToNot(BeNil())
+					Expect(req.Header["Session-Name"][0]).To(Equal(fmt.Sprintf("%v", "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+					// Set mock response
+					res.Header().Set("Content-type", "application/json")
+					res.WriteHeader(200)
+					fmt.Fprintf(res, "%s", `{"adUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "isFloatingUser": true}, "additionalGroupNames": ["AdditionalGroupNames"], "allowDsoModify": true, "auditLogSettings": {"readLogging": false}, "authenticationType": "kAuthLocal", "clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "currentPassword": "CurrentPassword", "description": "Description", "domain": "Domain", "effectiveTimeMsecs": 18, "emailAddress": "EmailAddress", "expiredTimeMsecs": 16, "forcePasswordChange": false, "googleAccount": {"accountId": "AccountID", "userId": "UserID"}, "groupRoles": ["GroupRoles"], "idpUserInfo": {"groupSids": ["GroupSids"], "groups": ["Groups"], "idpId": 5, "isFloatingUser": true, "issuerId": "IssuerID", "userId": "UserID", "vendor": "Vendor"}, "intercomMessengerToken": "IntercomMessengerToken", "isAccountLocked": false, "isAccountMfaEnabled": false, "isActive": true, "isClusterMfaEnabled": false, "lastSuccessfulLoginTimeMsecs": 28, "lastUpdatedTimeMsecs": 20, "mfaInfo": {"isEmailOtpSetupDone": false, "isTotpSetupDone": false, "isUserExemptFromMfa": false}, "mfaMethods": ["MfaMethods"], "objectClass": "ObjectClass", "orgMembership": [{"bifrostEnabled": true, "isManagedOnHelios": false, "name": "Name", "restricted": true, "roles": ["Roles"], "tenantId": "TenantID"}], "password": "Password", "preferences": {"locale": "Locale"}, "previousLoginTimeMsecs": 22, "primaryGroupName": "PrimaryGroupName", "privilegeIds": ["kPrincipalView"], "profiles": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "isActive": true, "isDeleted": false, "regionIds": ["RegionIds"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "restricted": true, "roles": ["Roles"], "s3AccessKeyId": "S3AccessKeyID", "s3AccountId": "S3AccountID", "s3SecretKey": "S3SecretKey", "salesforceAccount": {"accountId": "AccountID", "heliosAccessGrantStatus": "HeliosAccessGrantStatus", "isDGaaSUser": false, "isDMaaSUser": false, "isDRaaSUser": false, "isRPaaSUser": false, "isSalesUser": false, "isSupportUser": false, "userId": "UserID"}, "sid": "Sid", "spogContext": {"PrimaryClusterId": 16, "PrimaryClusterUserSid": "PrimaryClusterUserSid", "PrimaryClusterUsername": "PrimaryClusterUsername"}, "subscriptionInfo": {"classification": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "dataProtect": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "isAwsSubscription": false, "isCohesitySubscription": true, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "dataProtectAzure": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate", "tiering": {"backendTiering": true, "frontendTiering": false, "maxRetention": 12}}, "fortKnoxAzureCool": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxAzureHot": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "fortKnoxCold": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "ransomware": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "quantity": 8, "startDate": "StartDate"}, "siteContinuity": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}, "threatProtection": {"endDate": "EndDate", "isActive": true, "isFreeTrial": false, "startDate": "StartDate"}}, "tenantAccesses": [{"clusterIdentifiers": [{"clusterId": 9, "clusterIncarnationId": 20}], "createdTimeMsecs": 16, "effectiveTimeMsecs": 18, "expiredTimeMsecs": 16, "isAccessActive": true, "isActive": true, "isDeleted": false, "lastUpdatedTimeMsecs": 20, "roles": ["Roles"], "tenantId": "TenantID", "tenantName": "TenantName", "tenantType": "Dmaas"}], "tenantId": "TenantID", "username": "Username"}`)
+				}))
+			})
+			It(`Invoke UpdateUser successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Invoke operation with nil options model (negative test)
+				result, response, operationErr := backupRecoveryService.UpdateUser(nil)
+				Expect(operationErr).NotTo(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+
+				// Construct an instance of the AdUserInfo model
+				adUserInfoModel := new(backuprecoveryv1.AdUserInfo)
+				adUserInfoModel.GroupSids = []string{"testString"}
+				adUserInfoModel.Groups = []string{"testString"}
+				adUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+
+				// Construct an instance of the AuditLogSettings model
+				auditLogSettingsModel := new(backuprecoveryv1.AuditLogSettings)
+				auditLogSettingsModel.ReadLogging = core.BoolPtr(true)
+
+				// Construct an instance of the UserClusterIdentifier model
+				userClusterIdentifierModel := new(backuprecoveryv1.UserClusterIdentifier)
+				userClusterIdentifierModel.ClusterID = core.Int64Ptr(int64(26))
+				userClusterIdentifierModel.ClusterIncarnationID = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the GoogleAccountInfo model
+				googleAccountInfoModel := new(backuprecoveryv1.GoogleAccountInfo)
+				googleAccountInfoModel.AccountID = core.StringPtr("testString")
+				googleAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the IdpUserInfo model
+				idpUserInfoModel := new(backuprecoveryv1.IdpUserInfo)
+				idpUserInfoModel.GroupSids = []string{"testString"}
+				idpUserInfoModel.Groups = []string{"testString"}
+				idpUserInfoModel.IdpID = core.Int64Ptr(int64(26))
+				idpUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				idpUserInfoModel.IssuerID = core.StringPtr("testString")
+				idpUserInfoModel.UserID = core.StringPtr("testString")
+				idpUserInfoModel.Vendor = core.StringPtr("testString")
+
+				// Construct an instance of the MfaInfo model
+				mfaInfoModel := new(backuprecoveryv1.MfaInfo)
+				mfaInfoModel.IsUserExemptFromMfa = core.BoolPtr(true)
+
+				// Construct an instance of the TenantConfig model
+				tenantConfigModel := new(backuprecoveryv1.TenantConfig)
+				tenantConfigModel.BifrostEnabled = core.BoolPtr(true)
+				tenantConfigModel.IsManagedOnHelios = core.BoolPtr(true)
+				tenantConfigModel.Name = core.StringPtr("testString")
+				tenantConfigModel.Restricted = core.BoolPtr(true)
+				tenantConfigModel.Roles = []string{"testString"}
+				tenantConfigModel.TenantID = core.StringPtr("testString")
+
+				// Construct an instance of the UsersPreferences model
+				usersPreferencesModel := new(backuprecoveryv1.UsersPreferences)
+				usersPreferencesModel.Locale = core.StringPtr("testString")
+
+				// Construct an instance of the UserProfile model
+				userProfileModel := new(backuprecoveryv1.UserProfile)
+				userProfileModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				userProfileModel.IsActive = core.BoolPtr(true)
+				userProfileModel.IsDeleted = core.BoolPtr(true)
+				userProfileModel.RegionIds = []string{"testString"}
+				userProfileModel.TenantID = core.StringPtr("testString")
+				userProfileModel.TenantName = core.StringPtr("testString")
+				userProfileModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the SalesforceAccountInfo model
+				salesforceAccountInfoModel := new(backuprecoveryv1.SalesforceAccountInfo)
+				salesforceAccountInfoModel.AccountID = core.StringPtr("testString")
+				salesforceAccountInfoModel.HeliosAccessGrantStatus = core.StringPtr("testString")
+				salesforceAccountInfoModel.IsDGaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDMaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDRaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsRPaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSalesUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSupportUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the SpogContext model
+				spogContextModel := new(backuprecoveryv1.SpogContext)
+				spogContextModel.PrimaryClusterID = core.Int64Ptr(int64(26))
+				spogContextModel.PrimaryClusterUserSid = core.StringPtr("testString")
+				spogContextModel.PrimaryClusterUsername = core.StringPtr("testString")
+
+				// Construct an instance of the ClassificationInfo model
+				classificationInfoModel := new(backuprecoveryv1.ClassificationInfo)
+				classificationInfoModel.EndDate = core.StringPtr("testString")
+				classificationInfoModel.IsActive = core.BoolPtr(true)
+				classificationInfoModel.IsFreeTrial = core.BoolPtr(true)
+				classificationInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the TieringInfo model
+				tieringInfoModel := new(backuprecoveryv1.TieringInfo)
+				tieringInfoModel.BackendTiering = core.BoolPtr(true)
+				tieringInfoModel.FrontendTiering = core.BoolPtr(true)
+				tieringInfoModel.MaxRetention = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the DataProtectInfo model
+				dataProtectInfoModel := new(backuprecoveryv1.DataProtectInfo)
+				dataProtectInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectInfoModel.IsAwsSubscription = core.BoolPtr(true)
+				dataProtectInfoModel.IsCohesitySubscription = core.BoolPtr(true)
+				dataProtectInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the DataProtectAzureInfo model
+				dataProtectAzureInfoModel := new(backuprecoveryv1.DataProtectAzureInfo)
+				dataProtectAzureInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectAzureInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectAzureInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectAzureInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the FortKnoxInfo model
+				fortKnoxInfoModel := new(backuprecoveryv1.FortKnoxInfo)
+				fortKnoxInfoModel.EndDate = core.StringPtr("testString")
+				fortKnoxInfoModel.IsActive = core.BoolPtr(true)
+				fortKnoxInfoModel.IsFreeTrial = core.BoolPtr(true)
+				fortKnoxInfoModel.Quantity = core.Int64Ptr(int64(26))
+				fortKnoxInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the SubscriptionInfo model
+				subscriptionInfoModel := new(backuprecoveryv1.SubscriptionInfo)
+				subscriptionInfoModel.Classification = classificationInfoModel
+				subscriptionInfoModel.DataProtect = dataProtectInfoModel
+				subscriptionInfoModel.DataProtectAzure = dataProtectAzureInfoModel
+				subscriptionInfoModel.FortKnoxAzureCool = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxAzureHot = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxCold = fortKnoxInfoModel
+				subscriptionInfoModel.Ransomware = fortKnoxInfoModel
+				subscriptionInfoModel.SiteContinuity = classificationInfoModel
+				subscriptionInfoModel.ThreatProtection = classificationInfoModel
+
+				// Construct an instance of the TenantAccesses model
+				tenantAccessesModel := new(backuprecoveryv1.TenantAccesses)
+				tenantAccessesModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				tenantAccessesModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.IsAccessActive = core.BoolPtr(true)
+				tenantAccessesModel.IsActive = core.BoolPtr(true)
+				tenantAccessesModel.IsDeleted = core.BoolPtr(true)
+				tenantAccessesModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.Roles = []string{"testString"}
+				tenantAccessesModel.TenantID = core.StringPtr("testString")
+				tenantAccessesModel.TenantName = core.StringPtr("testString")
+				tenantAccessesModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the UpdateUserOptions model
+				updateUserOptionsModel := new(backuprecoveryv1.UpdateUserOptions)
+				updateUserOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				updateUserOptionsModel.AdUserInfo = adUserInfoModel
+				updateUserOptionsModel.AdditionalGroupNames = []string{"testString"}
+				updateUserOptionsModel.AllowDsoModify = core.BoolPtr(true)
+				updateUserOptionsModel.AuditLogSettings = auditLogSettingsModel
+				updateUserOptionsModel.AuthenticationType = core.StringPtr("kAuthLocal")
+				updateUserOptionsModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				updateUserOptionsModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.CurrentPassword = core.StringPtr("testString")
+				updateUserOptionsModel.Description = core.StringPtr("testString")
+				updateUserOptionsModel.Domain = core.StringPtr("testString")
+				updateUserOptionsModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.EmailAddress = core.StringPtr("testString")
+				updateUserOptionsModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.ForcePasswordChange = core.BoolPtr(true)
+				updateUserOptionsModel.GoogleAccount = googleAccountInfoModel
+				updateUserOptionsModel.IdpUserInfo = idpUserInfoModel
+				updateUserOptionsModel.IntercomMessengerToken = core.StringPtr("testString")
+				updateUserOptionsModel.IsAccountLocked = core.BoolPtr(true)
+				updateUserOptionsModel.IsActive = core.BoolPtr(true)
+				updateUserOptionsModel.LastSuccessfulLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.MfaInfo = mfaInfoModel
+				updateUserOptionsModel.MfaMethods = []string{"testString"}
+				updateUserOptionsModel.ObjectClass = core.StringPtr("testString")
+				updateUserOptionsModel.OrgMembership = []backuprecoveryv1.TenantConfig{*tenantConfigModel}
+				updateUserOptionsModel.Password = core.StringPtr("testString")
+				updateUserOptionsModel.Preferences = usersPreferencesModel
+				updateUserOptionsModel.PreviousLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.PrimaryGroupName = core.StringPtr("testString")
+				updateUserOptionsModel.PrivilegeIds = []string{"kPrincipalView"}
+				updateUserOptionsModel.Profiles = []backuprecoveryv1.UserProfile{*userProfileModel}
+				updateUserOptionsModel.Restricted = core.BoolPtr(true)
+				updateUserOptionsModel.Roles = []string{"testString"}
+				updateUserOptionsModel.S3AccessKeyID = core.StringPtr("testString")
+				updateUserOptionsModel.S3AccountID = core.StringPtr("testString")
+				updateUserOptionsModel.S3SecretKey = core.StringPtr("testString")
+				updateUserOptionsModel.SalesforceAccount = salesforceAccountInfoModel
+				updateUserOptionsModel.Sid = core.StringPtr("testString")
+				updateUserOptionsModel.SpogContext = spogContextModel
+				updateUserOptionsModel.SubscriptionInfo = subscriptionInfoModel
+				updateUserOptionsModel.TenantAccesses = []backuprecoveryv1.TenantAccesses{*tenantAccessesModel}
+				updateUserOptionsModel.TenantID = core.StringPtr("testString")
+				updateUserOptionsModel.Username = core.StringPtr("testString")
+				updateUserOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation with valid options model (positive test)
+				result, response, operationErr = backupRecoveryService.UpdateUser(updateUserOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+				Expect(result).ToNot(BeNil())
+
+			})
+			It(`Invoke UpdateUser with error: Operation validation and request error`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the AdUserInfo model
+				adUserInfoModel := new(backuprecoveryv1.AdUserInfo)
+				adUserInfoModel.GroupSids = []string{"testString"}
+				adUserInfoModel.Groups = []string{"testString"}
+				adUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+
+				// Construct an instance of the AuditLogSettings model
+				auditLogSettingsModel := new(backuprecoveryv1.AuditLogSettings)
+				auditLogSettingsModel.ReadLogging = core.BoolPtr(true)
+
+				// Construct an instance of the UserClusterIdentifier model
+				userClusterIdentifierModel := new(backuprecoveryv1.UserClusterIdentifier)
+				userClusterIdentifierModel.ClusterID = core.Int64Ptr(int64(26))
+				userClusterIdentifierModel.ClusterIncarnationID = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the GoogleAccountInfo model
+				googleAccountInfoModel := new(backuprecoveryv1.GoogleAccountInfo)
+				googleAccountInfoModel.AccountID = core.StringPtr("testString")
+				googleAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the IdpUserInfo model
+				idpUserInfoModel := new(backuprecoveryv1.IdpUserInfo)
+				idpUserInfoModel.GroupSids = []string{"testString"}
+				idpUserInfoModel.Groups = []string{"testString"}
+				idpUserInfoModel.IdpID = core.Int64Ptr(int64(26))
+				idpUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				idpUserInfoModel.IssuerID = core.StringPtr("testString")
+				idpUserInfoModel.UserID = core.StringPtr("testString")
+				idpUserInfoModel.Vendor = core.StringPtr("testString")
+
+				// Construct an instance of the MfaInfo model
+				mfaInfoModel := new(backuprecoveryv1.MfaInfo)
+				mfaInfoModel.IsUserExemptFromMfa = core.BoolPtr(true)
+
+				// Construct an instance of the TenantConfig model
+				tenantConfigModel := new(backuprecoveryv1.TenantConfig)
+				tenantConfigModel.BifrostEnabled = core.BoolPtr(true)
+				tenantConfigModel.IsManagedOnHelios = core.BoolPtr(true)
+				tenantConfigModel.Name = core.StringPtr("testString")
+				tenantConfigModel.Restricted = core.BoolPtr(true)
+				tenantConfigModel.Roles = []string{"testString"}
+				tenantConfigModel.TenantID = core.StringPtr("testString")
+
+				// Construct an instance of the UsersPreferences model
+				usersPreferencesModel := new(backuprecoveryv1.UsersPreferences)
+				usersPreferencesModel.Locale = core.StringPtr("testString")
+
+				// Construct an instance of the UserProfile model
+				userProfileModel := new(backuprecoveryv1.UserProfile)
+				userProfileModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				userProfileModel.IsActive = core.BoolPtr(true)
+				userProfileModel.IsDeleted = core.BoolPtr(true)
+				userProfileModel.RegionIds = []string{"testString"}
+				userProfileModel.TenantID = core.StringPtr("testString")
+				userProfileModel.TenantName = core.StringPtr("testString")
+				userProfileModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the SalesforceAccountInfo model
+				salesforceAccountInfoModel := new(backuprecoveryv1.SalesforceAccountInfo)
+				salesforceAccountInfoModel.AccountID = core.StringPtr("testString")
+				salesforceAccountInfoModel.HeliosAccessGrantStatus = core.StringPtr("testString")
+				salesforceAccountInfoModel.IsDGaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDMaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDRaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsRPaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSalesUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSupportUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the SpogContext model
+				spogContextModel := new(backuprecoveryv1.SpogContext)
+				spogContextModel.PrimaryClusterID = core.Int64Ptr(int64(26))
+				spogContextModel.PrimaryClusterUserSid = core.StringPtr("testString")
+				spogContextModel.PrimaryClusterUsername = core.StringPtr("testString")
+
+				// Construct an instance of the ClassificationInfo model
+				classificationInfoModel := new(backuprecoveryv1.ClassificationInfo)
+				classificationInfoModel.EndDate = core.StringPtr("testString")
+				classificationInfoModel.IsActive = core.BoolPtr(true)
+				classificationInfoModel.IsFreeTrial = core.BoolPtr(true)
+				classificationInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the TieringInfo model
+				tieringInfoModel := new(backuprecoveryv1.TieringInfo)
+				tieringInfoModel.BackendTiering = core.BoolPtr(true)
+				tieringInfoModel.FrontendTiering = core.BoolPtr(true)
+				tieringInfoModel.MaxRetention = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the DataProtectInfo model
+				dataProtectInfoModel := new(backuprecoveryv1.DataProtectInfo)
+				dataProtectInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectInfoModel.IsAwsSubscription = core.BoolPtr(true)
+				dataProtectInfoModel.IsCohesitySubscription = core.BoolPtr(true)
+				dataProtectInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the DataProtectAzureInfo model
+				dataProtectAzureInfoModel := new(backuprecoveryv1.DataProtectAzureInfo)
+				dataProtectAzureInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectAzureInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectAzureInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectAzureInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the FortKnoxInfo model
+				fortKnoxInfoModel := new(backuprecoveryv1.FortKnoxInfo)
+				fortKnoxInfoModel.EndDate = core.StringPtr("testString")
+				fortKnoxInfoModel.IsActive = core.BoolPtr(true)
+				fortKnoxInfoModel.IsFreeTrial = core.BoolPtr(true)
+				fortKnoxInfoModel.Quantity = core.Int64Ptr(int64(26))
+				fortKnoxInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the SubscriptionInfo model
+				subscriptionInfoModel := new(backuprecoveryv1.SubscriptionInfo)
+				subscriptionInfoModel.Classification = classificationInfoModel
+				subscriptionInfoModel.DataProtect = dataProtectInfoModel
+				subscriptionInfoModel.DataProtectAzure = dataProtectAzureInfoModel
+				subscriptionInfoModel.FortKnoxAzureCool = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxAzureHot = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxCold = fortKnoxInfoModel
+				subscriptionInfoModel.Ransomware = fortKnoxInfoModel
+				subscriptionInfoModel.SiteContinuity = classificationInfoModel
+				subscriptionInfoModel.ThreatProtection = classificationInfoModel
+
+				// Construct an instance of the TenantAccesses model
+				tenantAccessesModel := new(backuprecoveryv1.TenantAccesses)
+				tenantAccessesModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				tenantAccessesModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.IsAccessActive = core.BoolPtr(true)
+				tenantAccessesModel.IsActive = core.BoolPtr(true)
+				tenantAccessesModel.IsDeleted = core.BoolPtr(true)
+				tenantAccessesModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.Roles = []string{"testString"}
+				tenantAccessesModel.TenantID = core.StringPtr("testString")
+				tenantAccessesModel.TenantName = core.StringPtr("testString")
+				tenantAccessesModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the UpdateUserOptions model
+				updateUserOptionsModel := new(backuprecoveryv1.UpdateUserOptions)
+				updateUserOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				updateUserOptionsModel.AdUserInfo = adUserInfoModel
+				updateUserOptionsModel.AdditionalGroupNames = []string{"testString"}
+				updateUserOptionsModel.AllowDsoModify = core.BoolPtr(true)
+				updateUserOptionsModel.AuditLogSettings = auditLogSettingsModel
+				updateUserOptionsModel.AuthenticationType = core.StringPtr("kAuthLocal")
+				updateUserOptionsModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				updateUserOptionsModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.CurrentPassword = core.StringPtr("testString")
+				updateUserOptionsModel.Description = core.StringPtr("testString")
+				updateUserOptionsModel.Domain = core.StringPtr("testString")
+				updateUserOptionsModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.EmailAddress = core.StringPtr("testString")
+				updateUserOptionsModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.ForcePasswordChange = core.BoolPtr(true)
+				updateUserOptionsModel.GoogleAccount = googleAccountInfoModel
+				updateUserOptionsModel.IdpUserInfo = idpUserInfoModel
+				updateUserOptionsModel.IntercomMessengerToken = core.StringPtr("testString")
+				updateUserOptionsModel.IsAccountLocked = core.BoolPtr(true)
+				updateUserOptionsModel.IsActive = core.BoolPtr(true)
+				updateUserOptionsModel.LastSuccessfulLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.MfaInfo = mfaInfoModel
+				updateUserOptionsModel.MfaMethods = []string{"testString"}
+				updateUserOptionsModel.ObjectClass = core.StringPtr("testString")
+				updateUserOptionsModel.OrgMembership = []backuprecoveryv1.TenantConfig{*tenantConfigModel}
+				updateUserOptionsModel.Password = core.StringPtr("testString")
+				updateUserOptionsModel.Preferences = usersPreferencesModel
+				updateUserOptionsModel.PreviousLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.PrimaryGroupName = core.StringPtr("testString")
+				updateUserOptionsModel.PrivilegeIds = []string{"kPrincipalView"}
+				updateUserOptionsModel.Profiles = []backuprecoveryv1.UserProfile{*userProfileModel}
+				updateUserOptionsModel.Restricted = core.BoolPtr(true)
+				updateUserOptionsModel.Roles = []string{"testString"}
+				updateUserOptionsModel.S3AccessKeyID = core.StringPtr("testString")
+				updateUserOptionsModel.S3AccountID = core.StringPtr("testString")
+				updateUserOptionsModel.S3SecretKey = core.StringPtr("testString")
+				updateUserOptionsModel.SalesforceAccount = salesforceAccountInfoModel
+				updateUserOptionsModel.Sid = core.StringPtr("testString")
+				updateUserOptionsModel.SpogContext = spogContextModel
+				updateUserOptionsModel.SubscriptionInfo = subscriptionInfoModel
+				updateUserOptionsModel.TenantAccesses = []backuprecoveryv1.TenantAccesses{*tenantAccessesModel}
+				updateUserOptionsModel.TenantID = core.StringPtr("testString")
+				updateUserOptionsModel.Username = core.StringPtr("testString")
+				updateUserOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+				// Invoke operation with empty URL (negative test)
+				err := backupRecoveryService.SetServiceURL("")
+				Expect(err).To(BeNil())
+				result, response, operationErr := backupRecoveryService.UpdateUser(updateUserOptionsModel)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(operationErr.Error()).To(ContainSubstring(core.ERRORMSG_SERVICE_URL_MISSING))
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+				// Construct a second instance of the UpdateUserOptions model with no property values
+				updateUserOptionsModelNew := new(backuprecoveryv1.UpdateUserOptions)
+				// Invoke operation with invalid model (negative test)
+				result, response, operationErr = backupRecoveryService.UpdateUser(updateUserOptionsModelNew)
+				Expect(operationErr).ToNot(BeNil())
+				Expect(response).To(BeNil())
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+		Context(`Using mock server endpoint with missing response body`, func() {
+			BeforeEach(func() {
+				testServer = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+					defer GinkgoRecover()
+
+					// Set success status code with no respoonse body
+					res.WriteHeader(200)
+				}))
+			})
+			It(`Invoke UpdateUser successfully`, func() {
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
+					URL:           testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
+				Expect(serviceErr).To(BeNil())
+				Expect(backupRecoveryService).ToNot(BeNil())
+
+				// Construct an instance of the AdUserInfo model
+				adUserInfoModel := new(backuprecoveryv1.AdUserInfo)
+				adUserInfoModel.GroupSids = []string{"testString"}
+				adUserInfoModel.Groups = []string{"testString"}
+				adUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+
+				// Construct an instance of the AuditLogSettings model
+				auditLogSettingsModel := new(backuprecoveryv1.AuditLogSettings)
+				auditLogSettingsModel.ReadLogging = core.BoolPtr(true)
+
+				// Construct an instance of the UserClusterIdentifier model
+				userClusterIdentifierModel := new(backuprecoveryv1.UserClusterIdentifier)
+				userClusterIdentifierModel.ClusterID = core.Int64Ptr(int64(26))
+				userClusterIdentifierModel.ClusterIncarnationID = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the GoogleAccountInfo model
+				googleAccountInfoModel := new(backuprecoveryv1.GoogleAccountInfo)
+				googleAccountInfoModel.AccountID = core.StringPtr("testString")
+				googleAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the IdpUserInfo model
+				idpUserInfoModel := new(backuprecoveryv1.IdpUserInfo)
+				idpUserInfoModel.GroupSids = []string{"testString"}
+				idpUserInfoModel.Groups = []string{"testString"}
+				idpUserInfoModel.IdpID = core.Int64Ptr(int64(26))
+				idpUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				idpUserInfoModel.IssuerID = core.StringPtr("testString")
+				idpUserInfoModel.UserID = core.StringPtr("testString")
+				idpUserInfoModel.Vendor = core.StringPtr("testString")
+
+				// Construct an instance of the MfaInfo model
+				mfaInfoModel := new(backuprecoveryv1.MfaInfo)
+				mfaInfoModel.IsUserExemptFromMfa = core.BoolPtr(true)
+
+				// Construct an instance of the TenantConfig model
+				tenantConfigModel := new(backuprecoveryv1.TenantConfig)
+				tenantConfigModel.BifrostEnabled = core.BoolPtr(true)
+				tenantConfigModel.IsManagedOnHelios = core.BoolPtr(true)
+				tenantConfigModel.Name = core.StringPtr("testString")
+				tenantConfigModel.Restricted = core.BoolPtr(true)
+				tenantConfigModel.Roles = []string{"testString"}
+				tenantConfigModel.TenantID = core.StringPtr("testString")
+
+				// Construct an instance of the UsersPreferences model
+				usersPreferencesModel := new(backuprecoveryv1.UsersPreferences)
+				usersPreferencesModel.Locale = core.StringPtr("testString")
+
+				// Construct an instance of the UserProfile model
+				userProfileModel := new(backuprecoveryv1.UserProfile)
+				userProfileModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				userProfileModel.IsActive = core.BoolPtr(true)
+				userProfileModel.IsDeleted = core.BoolPtr(true)
+				userProfileModel.RegionIds = []string{"testString"}
+				userProfileModel.TenantID = core.StringPtr("testString")
+				userProfileModel.TenantName = core.StringPtr("testString")
+				userProfileModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the SalesforceAccountInfo model
+				salesforceAccountInfoModel := new(backuprecoveryv1.SalesforceAccountInfo)
+				salesforceAccountInfoModel.AccountID = core.StringPtr("testString")
+				salesforceAccountInfoModel.HeliosAccessGrantStatus = core.StringPtr("testString")
+				salesforceAccountInfoModel.IsDGaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDMaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDRaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsRPaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSalesUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSupportUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.UserID = core.StringPtr("testString")
+
+				// Construct an instance of the SpogContext model
+				spogContextModel := new(backuprecoveryv1.SpogContext)
+				spogContextModel.PrimaryClusterID = core.Int64Ptr(int64(26))
+				spogContextModel.PrimaryClusterUserSid = core.StringPtr("testString")
+				spogContextModel.PrimaryClusterUsername = core.StringPtr("testString")
+
+				// Construct an instance of the ClassificationInfo model
+				classificationInfoModel := new(backuprecoveryv1.ClassificationInfo)
+				classificationInfoModel.EndDate = core.StringPtr("testString")
+				classificationInfoModel.IsActive = core.BoolPtr(true)
+				classificationInfoModel.IsFreeTrial = core.BoolPtr(true)
+				classificationInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the TieringInfo model
+				tieringInfoModel := new(backuprecoveryv1.TieringInfo)
+				tieringInfoModel.BackendTiering = core.BoolPtr(true)
+				tieringInfoModel.FrontendTiering = core.BoolPtr(true)
+				tieringInfoModel.MaxRetention = core.Int64Ptr(int64(26))
+
+				// Construct an instance of the DataProtectInfo model
+				dataProtectInfoModel := new(backuprecoveryv1.DataProtectInfo)
+				dataProtectInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectInfoModel.IsAwsSubscription = core.BoolPtr(true)
+				dataProtectInfoModel.IsCohesitySubscription = core.BoolPtr(true)
+				dataProtectInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the DataProtectAzureInfo model
+				dataProtectAzureInfoModel := new(backuprecoveryv1.DataProtectAzureInfo)
+				dataProtectAzureInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectAzureInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectAzureInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectAzureInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.Tiering = tieringInfoModel
+
+				// Construct an instance of the FortKnoxInfo model
+				fortKnoxInfoModel := new(backuprecoveryv1.FortKnoxInfo)
+				fortKnoxInfoModel.EndDate = core.StringPtr("testString")
+				fortKnoxInfoModel.IsActive = core.BoolPtr(true)
+				fortKnoxInfoModel.IsFreeTrial = core.BoolPtr(true)
+				fortKnoxInfoModel.Quantity = core.Int64Ptr(int64(26))
+				fortKnoxInfoModel.StartDate = core.StringPtr("testString")
+
+				// Construct an instance of the SubscriptionInfo model
+				subscriptionInfoModel := new(backuprecoveryv1.SubscriptionInfo)
+				subscriptionInfoModel.Classification = classificationInfoModel
+				subscriptionInfoModel.DataProtect = dataProtectInfoModel
+				subscriptionInfoModel.DataProtectAzure = dataProtectAzureInfoModel
+				subscriptionInfoModel.FortKnoxAzureCool = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxAzureHot = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxCold = fortKnoxInfoModel
+				subscriptionInfoModel.Ransomware = fortKnoxInfoModel
+				subscriptionInfoModel.SiteContinuity = classificationInfoModel
+				subscriptionInfoModel.ThreatProtection = classificationInfoModel
+
+				// Construct an instance of the TenantAccesses model
+				tenantAccessesModel := new(backuprecoveryv1.TenantAccesses)
+				tenantAccessesModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				tenantAccessesModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.IsAccessActive = core.BoolPtr(true)
+				tenantAccessesModel.IsActive = core.BoolPtr(true)
+				tenantAccessesModel.IsDeleted = core.BoolPtr(true)
+				tenantAccessesModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.Roles = []string{"testString"}
+				tenantAccessesModel.TenantID = core.StringPtr("testString")
+				tenantAccessesModel.TenantName = core.StringPtr("testString")
+				tenantAccessesModel.TenantType = core.StringPtr("Dmaas")
+
+				// Construct an instance of the UpdateUserOptions model
+				updateUserOptionsModel := new(backuprecoveryv1.UpdateUserOptions)
+				updateUserOptionsModel.SessionName = core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				updateUserOptionsModel.AdUserInfo = adUserInfoModel
+				updateUserOptionsModel.AdditionalGroupNames = []string{"testString"}
+				updateUserOptionsModel.AllowDsoModify = core.BoolPtr(true)
+				updateUserOptionsModel.AuditLogSettings = auditLogSettingsModel
+				updateUserOptionsModel.AuthenticationType = core.StringPtr("kAuthLocal")
+				updateUserOptionsModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				updateUserOptionsModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.CurrentPassword = core.StringPtr("testString")
+				updateUserOptionsModel.Description = core.StringPtr("testString")
+				updateUserOptionsModel.Domain = core.StringPtr("testString")
+				updateUserOptionsModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.EmailAddress = core.StringPtr("testString")
+				updateUserOptionsModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.ForcePasswordChange = core.BoolPtr(true)
+				updateUserOptionsModel.GoogleAccount = googleAccountInfoModel
+				updateUserOptionsModel.IdpUserInfo = idpUserInfoModel
+				updateUserOptionsModel.IntercomMessengerToken = core.StringPtr("testString")
+				updateUserOptionsModel.IsAccountLocked = core.BoolPtr(true)
+				updateUserOptionsModel.IsActive = core.BoolPtr(true)
+				updateUserOptionsModel.LastSuccessfulLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.MfaInfo = mfaInfoModel
+				updateUserOptionsModel.MfaMethods = []string{"testString"}
+				updateUserOptionsModel.ObjectClass = core.StringPtr("testString")
+				updateUserOptionsModel.OrgMembership = []backuprecoveryv1.TenantConfig{*tenantConfigModel}
+				updateUserOptionsModel.Password = core.StringPtr("testString")
+				updateUserOptionsModel.Preferences = usersPreferencesModel
+				updateUserOptionsModel.PreviousLoginTimeMsecs = core.Int64Ptr(int64(26))
+				updateUserOptionsModel.PrimaryGroupName = core.StringPtr("testString")
+				updateUserOptionsModel.PrivilegeIds = []string{"kPrincipalView"}
+				updateUserOptionsModel.Profiles = []backuprecoveryv1.UserProfile{*userProfileModel}
+				updateUserOptionsModel.Restricted = core.BoolPtr(true)
+				updateUserOptionsModel.Roles = []string{"testString"}
+				updateUserOptionsModel.S3AccessKeyID = core.StringPtr("testString")
+				updateUserOptionsModel.S3AccountID = core.StringPtr("testString")
+				updateUserOptionsModel.S3SecretKey = core.StringPtr("testString")
+				updateUserOptionsModel.SalesforceAccount = salesforceAccountInfoModel
+				updateUserOptionsModel.Sid = core.StringPtr("testString")
+				updateUserOptionsModel.SpogContext = spogContextModel
+				updateUserOptionsModel.SubscriptionInfo = subscriptionInfoModel
+				updateUserOptionsModel.TenantAccesses = []backuprecoveryv1.TenantAccesses{*tenantAccessesModel}
+				updateUserOptionsModel.TenantID = core.StringPtr("testString")
+				updateUserOptionsModel.Username = core.StringPtr("testString")
+				updateUserOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
+
+				// Invoke operation
+				result, response, operationErr := backupRecoveryService.UpdateUser(updateUserOptionsModel)
+				Expect(operationErr).To(BeNil())
+				Expect(response).ToNot(BeNil())
+
+				// Verify a nil result
+				Expect(result).To(BeNil())
+			})
+			AfterEach(func() {
+				testServer.Close()
+			})
+		})
+	})
 	Describe(`Model constructor tests`, func() {
 		Context(`Using a service client instance`, func() {
 			backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
@@ -20216,6 +22386,19 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				_model, err := backupRecoveryService.NewCouchBaseOnPremSearchParams(couchbaseObjectTypes, searchString)
 				Expect(_model).ToNot(BeNil())
 				Expect(err).To(BeNil())
+			})
+			It(`Invoke NewCreateAccessTokenOptions successfully`, func() {
+				// Construct an instance of the CreateAccessTokenOptions model
+				createAccessTokenOptionsModel := backupRecoveryService.NewCreateAccessTokenOptions()
+				createAccessTokenOptionsModel.SetUsername("testString")
+				createAccessTokenOptionsModel.SetPassword("testString")
+				createAccessTokenOptionsModel.SetDomain("testString")
+				createAccessTokenOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
+				Expect(createAccessTokenOptionsModel).ToNot(BeNil())
+				Expect(createAccessTokenOptionsModel.Username).To(Equal(core.StringPtr("testString")))
+				Expect(createAccessTokenOptionsModel.Password).To(Equal(core.StringPtr("testString")))
+				Expect(createAccessTokenOptionsModel.Domain).To(Equal(core.StringPtr("testString")))
+				Expect(createAccessTokenOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
 			It(`Invoke NewCreateDataSourceConnectionOptions successfully`, func() {
 				// Construct an instance of the CreateDataSourceConnectionOptions model
@@ -22125,6 +24308,20 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(getDataSourceConnectionsOptionsModel.ConnectionNames).To(Equal([]string{"connectionName1", "connectionName2"}))
 				Expect(getDataSourceConnectionsOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
+			It(`Invoke NewGetDataSourceConnectorLogsOptions successfully`, func() {
+				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				getDataSourceConnectorLogsOptionsModel := backupRecoveryService.NewGetDataSourceConnectorLogsOptions()
+				getDataSourceConnectorLogsOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
+				Expect(getDataSourceConnectorLogsOptionsModel).ToNot(BeNil())
+				Expect(getDataSourceConnectorLogsOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
+			})
+			It(`Invoke NewGetDataSourceConnectorStatusOptions successfully`, func() {
+				// Construct an instance of the GetDataSourceConnectorStatusOptions model
+				getDataSourceConnectorStatusOptionsModel := backupRecoveryService.NewGetDataSourceConnectorStatusOptions()
+				getDataSourceConnectorStatusOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
+				Expect(getDataSourceConnectorStatusOptionsModel).ToNot(BeNil())
+				Expect(getDataSourceConnectorStatusOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
+			})
 			It(`Invoke NewGetDataSourceConnectorsOptions successfully`, func() {
 				// Construct an instance of the GetDataSourceConnectorsOptions model
 				xIbmTenantID := "tenantId"
@@ -22446,6 +24643,28 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(getUpgradeTasksOptionsModel.XIBMTenantID).To(Equal(core.StringPtr("tenantId")))
 				Expect(getUpgradeTasksOptionsModel.Ids).To(Equal([]int64{int64(26)}))
 				Expect(getUpgradeTasksOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
+			})
+			It(`Invoke NewGetUsersOptions successfully`, func() {
+				// Construct an instance of the GetUsersOptions model
+				sessionName := "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo"
+				getUsersOptionsModel := backupRecoveryService.NewGetUsersOptions(sessionName)
+				getUsersOptionsModel.SetSessionName("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				getUsersOptionsModel.SetTenantIds([]string{"testString"})
+				getUsersOptionsModel.SetAllUnderHierarchy(true)
+				getUsersOptionsModel.SetUsernames([]string{"testString"})
+				getUsersOptionsModel.SetEmailAddresses([]string{"testString"})
+				getUsersOptionsModel.SetDomain("testString")
+				getUsersOptionsModel.SetPartialMatch(true)
+				getUsersOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
+				Expect(getUsersOptionsModel).ToNot(BeNil())
+				Expect(getUsersOptionsModel.SessionName).To(Equal(core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+				Expect(getUsersOptionsModel.TenantIds).To(Equal([]string{"testString"}))
+				Expect(getUsersOptionsModel.AllUnderHierarchy).To(Equal(core.BoolPtr(true)))
+				Expect(getUsersOptionsModel.Usernames).To(Equal([]string{"testString"}))
+				Expect(getUsersOptionsModel.EmailAddresses).To(Equal([]string{"testString"}))
+				Expect(getUsersOptionsModel.Domain).To(Equal(core.StringPtr("testString")))
+				Expect(getUsersOptionsModel.PartialMatch).To(Equal(core.BoolPtr(true)))
+				Expect(getUsersOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
 			It(`Invoke NewGoogleTier successfully`, func() {
 				tierType := "kGoogleStandard"
@@ -22975,6 +25194,18 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(refreshProtectionSourceByIdOptionsModel.ID).To(Equal(core.Int64Ptr(int64(26))))
 				Expect(refreshProtectionSourceByIdOptionsModel.XIBMTenantID).To(Equal(core.StringPtr("tenantId")))
 				Expect(refreshProtectionSourceByIdOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
+			})
+			It(`Invoke NewRegisterDataSourceConnectorOptions successfully`, func() {
+				// Construct an instance of the RegisterDataSourceConnectorOptions model
+				registerDataSourceConnectorOptionsRegistrationToken := "testString"
+				registerDataSourceConnectorOptionsModel := backupRecoveryService.NewRegisterDataSourceConnectorOptions(registerDataSourceConnectorOptionsRegistrationToken)
+				registerDataSourceConnectorOptionsModel.SetRegistrationToken("testString")
+				registerDataSourceConnectorOptionsModel.SetConnectorID(int64(26))
+				registerDataSourceConnectorOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
+				Expect(registerDataSourceConnectorOptionsModel).ToNot(BeNil())
+				Expect(registerDataSourceConnectorOptionsModel.RegistrationToken).To(Equal(core.StringPtr("testString")))
+				Expect(registerDataSourceConnectorOptionsModel.ConnectorID).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(registerDataSourceConnectorOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
 			It(`Invoke NewRegisterProtectionSourceOptions successfully`, func() {
 				// Construct an instance of the ConnectionConfig model
@@ -24957,6 +27188,352 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(updateProtectionSourceRegistrationOptionsModel.PhysicalParams).To(Equal(physicalSourceRegistrationParamsModel))
 				Expect(updateProtectionSourceRegistrationOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
+			It(`Invoke NewUpdateUserOptions successfully`, func() {
+				// Construct an instance of the AdUserInfo model
+				adUserInfoModel := new(backuprecoveryv1.AdUserInfo)
+				Expect(adUserInfoModel).ToNot(BeNil())
+				adUserInfoModel.GroupSids = []string{"testString"}
+				adUserInfoModel.Groups = []string{"testString"}
+				adUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				Expect(adUserInfoModel.GroupSids).To(Equal([]string{"testString"}))
+				Expect(adUserInfoModel.Groups).To(Equal([]string{"testString"}))
+				Expect(adUserInfoModel.IsFloatingUser).To(Equal(core.BoolPtr(true)))
+
+				// Construct an instance of the AuditLogSettings model
+				auditLogSettingsModel := new(backuprecoveryv1.AuditLogSettings)
+				Expect(auditLogSettingsModel).ToNot(BeNil())
+				auditLogSettingsModel.ReadLogging = core.BoolPtr(true)
+				Expect(auditLogSettingsModel.ReadLogging).To(Equal(core.BoolPtr(true)))
+
+				// Construct an instance of the UserClusterIdentifier model
+				userClusterIdentifierModel := new(backuprecoveryv1.UserClusterIdentifier)
+				Expect(userClusterIdentifierModel).ToNot(BeNil())
+				userClusterIdentifierModel.ClusterID = core.Int64Ptr(int64(26))
+				userClusterIdentifierModel.ClusterIncarnationID = core.Int64Ptr(int64(26))
+				Expect(userClusterIdentifierModel.ClusterID).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(userClusterIdentifierModel.ClusterIncarnationID).To(Equal(core.Int64Ptr(int64(26))))
+
+				// Construct an instance of the GoogleAccountInfo model
+				googleAccountInfoModel := new(backuprecoveryv1.GoogleAccountInfo)
+				Expect(googleAccountInfoModel).ToNot(BeNil())
+				googleAccountInfoModel.AccountID = core.StringPtr("testString")
+				googleAccountInfoModel.UserID = core.StringPtr("testString")
+				Expect(googleAccountInfoModel.AccountID).To(Equal(core.StringPtr("testString")))
+				Expect(googleAccountInfoModel.UserID).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the IdpUserInfo model
+				idpUserInfoModel := new(backuprecoveryv1.IdpUserInfo)
+				Expect(idpUserInfoModel).ToNot(BeNil())
+				idpUserInfoModel.GroupSids = []string{"testString"}
+				idpUserInfoModel.Groups = []string{"testString"}
+				idpUserInfoModel.IdpID = core.Int64Ptr(int64(26))
+				idpUserInfoModel.IsFloatingUser = core.BoolPtr(true)
+				idpUserInfoModel.IssuerID = core.StringPtr("testString")
+				idpUserInfoModel.UserID = core.StringPtr("testString")
+				idpUserInfoModel.Vendor = core.StringPtr("testString")
+				Expect(idpUserInfoModel.GroupSids).To(Equal([]string{"testString"}))
+				Expect(idpUserInfoModel.Groups).To(Equal([]string{"testString"}))
+				Expect(idpUserInfoModel.IdpID).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(idpUserInfoModel.IsFloatingUser).To(Equal(core.BoolPtr(true)))
+				Expect(idpUserInfoModel.IssuerID).To(Equal(core.StringPtr("testString")))
+				Expect(idpUserInfoModel.UserID).To(Equal(core.StringPtr("testString")))
+				Expect(idpUserInfoModel.Vendor).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the MfaInfo model
+				mfaInfoModel := new(backuprecoveryv1.MfaInfo)
+				Expect(mfaInfoModel).ToNot(BeNil())
+				mfaInfoModel.IsUserExemptFromMfa = core.BoolPtr(true)
+				Expect(mfaInfoModel.IsUserExemptFromMfa).To(Equal(core.BoolPtr(true)))
+
+				// Construct an instance of the TenantConfig model
+				tenantConfigModel := new(backuprecoveryv1.TenantConfig)
+				Expect(tenantConfigModel).ToNot(BeNil())
+				tenantConfigModel.BifrostEnabled = core.BoolPtr(true)
+				tenantConfigModel.IsManagedOnHelios = core.BoolPtr(true)
+				tenantConfigModel.Name = core.StringPtr("testString")
+				tenantConfigModel.Restricted = core.BoolPtr(true)
+				tenantConfigModel.Roles = []string{"testString"}
+				tenantConfigModel.TenantID = core.StringPtr("testString")
+				Expect(tenantConfigModel.BifrostEnabled).To(Equal(core.BoolPtr(true)))
+				Expect(tenantConfigModel.IsManagedOnHelios).To(Equal(core.BoolPtr(true)))
+				Expect(tenantConfigModel.Name).To(Equal(core.StringPtr("testString")))
+				Expect(tenantConfigModel.Restricted).To(Equal(core.BoolPtr(true)))
+				Expect(tenantConfigModel.Roles).To(Equal([]string{"testString"}))
+				Expect(tenantConfigModel.TenantID).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the UsersPreferences model
+				usersPreferencesModel := new(backuprecoveryv1.UsersPreferences)
+				Expect(usersPreferencesModel).ToNot(BeNil())
+				usersPreferencesModel.Locale = core.StringPtr("testString")
+				Expect(usersPreferencesModel.Locale).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the UserProfile model
+				userProfileModel := new(backuprecoveryv1.UserProfile)
+				Expect(userProfileModel).ToNot(BeNil())
+				userProfileModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				userProfileModel.IsActive = core.BoolPtr(true)
+				userProfileModel.IsDeleted = core.BoolPtr(true)
+				userProfileModel.RegionIds = []string{"testString"}
+				userProfileModel.TenantID = core.StringPtr("testString")
+				userProfileModel.TenantName = core.StringPtr("testString")
+				userProfileModel.TenantType = core.StringPtr("Dmaas")
+				Expect(userProfileModel.ClusterIdentifiers).To(Equal([]backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}))
+				Expect(userProfileModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(userProfileModel.IsDeleted).To(Equal(core.BoolPtr(true)))
+				Expect(userProfileModel.RegionIds).To(Equal([]string{"testString"}))
+				Expect(userProfileModel.TenantID).To(Equal(core.StringPtr("testString")))
+				Expect(userProfileModel.TenantName).To(Equal(core.StringPtr("testString")))
+				Expect(userProfileModel.TenantType).To(Equal(core.StringPtr("Dmaas")))
+
+				// Construct an instance of the SalesforceAccountInfo model
+				salesforceAccountInfoModel := new(backuprecoveryv1.SalesforceAccountInfo)
+				Expect(salesforceAccountInfoModel).ToNot(BeNil())
+				salesforceAccountInfoModel.AccountID = core.StringPtr("testString")
+				salesforceAccountInfoModel.HeliosAccessGrantStatus = core.StringPtr("testString")
+				salesforceAccountInfoModel.IsDGaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDMaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsDRaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsRPaaSUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSalesUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.IsSupportUser = core.BoolPtr(true)
+				salesforceAccountInfoModel.UserID = core.StringPtr("testString")
+				Expect(salesforceAccountInfoModel.AccountID).To(Equal(core.StringPtr("testString")))
+				Expect(salesforceAccountInfoModel.HeliosAccessGrantStatus).To(Equal(core.StringPtr("testString")))
+				Expect(salesforceAccountInfoModel.IsDGaaSUser).To(Equal(core.BoolPtr(true)))
+				Expect(salesforceAccountInfoModel.IsDMaaSUser).To(Equal(core.BoolPtr(true)))
+				Expect(salesforceAccountInfoModel.IsDRaaSUser).To(Equal(core.BoolPtr(true)))
+				Expect(salesforceAccountInfoModel.IsRPaaSUser).To(Equal(core.BoolPtr(true)))
+				Expect(salesforceAccountInfoModel.IsSalesUser).To(Equal(core.BoolPtr(true)))
+				Expect(salesforceAccountInfoModel.IsSupportUser).To(Equal(core.BoolPtr(true)))
+				Expect(salesforceAccountInfoModel.UserID).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the SpogContext model
+				spogContextModel := new(backuprecoveryv1.SpogContext)
+				Expect(spogContextModel).ToNot(BeNil())
+				spogContextModel.PrimaryClusterID = core.Int64Ptr(int64(26))
+				spogContextModel.PrimaryClusterUserSid = core.StringPtr("testString")
+				spogContextModel.PrimaryClusterUsername = core.StringPtr("testString")
+				Expect(spogContextModel.PrimaryClusterID).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(spogContextModel.PrimaryClusterUserSid).To(Equal(core.StringPtr("testString")))
+				Expect(spogContextModel.PrimaryClusterUsername).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the ClassificationInfo model
+				classificationInfoModel := new(backuprecoveryv1.ClassificationInfo)
+				Expect(classificationInfoModel).ToNot(BeNil())
+				classificationInfoModel.EndDate = core.StringPtr("testString")
+				classificationInfoModel.IsActive = core.BoolPtr(true)
+				classificationInfoModel.IsFreeTrial = core.BoolPtr(true)
+				classificationInfoModel.StartDate = core.StringPtr("testString")
+				Expect(classificationInfoModel.EndDate).To(Equal(core.StringPtr("testString")))
+				Expect(classificationInfoModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(classificationInfoModel.IsFreeTrial).To(Equal(core.BoolPtr(true)))
+				Expect(classificationInfoModel.StartDate).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the TieringInfo model
+				tieringInfoModel := new(backuprecoveryv1.TieringInfo)
+				Expect(tieringInfoModel).ToNot(BeNil())
+				tieringInfoModel.BackendTiering = core.BoolPtr(true)
+				tieringInfoModel.FrontendTiering = core.BoolPtr(true)
+				tieringInfoModel.MaxRetention = core.Int64Ptr(int64(26))
+				Expect(tieringInfoModel.BackendTiering).To(Equal(core.BoolPtr(true)))
+				Expect(tieringInfoModel.FrontendTiering).To(Equal(core.BoolPtr(true)))
+				Expect(tieringInfoModel.MaxRetention).To(Equal(core.Int64Ptr(int64(26))))
+
+				// Construct an instance of the DataProtectInfo model
+				dataProtectInfoModel := new(backuprecoveryv1.DataProtectInfo)
+				Expect(dataProtectInfoModel).ToNot(BeNil())
+				dataProtectInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectInfoModel.IsAwsSubscription = core.BoolPtr(true)
+				dataProtectInfoModel.IsCohesitySubscription = core.BoolPtr(true)
+				dataProtectInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectInfoModel.Tiering = tieringInfoModel
+				Expect(dataProtectInfoModel.EndDate).To(Equal(core.StringPtr("testString")))
+				Expect(dataProtectInfoModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(dataProtectInfoModel.IsFreeTrial).To(Equal(core.BoolPtr(true)))
+				Expect(dataProtectInfoModel.IsAwsSubscription).To(Equal(core.BoolPtr(true)))
+				Expect(dataProtectInfoModel.IsCohesitySubscription).To(Equal(core.BoolPtr(true)))
+				Expect(dataProtectInfoModel.Quantity).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(dataProtectInfoModel.StartDate).To(Equal(core.StringPtr("testString")))
+				Expect(dataProtectInfoModel.Tiering).To(Equal(tieringInfoModel))
+
+				// Construct an instance of the DataProtectAzureInfo model
+				dataProtectAzureInfoModel := new(backuprecoveryv1.DataProtectAzureInfo)
+				Expect(dataProtectAzureInfoModel).ToNot(BeNil())
+				dataProtectAzureInfoModel.EndDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.IsActive = core.BoolPtr(true)
+				dataProtectAzureInfoModel.IsFreeTrial = core.BoolPtr(true)
+				dataProtectAzureInfoModel.Quantity = core.Int64Ptr(int64(26))
+				dataProtectAzureInfoModel.StartDate = core.StringPtr("testString")
+				dataProtectAzureInfoModel.Tiering = tieringInfoModel
+				Expect(dataProtectAzureInfoModel.EndDate).To(Equal(core.StringPtr("testString")))
+				Expect(dataProtectAzureInfoModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(dataProtectAzureInfoModel.IsFreeTrial).To(Equal(core.BoolPtr(true)))
+				Expect(dataProtectAzureInfoModel.Quantity).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(dataProtectAzureInfoModel.StartDate).To(Equal(core.StringPtr("testString")))
+				Expect(dataProtectAzureInfoModel.Tiering).To(Equal(tieringInfoModel))
+
+				// Construct an instance of the FortKnoxInfo model
+				fortKnoxInfoModel := new(backuprecoveryv1.FortKnoxInfo)
+				Expect(fortKnoxInfoModel).ToNot(BeNil())
+				fortKnoxInfoModel.EndDate = core.StringPtr("testString")
+				fortKnoxInfoModel.IsActive = core.BoolPtr(true)
+				fortKnoxInfoModel.IsFreeTrial = core.BoolPtr(true)
+				fortKnoxInfoModel.Quantity = core.Int64Ptr(int64(26))
+				fortKnoxInfoModel.StartDate = core.StringPtr("testString")
+				Expect(fortKnoxInfoModel.EndDate).To(Equal(core.StringPtr("testString")))
+				Expect(fortKnoxInfoModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(fortKnoxInfoModel.IsFreeTrial).To(Equal(core.BoolPtr(true)))
+				Expect(fortKnoxInfoModel.Quantity).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(fortKnoxInfoModel.StartDate).To(Equal(core.StringPtr("testString")))
+
+				// Construct an instance of the SubscriptionInfo model
+				subscriptionInfoModel := new(backuprecoveryv1.SubscriptionInfo)
+				Expect(subscriptionInfoModel).ToNot(BeNil())
+				subscriptionInfoModel.Classification = classificationInfoModel
+				subscriptionInfoModel.DataProtect = dataProtectInfoModel
+				subscriptionInfoModel.DataProtectAzure = dataProtectAzureInfoModel
+				subscriptionInfoModel.FortKnoxAzureCool = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxAzureHot = fortKnoxInfoModel
+				subscriptionInfoModel.FortKnoxCold = fortKnoxInfoModel
+				subscriptionInfoModel.Ransomware = fortKnoxInfoModel
+				subscriptionInfoModel.SiteContinuity = classificationInfoModel
+				subscriptionInfoModel.ThreatProtection = classificationInfoModel
+				Expect(subscriptionInfoModel.Classification).To(Equal(classificationInfoModel))
+				Expect(subscriptionInfoModel.DataProtect).To(Equal(dataProtectInfoModel))
+				Expect(subscriptionInfoModel.DataProtectAzure).To(Equal(dataProtectAzureInfoModel))
+				Expect(subscriptionInfoModel.FortKnoxAzureCool).To(Equal(fortKnoxInfoModel))
+				Expect(subscriptionInfoModel.FortKnoxAzureHot).To(Equal(fortKnoxInfoModel))
+				Expect(subscriptionInfoModel.FortKnoxCold).To(Equal(fortKnoxInfoModel))
+				Expect(subscriptionInfoModel.Ransomware).To(Equal(fortKnoxInfoModel))
+				Expect(subscriptionInfoModel.SiteContinuity).To(Equal(classificationInfoModel))
+				Expect(subscriptionInfoModel.ThreatProtection).To(Equal(classificationInfoModel))
+
+				// Construct an instance of the TenantAccesses model
+				tenantAccessesModel := new(backuprecoveryv1.TenantAccesses)
+				Expect(tenantAccessesModel).ToNot(BeNil())
+				tenantAccessesModel.ClusterIdentifiers = []backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}
+				tenantAccessesModel.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.IsAccessActive = core.BoolPtr(true)
+				tenantAccessesModel.IsActive = core.BoolPtr(true)
+				tenantAccessesModel.IsDeleted = core.BoolPtr(true)
+				tenantAccessesModel.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+				tenantAccessesModel.Roles = []string{"testString"}
+				tenantAccessesModel.TenantID = core.StringPtr("testString")
+				tenantAccessesModel.TenantName = core.StringPtr("testString")
+				tenantAccessesModel.TenantType = core.StringPtr("Dmaas")
+				Expect(tenantAccessesModel.ClusterIdentifiers).To(Equal([]backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}))
+				Expect(tenantAccessesModel.CreatedTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(tenantAccessesModel.EffectiveTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(tenantAccessesModel.ExpiredTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(tenantAccessesModel.IsAccessActive).To(Equal(core.BoolPtr(true)))
+				Expect(tenantAccessesModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(tenantAccessesModel.IsDeleted).To(Equal(core.BoolPtr(true)))
+				Expect(tenantAccessesModel.LastUpdatedTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(tenantAccessesModel.Roles).To(Equal([]string{"testString"}))
+				Expect(tenantAccessesModel.TenantID).To(Equal(core.StringPtr("testString")))
+				Expect(tenantAccessesModel.TenantName).To(Equal(core.StringPtr("testString")))
+				Expect(tenantAccessesModel.TenantType).To(Equal(core.StringPtr("Dmaas")))
+
+				// Construct an instance of the UpdateUserOptions model
+				sessionName := "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo"
+				updateUserOptionsModel := backupRecoveryService.NewUpdateUserOptions(sessionName)
+				updateUserOptionsModel.SetSessionName("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")
+				updateUserOptionsModel.SetAdUserInfo(adUserInfoModel)
+				updateUserOptionsModel.SetAdditionalGroupNames([]string{"testString"})
+				updateUserOptionsModel.SetAllowDsoModify(true)
+				updateUserOptionsModel.SetAuditLogSettings(auditLogSettingsModel)
+				updateUserOptionsModel.SetAuthenticationType("kAuthLocal")
+				updateUserOptionsModel.SetClusterIdentifiers([]backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel})
+				updateUserOptionsModel.SetCreatedTimeMsecs(int64(26))
+				updateUserOptionsModel.SetCurrentPassword("testString")
+				updateUserOptionsModel.SetDescription("testString")
+				updateUserOptionsModel.SetDomain("testString")
+				updateUserOptionsModel.SetEffectiveTimeMsecs(int64(26))
+				updateUserOptionsModel.SetEmailAddress("testString")
+				updateUserOptionsModel.SetExpiredTimeMsecs(int64(26))
+				updateUserOptionsModel.SetForcePasswordChange(true)
+				updateUserOptionsModel.SetGoogleAccount(googleAccountInfoModel)
+				updateUserOptionsModel.SetIdpUserInfo(idpUserInfoModel)
+				updateUserOptionsModel.SetIntercomMessengerToken("testString")
+				updateUserOptionsModel.SetIsAccountLocked(true)
+				updateUserOptionsModel.SetIsActive(true)
+				updateUserOptionsModel.SetLastSuccessfulLoginTimeMsecs(int64(26))
+				updateUserOptionsModel.SetLastUpdatedTimeMsecs(int64(26))
+				updateUserOptionsModel.SetMfaInfo(mfaInfoModel)
+				updateUserOptionsModel.SetMfaMethods([]string{"testString"})
+				updateUserOptionsModel.SetObjectClass("testString")
+				updateUserOptionsModel.SetOrgMembership([]backuprecoveryv1.TenantConfig{*tenantConfigModel})
+				updateUserOptionsModel.SetPassword("testString")
+				updateUserOptionsModel.SetPreferences(usersPreferencesModel)
+				updateUserOptionsModel.SetPreviousLoginTimeMsecs(int64(26))
+				updateUserOptionsModel.SetPrimaryGroupName("testString")
+				updateUserOptionsModel.SetPrivilegeIds([]string{"kPrincipalView"})
+				updateUserOptionsModel.SetProfiles([]backuprecoveryv1.UserProfile{*userProfileModel})
+				updateUserOptionsModel.SetRestricted(true)
+				updateUserOptionsModel.SetRoles([]string{"testString"})
+				updateUserOptionsModel.SetS3AccessKeyID("testString")
+				updateUserOptionsModel.SetS3AccountID("testString")
+				updateUserOptionsModel.SetS3SecretKey("testString")
+				updateUserOptionsModel.SetSalesforceAccount(salesforceAccountInfoModel)
+				updateUserOptionsModel.SetSid("testString")
+				updateUserOptionsModel.SetSpogContext(spogContextModel)
+				updateUserOptionsModel.SetSubscriptionInfo(subscriptionInfoModel)
+				updateUserOptionsModel.SetTenantAccesses([]backuprecoveryv1.TenantAccesses{*tenantAccessesModel})
+				updateUserOptionsModel.SetTenantID("testString")
+				updateUserOptionsModel.SetUsername("testString")
+				updateUserOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
+				Expect(updateUserOptionsModel).ToNot(BeNil())
+				Expect(updateUserOptionsModel.SessionName).To(Equal(core.StringPtr("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")))
+				Expect(updateUserOptionsModel.AdUserInfo).To(Equal(adUserInfoModel))
+				Expect(updateUserOptionsModel.AdditionalGroupNames).To(Equal([]string{"testString"}))
+				Expect(updateUserOptionsModel.AllowDsoModify).To(Equal(core.BoolPtr(true)))
+				Expect(updateUserOptionsModel.AuditLogSettings).To(Equal(auditLogSettingsModel))
+				Expect(updateUserOptionsModel.AuthenticationType).To(Equal(core.StringPtr("kAuthLocal")))
+				Expect(updateUserOptionsModel.ClusterIdentifiers).To(Equal([]backuprecoveryv1.UserClusterIdentifier{*userClusterIdentifierModel}))
+				Expect(updateUserOptionsModel.CreatedTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(updateUserOptionsModel.CurrentPassword).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.Description).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.Domain).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.EffectiveTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(updateUserOptionsModel.EmailAddress).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.ExpiredTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(updateUserOptionsModel.ForcePasswordChange).To(Equal(core.BoolPtr(true)))
+				Expect(updateUserOptionsModel.GoogleAccount).To(Equal(googleAccountInfoModel))
+				Expect(updateUserOptionsModel.IdpUserInfo).To(Equal(idpUserInfoModel))
+				Expect(updateUserOptionsModel.IntercomMessengerToken).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.IsAccountLocked).To(Equal(core.BoolPtr(true)))
+				Expect(updateUserOptionsModel.IsActive).To(Equal(core.BoolPtr(true)))
+				Expect(updateUserOptionsModel.LastSuccessfulLoginTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(updateUserOptionsModel.LastUpdatedTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(updateUserOptionsModel.MfaInfo).To(Equal(mfaInfoModel))
+				Expect(updateUserOptionsModel.MfaMethods).To(Equal([]string{"testString"}))
+				Expect(updateUserOptionsModel.ObjectClass).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.OrgMembership).To(Equal([]backuprecoveryv1.TenantConfig{*tenantConfigModel}))
+				Expect(updateUserOptionsModel.Password).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.Preferences).To(Equal(usersPreferencesModel))
+				Expect(updateUserOptionsModel.PreviousLoginTimeMsecs).To(Equal(core.Int64Ptr(int64(26))))
+				Expect(updateUserOptionsModel.PrimaryGroupName).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.PrivilegeIds).To(Equal([]string{"kPrincipalView"}))
+				Expect(updateUserOptionsModel.Profiles).To(Equal([]backuprecoveryv1.UserProfile{*userProfileModel}))
+				Expect(updateUserOptionsModel.Restricted).To(Equal(core.BoolPtr(true)))
+				Expect(updateUserOptionsModel.Roles).To(Equal([]string{"testString"}))
+				Expect(updateUserOptionsModel.S3AccessKeyID).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.S3AccountID).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.S3SecretKey).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.SalesforceAccount).To(Equal(salesforceAccountInfoModel))
+				Expect(updateUserOptionsModel.Sid).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.SpogContext).To(Equal(spogContextModel))
+				Expect(updateUserOptionsModel.SubscriptionInfo).To(Equal(subscriptionInfoModel))
+				Expect(updateUserOptionsModel.TenantAccesses).To(Equal([]backuprecoveryv1.TenantAccesses{*tenantAccessesModel}))
+				Expect(updateUserOptionsModel.TenantID).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.Username).To(Equal(core.StringPtr("testString")))
+				Expect(updateUserOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
+			})
 			It(`Invoke NewWeekSchedule successfully`, func() {
 				dayOfWeek := []string{"Sunday"}
 				_model, err := backupRecoveryService.NewWeekSchedule(dayOfWeek)
@@ -25046,6 +27623,26 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.AWSTiers
 			err = backuprecoveryv1.UnmarshalAWSTiers(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalAdUserInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.AdUserInfo)
+			model.GroupSids = []string{"testString"}
+			model.Groups = []string{"testString"}
+			model.IsFloatingUser = core.BoolPtr(true)
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.AdUserInfo
+			err = backuprecoveryv1.UnmarshalAdUserInfo(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
@@ -25141,6 +27738,24 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.ArchivalTargetTierInfo
 			err = backuprecoveryv1.UnmarshalArchivalTargetTierInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalAuditLogSettings successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.AuditLogSettings)
+			model.ReadLogging = core.BoolPtr(true)
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.AuditLogSettings
+			err = backuprecoveryv1.UnmarshalAuditLogSettings(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
@@ -25463,6 +28078,27 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalClassificationInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.ClassificationInfo)
+			model.EndDate = core.StringPtr("testString")
+			model.IsActive = core.BoolPtr(true)
+			model.IsFreeTrial = core.BoolPtr(true)
+			model.StartDate = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.ClassificationInfo
+			err = backuprecoveryv1.UnmarshalClassificationInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalCloudSpinTarget successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.CloudSpinTarget)
@@ -25745,6 +28381,54 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalDataProtectAzureInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.DataProtectAzureInfo)
+			model.EndDate = core.StringPtr("testString")
+			model.IsActive = core.BoolPtr(true)
+			model.IsFreeTrial = core.BoolPtr(true)
+			model.Quantity = core.Int64Ptr(int64(26))
+			model.StartDate = core.StringPtr("testString")
+			model.Tiering = nil
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.DataProtectAzureInfo
+			err = backuprecoveryv1.UnmarshalDataProtectAzureInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalDataProtectInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.DataProtectInfo)
+			model.EndDate = core.StringPtr("testString")
+			model.IsActive = core.BoolPtr(true)
+			model.IsFreeTrial = core.BoolPtr(true)
+			model.IsAwsSubscription = core.BoolPtr(true)
+			model.IsCohesitySubscription = core.BoolPtr(true)
+			model.Quantity = core.Int64Ptr(int64(26))
+			model.StartDate = core.StringPtr("testString")
+			model.Tiering = nil
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.DataProtectInfo
+			err = backuprecoveryv1.UnmarshalDataProtectInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalDaySchedule successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.DaySchedule)
@@ -25879,6 +28563,28 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalFortKnoxInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.FortKnoxInfo)
+			model.EndDate = core.StringPtr("testString")
+			model.IsActive = core.BoolPtr(true)
+			model.IsFreeTrial = core.BoolPtr(true)
+			model.Quantity = core.Int64Ptr(int64(26))
+			model.StartDate = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.FortKnoxInfo
+			err = backuprecoveryv1.UnmarshalFortKnoxInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalFullBackupPolicy successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.FullBackupPolicy)
@@ -25934,6 +28640,25 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.FullScheduleAndRetention
 			err = backuprecoveryv1.UnmarshalFullScheduleAndRetention(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalGoogleAccountInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.GoogleAccountInfo)
+			model.AccountID = core.StringPtr("testString")
+			model.UserID = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.GoogleAccountInfo
+			err = backuprecoveryv1.UnmarshalGoogleAccountInfo(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
@@ -26070,6 +28795,30 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.HourSchedule
 			err = backuprecoveryv1.UnmarshalHourSchedule(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalIdpUserInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.IdpUserInfo)
+			model.GroupSids = []string{"testString"}
+			model.Groups = []string{"testString"}
+			model.IdpID = core.Int64Ptr(int64(26))
+			model.IsFloatingUser = core.BoolPtr(true)
+			model.IssuerID = core.StringPtr("testString")
+			model.UserID = core.StringPtr("testString")
+			model.Vendor = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.IdpUserInfo
+			err = backuprecoveryv1.UnmarshalIdpUserInfo(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
@@ -26442,6 +29191,26 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.MSSQLVolumeProtectionGroupParams
 			err = backuprecoveryv1.UnmarshalMSSQLVolumeProtectionGroupParams(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalMfaInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.MfaInfo)
+			model.IsEmailOtpSetupDone = core.BoolPtr(true)
+			model.IsTotpSetupDone = core.BoolPtr(true)
+			model.IsUserExemptFromMfa = core.BoolPtr(true)
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.MfaInfo
+			err = backuprecoveryv1.UnmarshalMfaInfo(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
@@ -27860,6 +30629,32 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalSalesforceAccountInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.SalesforceAccountInfo)
+			model.AccountID = core.StringPtr("testString")
+			model.HeliosAccessGrantStatus = core.StringPtr("testString")
+			model.IsDGaaSUser = core.BoolPtr(true)
+			model.IsDMaaSUser = core.BoolPtr(true)
+			model.IsDRaaSUser = core.BoolPtr(true)
+			model.IsRPaaSUser = core.BoolPtr(true)
+			model.IsSalesUser = core.BoolPtr(true)
+			model.IsSupportUser = core.BoolPtr(true)
+			model.UserID = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.SalesforceAccountInfo
+			err = backuprecoveryv1.UnmarshalSalesforceAccountInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalSchedule successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.Schedule)
@@ -28163,6 +30958,26 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalSpogContext successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.SpogContext)
+			model.PrimaryClusterID = core.Int64Ptr(int64(26))
+			model.PrimaryClusterUserSid = core.StringPtr("testString")
+			model.PrimaryClusterUsername = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.SpogContext
+			err = backuprecoveryv1.UnmarshalSpogContext(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalSqlTargetParamsForRecoverSqlApp successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.SqlTargetParamsForRecoverSqlApp)
@@ -28226,6 +31041,32 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalSubscriptionInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.SubscriptionInfo)
+			model.Classification = nil
+			model.DataProtect = nil
+			model.DataProtectAzure = nil
+			model.FortKnoxAzureCool = nil
+			model.FortKnoxAzureHot = nil
+			model.FortKnoxCold = nil
+			model.Ransomware = nil
+			model.SiteContinuity = nil
+			model.ThreatProtection = nil
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.SubscriptionInfo
+			err = backuprecoveryv1.UnmarshalSubscriptionInfo(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalTargetSchedule successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.TargetSchedule)
@@ -28267,6 +31108,58 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
 		})
+		It(`Invoke UnmarshalTenantAccesses successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.TenantAccesses)
+			model.ClusterIdentifiers = nil
+			model.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+			model.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+			model.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+			model.IsAccessActive = core.BoolPtr(true)
+			model.IsActive = core.BoolPtr(true)
+			model.IsDeleted = core.BoolPtr(true)
+			model.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+			model.Roles = []string{"testString"}
+			model.TenantID = core.StringPtr("testString")
+			model.TenantName = core.StringPtr("testString")
+			model.TenantType = core.StringPtr("Dmaas")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.TenantAccesses
+			err = backuprecoveryv1.UnmarshalTenantAccesses(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalTenantConfig successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.TenantConfig)
+			model.BifrostEnabled = core.BoolPtr(true)
+			model.IsManagedOnHelios = core.BoolPtr(true)
+			model.Name = core.StringPtr("testString")
+			model.Restricted = core.BoolPtr(true)
+			model.Roles = []string{"testString"}
+			model.TenantID = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.TenantConfig
+			err = backuprecoveryv1.UnmarshalTenantConfig(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
 		It(`Invoke UnmarshalTierLevelSettings successfully`, func() {
 			// Construct an instance of the model.
 			model := new(backuprecoveryv1.TierLevelSettings)
@@ -28285,6 +31178,26 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.TierLevelSettings
 			err = backuprecoveryv1.UnmarshalTierLevelSettings(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalTieringInfo successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.TieringInfo)
+			model.BackendTiering = core.BoolPtr(true)
+			model.FrontendTiering = core.BoolPtr(true)
+			model.MaxRetention = core.Int64Ptr(int64(26))
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.TieringInfo
+			err = backuprecoveryv1.UnmarshalTieringInfo(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
@@ -28453,6 +31366,130 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			var result *backuprecoveryv1.UpdateReplicationSnapshotConfig
 			err = backuprecoveryv1.UnmarshalUpdateReplicationSnapshotConfig(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalUserClusterIdentifier successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.UserClusterIdentifier)
+			model.ClusterID = core.Int64Ptr(int64(26))
+			model.ClusterIncarnationID = core.Int64Ptr(int64(26))
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.UserClusterIdentifier
+			err = backuprecoveryv1.UnmarshalUserClusterIdentifier(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalUserDetails successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.UserDetails)
+			model.AdUserInfo = nil
+			model.AdditionalGroupNames = []string{"testString"}
+			model.AllowDsoModify = core.BoolPtr(true)
+			model.AuditLogSettings = nil
+			model.AuthenticationType = core.StringPtr("kAuthLocal")
+			model.ClusterIdentifiers = nil
+			model.CreatedTimeMsecs = core.Int64Ptr(int64(26))
+			model.CurrentPassword = core.StringPtr("testString")
+			model.Description = core.StringPtr("testString")
+			model.Domain = core.StringPtr("testString")
+			model.EffectiveTimeMsecs = core.Int64Ptr(int64(26))
+			model.EmailAddress = core.StringPtr("testString")
+			model.ExpiredTimeMsecs = core.Int64Ptr(int64(26))
+			model.ForcePasswordChange = core.BoolPtr(true)
+			model.GoogleAccount = nil
+			model.GroupRoles = []string{"testString"}
+			model.IdpUserInfo = nil
+			model.IntercomMessengerToken = core.StringPtr("testString")
+			model.IsAccountLocked = core.BoolPtr(true)
+			model.IsAccountMfaEnabled = core.BoolPtr(true)
+			model.IsActive = core.BoolPtr(true)
+			model.IsClusterMfaEnabled = core.BoolPtr(true)
+			model.LastSuccessfulLoginTimeMsecs = core.Int64Ptr(int64(26))
+			model.LastUpdatedTimeMsecs = core.Int64Ptr(int64(26))
+			model.MfaInfo = nil
+			model.MfaMethods = []string{"testString"}
+			model.ObjectClass = core.StringPtr("testString")
+			model.OrgMembership = nil
+			model.Password = core.StringPtr("testString")
+			model.Preferences = nil
+			model.PreviousLoginTimeMsecs = core.Int64Ptr(int64(26))
+			model.PrimaryGroupName = core.StringPtr("testString")
+			model.PrivilegeIds = []string{"kPrincipalView"}
+			model.Profiles = nil
+			model.Restricted = core.BoolPtr(true)
+			model.Roles = []string{"testString"}
+			model.S3AccessKeyID = core.StringPtr("testString")
+			model.S3AccountID = core.StringPtr("testString")
+			model.S3SecretKey = core.StringPtr("testString")
+			model.SalesforceAccount = nil
+			model.Sid = core.StringPtr("testString")
+			model.SpogContext = nil
+			model.SubscriptionInfo = nil
+			model.TenantAccesses = nil
+			model.TenantID = core.StringPtr("testString")
+			model.Username = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.UserDetails
+			err = backuprecoveryv1.UnmarshalUserDetails(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalUserProfile successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.UserProfile)
+			model.ClusterIdentifiers = nil
+			model.IsActive = core.BoolPtr(true)
+			model.IsDeleted = core.BoolPtr(true)
+			model.RegionIds = []string{"testString"}
+			model.TenantID = core.StringPtr("testString")
+			model.TenantName = core.StringPtr("testString")
+			model.TenantType = core.StringPtr("Dmaas")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.UserProfile
+			err = backuprecoveryv1.UnmarshalUserProfile(raw, &result)
+			Expect(err).To(BeNil())
+			Expect(result).ToNot(BeNil())
+			Expect(result).To(Equal(model))
+		})
+		It(`Invoke UnmarshalUsersPreferences successfully`, func() {
+			// Construct an instance of the model.
+			model := new(backuprecoveryv1.UsersPreferences)
+			model.Locale = core.StringPtr("testString")
+
+			b, err := json.Marshal(model)
+			Expect(err).To(BeNil())
+
+			var raw map[string]json.RawMessage
+			err = json.Unmarshal(b, &raw)
+			Expect(err).To(BeNil())
+
+			var result *backuprecoveryv1.UsersPreferences
+			err = backuprecoveryv1.UnmarshalUsersPreferences(raw, &result)
 			Expect(err).To(BeNil())
 			Expect(result).ToNot(BeNil())
 			Expect(result).To(Equal(model))
