@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.3
+
+### Content
+
+#### Defects
+
+* Internal fixes and improvements
+
 ## 1.0.2
 
 ### Content
