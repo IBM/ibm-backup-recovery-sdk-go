@@ -1,15 +1,14 @@
 {
   "service": "backup-recovery",
-  "production_code": "Yes",
-  "security_sensitive": "No",
-  "ip_sensitive": "No",
-  "others": {
+  "production_code": "yes",
+  "security_sensitive": "no",
+  "ip_sensitive": "no",
+  "other": {
     "owner_squad": "BRS SRE",
     "description": "GO SDK for the Backup and Recovery Service"
   },
   "production_branches": [
     "main",
     "staging"
-  ],
-  "production_code_end": ""
+  ]
 }
