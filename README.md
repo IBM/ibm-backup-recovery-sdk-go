@@ -1,40 +1,33 @@
-# IBM Backup and Recovery Service SDK GO
+# IBM Cloud Backup and Recovery Service SDK GO
 
-**Note:**
-IBM Cloud Backup and Recovery is the Limited Availability (LA) offering in the present release and currently not available under the "General Availability (GA)".  Only after the GA release, it would be available through the "IBM Global Catalog" for delivery and consumption from all available Data center Region/Zones.  For more details/Questions about products, sales, support etc at [IBM Help](https://www.ibm.com/contact/global).
-
-Go client library to interact with the various [IBM Cloud Backup and Recovery service APIs](https://cloud.ibm.com/docs/allowlist/backup-recovery?topic=backup-recovery-compatibility-api).
+This GO SDK for IBM Cloud Backup and Recovery enables customers to leverage a managed service that provides backup solutions for various customer workloads running on IBM Cloud.
 
 ## Table of Contents
 
-- [Overview](#overview)
+- [Documentation](#documentation)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
   - [Go modules](#go-modules)
-  - [`go get` command](#go-get-command)
+  - [Get SDK package](#get-sdk-package)
 - [Questions](#questions)
 - [Issues](#issues)
 - [License](#license)
 
-## Overview
+## Documentation
 
-The IBM Cloud Backup and Recovery service Go SDK allows developers to programmatically interact with the following IBM Cloud services:
-
-Service Name | Package name
---- | ---
-[Backup Recovery](https://cloud.ibm.com/docs/allowlist/backup-recovery) | backuprecoveryv1
+- [Documentation for IBM Cloud Backup and Recovery](https://cloud.ibm.com/docs/backup-recovery?topic=backup-recovery-getting-started-backup-recovery)
+- [REST API Reference and Code Examples](https://cloud.ibm.com/docs/backup-recovery?topic=backup-recovery-using-go)
+- [Go Backup and Recovery API reference documentation](https://pkg.go.dev/github.com/IBM/ibm-backup-recovery-sdk-go)
 
 ## Prerequisites
 
-[ibm-cloud-onboarding]: https://cloud.ibm.com/registration
-
-- An [IBM Cloud][ibm-cloud-onboarding] account.
+- An [IBM Cloud](https://cloud.ibm.com/registration) account.
 - An IAM API key to allow the SDK to access your account. Create one [here](https://cloud.ibm.com/iam/apikeys).
-- Go version 1.21.0 or above.
+- Go version 1.23 or newer.
 
 ## Installation
 
-### Go modules  
+### Go modules
 
 If your application uses Go modules for dependency management (recommended), just add an import for each service
 that you will use in your application.  
@@ -53,15 +46,13 @@ In the example above, the `backuprecoveryv1` part of the import path is the pack
 associated with the Example Service.
 See the service table above to find the appropriate package name for the services used by your application.
 
-### `go get` command  
+### Get SDK package
 
 Alternatively, you can use the `go get` command to download and install the appropriate packages needed by your application:
 
 ``` go
 go get -u github.com/IBM/ibm-backup-recovery-sdk-go/backuprecoveryv1
 ```
-
-Be sure to use the appropriate package name from the service table above for the services used by your application.
 
 ## Questions
 
