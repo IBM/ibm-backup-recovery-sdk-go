@@ -2,6 +2,9 @@
 
 This GO SDK for IBM Cloud Backup and Recovery enables customers to leverage a managed service that provides backup solutions for various customer workloads running on IBM Cloud.
 
+**Note**:
+IBM Cloud Backup and recovery supporting IKS/ROKS workload is only available in select regions. For more details/Questions about products, sales, support etc at [IBM Help](https://www.ibm.com/contact/global)
+
 ## Table of Contents
 
 - [Documentation](#documentation)

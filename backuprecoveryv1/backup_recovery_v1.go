@@ -2447,6 +2447,9 @@ func (backupRecovery *BackupRecoveryV1) CreateProtectionGroupWithContext(ctx con
 	if createProtectionGroupOptions.MssqlParams != nil {
 		body["mssqlParams"] = createProtectionGroupOptions.MssqlParams
 	}
+	if createProtectionGroupOptions.KubernetesParams != nil {
+		body["kubernetesParams"] = createProtectionGroupOptions.KubernetesParams
+	}
 	_, err = builder.SetBodyContentJSON(body)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "set-json-body-error", common.GetComponentInfo())
@@ -2662,6 +2665,9 @@ func (backupRecovery *BackupRecoveryV1) UpdateProtectionGroupWithContext(ctx con
 	}
 	if updateProtectionGroupOptions.MssqlParams != nil {
 		body["mssqlParams"] = updateProtectionGroupOptions.MssqlParams
+	}
+	if updateProtectionGroupOptions.KubernetesParams != nil {
+		body["kubernetesParams"] = updateProtectionGroupOptions.KubernetesParams
 	}
 	_, err = builder.SetBodyContentJSON(body)
 	if err != nil {
@@ -3157,6 +3163,119 @@ func (backupRecovery *BackupRecoveryV1) PerformActionOnProtectionGroupRunWithCon
 	return
 }
 
+// ListProtectionSourcesRegistrationInfo : The ListProtectionSourcesRegistrationInfo operation.
+// **Privileges:** ```PROTECTION_VIEW``` <br><br>Returns the registration and protection information of the registered
+// Protection Sources.
+func (backupRecovery *BackupRecoveryV1) ListProtectionSourcesRegistrationInfo(listProtectionSourcesRegistrationInfoOptions *ListProtectionSourcesRegistrationInfoOptions) (result *GetRegistrationInfoResponse, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.ListProtectionSourcesRegistrationInfoWithContext(context.Background(), listProtectionSourcesRegistrationInfoOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// ListProtectionSourcesRegistrationInfoWithContext is an alternate form of the ListProtectionSourcesRegistrationInfo method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) ListProtectionSourcesRegistrationInfoWithContext(ctx context.Context, listProtectionSourcesRegistrationInfoOptions *ListProtectionSourcesRegistrationInfoOptions) (result *GetRegistrationInfoResponse, response *core.DetailedResponse, err error) {
+	err = core.ValidateStruct(listProtectionSourcesRegistrationInfoOptions, "listProtectionSourcesRegistrationInfoOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	builder := core.NewRequestBuilder(core.GET)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	protectionSourcesUrl := strings.TrimSuffix(backupRecovery.Service.Options.URL, "/v2")
+	_, err = builder.ResolveRequestURL(protectionSourcesUrl, `/irisservices/api/v1/public/protectionSources/registrationInfo`, nil)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "ListProtectionSourcesRegistrationInfo")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	for headerName, headerValue := range listProtectionSourcesRegistrationInfoOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	if listProtectionSourcesRegistrationInfoOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.XIBMTenantID))
+	}
+
+	if listProtectionSourcesRegistrationInfoOptions.RequestInitiatorType != nil {
+		builder.AddHeader("requestInitiatorType", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.RequestInitiatorType))
+	}
+
+	if listProtectionSourcesRegistrationInfoOptions.Environments != nil {
+		builder.AddQuery("environments", strings.Join(listProtectionSourcesRegistrationInfoOptions.Environments, ","))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.Ids != nil {
+		err = builder.AddQuerySlice("ids", listProtectionSourcesRegistrationInfoOptions.Ids)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "add-query-slice-error", common.GetComponentInfo())
+			return
+		}
+	}
+	if listProtectionSourcesRegistrationInfoOptions.IncludeEntityPermissionInfo != nil {
+		builder.AddQuery("includeEntityPermissionInfo", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.IncludeEntityPermissionInfo))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.Sids != nil {
+		builder.AddQuery("sids", strings.Join(listProtectionSourcesRegistrationInfoOptions.Sids, ","))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.IncludeSourceCredentials != nil {
+		builder.AddQuery("includeSourceCredentials", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.IncludeSourceCredentials))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.EncryptionKey != nil {
+		builder.AddQuery("encryptionKey", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.EncryptionKey))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.IncludeApplicationsTreeInfo != nil {
+		builder.AddQuery("includeApplicationsTreeInfo", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.IncludeApplicationsTreeInfo))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.PruneNonCriticalInfo != nil {
+		builder.AddQuery("pruneNonCriticalInfo", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.PruneNonCriticalInfo))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.UseCachedData != nil {
+		builder.AddQuery("useCachedData", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.UseCachedData))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.IncludeExternalMetadata != nil {
+		builder.AddQuery("includeExternalMetadata", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.IncludeExternalMetadata))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.MaintenanceStatus != nil {
+		builder.AddQuery("maintenanceStatus", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.MaintenanceStatus))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.TenantIds != nil {
+		builder.AddQuery("tenantIds", strings.Join(listProtectionSourcesRegistrationInfoOptions.TenantIds, ","))
+	}
+	if listProtectionSourcesRegistrationInfoOptions.AllUnderHierarchy != nil {
+		builder.AddQuery("allUnderHierarchy", fmt.Sprint(*listProtectionSourcesRegistrationInfoOptions.AllUnderHierarchy))
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "ListProtectionSourcesRegistrationInfo", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalGetRegistrationInfoResponse)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
 // GetRecoveries : Lists the Recoveries
 // Lists the Recoveries.
 func (backupRecovery *BackupRecoveryV1) GetRecoveries(getRecoveriesOptions *GetRecoveriesOptions) (result *RecoveriesResponse, response *core.DetailedResponse, err error) {
@@ -3309,6 +3428,9 @@ func (backupRecovery *BackupRecoveryV1) CreateRecoveryWithContext(ctx context.Co
 	}
 	if createRecoveryOptions.PhysicalParams != nil {
 		body["physicalParams"] = createRecoveryOptions.PhysicalParams
+	}
+	if createRecoveryOptions.KubernetesParams != nil {
+		body["kubernetesParams"] = createRecoveryOptions.KubernetesParams
 	}
 	if createRecoveryOptions.MssqlParams != nil {
 		body["mssqlParams"] = createRecoveryOptions.MssqlParams
@@ -4376,6 +4498,9 @@ func (backupRecovery *BackupRecoveryV1) RegisterProtectionSourceWithContext(ctx 
 	if registerProtectionSourceOptions.DataSourceConnectionID != nil {
 		body["dataSourceConnectionId"] = registerProtectionSourceOptions.DataSourceConnectionID
 	}
+	if registerProtectionSourceOptions.KubernetesParams != nil {
+		body["kubernetesParams"] = registerProtectionSourceOptions.KubernetesParams
+	}
 	if registerProtectionSourceOptions.PhysicalParams != nil {
 		body["physicalParams"] = registerProtectionSourceOptions.PhysicalParams
 	}
@@ -4566,6 +4691,9 @@ func (backupRecovery *BackupRecoveryV1) UpdateProtectionSourceRegistrationWithCo
 	}
 	if updateProtectionSourceRegistrationOptions.PhysicalParams != nil {
 		body["physicalParams"] = updateProtectionSourceRegistrationOptions.PhysicalParams
+	}
+	if updateProtectionSourceRegistrationOptions.KubernetesParams != nil {
+		body["kubernetesParams"] = updateProtectionSourceRegistrationOptions.KubernetesParams
 	}
 	_, err = builder.SetBodyContentJSON(body)
 	if err != nil {
@@ -6354,6 +6482,118 @@ func UnmarshalAlertTarget(m map[string]json.RawMessage, result interface{}) (err
 	err = core.UnmarshalPrimitive(m, "recipientType", &obj.RecipientType)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "recipientType-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ApplicationInfo : Specifies the application registered on the Cohesity Cluster.
+type ApplicationInfo struct {
+	// Application Server and the subtrees below them. Specifies the application subtree used to store additional
+	// application level Objects. Different environments use the subtree to store application level information. For
+	// example for SQL Server, this subtree stores the SQL Server instances running on a VM or a Physical Server.
+	// overrideDescription: true.
+	ApplicationTreeInfo []ProtectionSourceNode `json:"applicationTreeInfo,omitempty"`
+
+	// Specifies the environment type of the application such as 'kSQL', 'kExchange' registered on the Protection Source.
+	// overrideDescription: true Supported environment types such as 'kView', 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer'
+	// refers to Cohesity's Remote Adapter.'kVMware' indicates the VMware Protection Source environment. 'kHyperV'
+	// indicates the HyperV Protection Source environment.'kSQL' indicates the SQL Protection Source environment.'kView'
+	// indicates the View Protection Source environment. 'kPuppeteer' indicates the Cohesity's Remote Adapter. 'kPhysical'
+	// indicates the physical Protection Source environment. 'kPure' indicates the Pure Storage Protection Source
+	// environment.'kNimble' indicates the Nimble Storage Protection Source environment. 'kHpe3Par' indicates the Hpe 3Par
+	// Storage Protection Source environment. 'kAzure' indicates the Microsoft's Azure Protection Source environment.
+	// 'kNetapp' indicates the Netapp Protection Source environment.'kAgent' indicates the Agent Protection Source
+	// environment. 'kGenericNas' indicates the Generic Network Attached Storage Protection Source environment.
+	// 'kAcropolis' indicates the Acropolis Protection Source environment. 'kPhysicalFiles' indicates the Physical Files
+	// Protection Source environment. 'kIbmFlashSystem' indicates the IBM Flash System Protection Source environment.
+	// 'kIsilon' indicates the Dell EMC's Isilon Protection Source environment. 'kGPFS' indicates IBM's GPFS Protection
+	// Source environment. 'kKVM' indicates the KVM Protection Source environment. 'kAWS' indicates the AWS Protection
+	// Source environment. 'kExchange' indicates the Exchange Protection Source environment. 'kHyperVVSS' indicates the
+	// HyperV VSS Protection Source environment. 'kOracle' indicates the Oracle Protection Source environment. 'kGCP'
+	// indicates the Google Cloud Platform Protection Source environment. 'kFlashBlade' indicates the Flash Blade
+	// Protection Source environment. 'kAWSNative' indicates the AWS Native Protection Source environment. 'kO365'
+	// indicates the Office 365 Protection Source environment. 'kO365Outlook' indicates Office 365 outlook Protection
+	// Source environment. 'kHyperFlex' indicates the Hyper Flex Protection Source environment. 'kGCPNative' indicates the
+	// GCP Native Protection Source environment. 'kAzureNative' indicates the Azure Native Protection Source environment.
+	// 'kKubernetes' indicates a Kubernetes Protection Source environment. 'kElastifile' indicates Elastifile Protection
+	// Source environment. 'kAD' indicates Active Directory Protection Source environment. 'kRDSSnapshotManager' indicates
+	// AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra Protection Source environment. 'kMongoDB'
+	// indicates MongoDB Protection Source environment. 'kCouchbase' indicates Couchbase Protection Source environment.
+	// 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates Hive Protection Source environment. 'kHBase'
+	// indicates HBase Protection Source environment. 'kUDA' indicates Universal Data Adapter Protection Source
+	// environment. 'kSAPHANA' indicates SAP HANA protection source environment. 'kO365Teams' indicates the Office365 Teams
+	// Protection Source environment. 'kO365Group' indicates the Office365 Groups Protection Source environment.
+	// 'kO365Exchange' indicates the Office365 Mailbox Protection Source environment. 'kO365OneDrive' indicates the
+	// Office365 OneDrive Protection Source environment. 'kO365Sharepoint' indicates the Office365 SharePoint Protection
+	// Source environment. 'kO365PublicFolders' indicates the Office365 PublicFolders Protection Source environment.
+	// kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas, kAcropolis, kPhysicalFiles, kIsilon, kGPFS, kKVM,
+	// kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade, kAWSNative, kO365, kO365Outlook, kHyperFlex, kGCPNative,
+	// kAzureNative, kKubernetes, kElastifile, kAD, kRDSSnapshotManager, kCassandra, kMongoDB, kCouchbase, kHdfs, kHive,
+	// kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group, kO365Exchange, kO365OneDrive, kO365Sharepoint, kO365PublicFolders.
+	Environment *string `json:"environment,omitempty"`
+}
+
+// Constants associated with the ApplicationInfo.Environment property.
+// Specifies the environment type of the application such as 'kSQL', 'kExchange' registered on the Protection Source.
+// overrideDescription: true Supported environment types such as 'kView', 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer'
+// refers to Cohesity's Remote Adapter.'kVMware' indicates the VMware Protection Source environment. 'kHyperV' indicates
+// the HyperV Protection Source environment.'kSQL' indicates the SQL Protection Source environment.'kView' indicates the
+// View Protection Source environment. 'kPuppeteer' indicates the Cohesity's Remote Adapter. 'kPhysical' indicates the
+// physical Protection Source environment. 'kPure' indicates the Pure Storage Protection Source environment.'kNimble'
+// indicates the Nimble Storage Protection Source environment. 'kHpe3Par' indicates the Hpe 3Par Storage Protection
+// Source environment. 'kAzure' indicates the Microsoft's Azure Protection Source environment. 'kNetapp' indicates the
+// Netapp Protection Source environment.'kAgent' indicates the Agent Protection Source environment. 'kGenericNas'
+// indicates the Generic Network Attached Storage Protection Source environment. 'kAcropolis' indicates the Acropolis
+// Protection Source environment. 'kPhysicalFiles' indicates the Physical Files Protection Source environment.
+// 'kIbmFlashSystem' indicates the IBM Flash System Protection Source environment. 'kIsilon' indicates the Dell EMC's
+// Isilon Protection Source environment. 'kGPFS' indicates IBM's GPFS Protection Source environment. 'kKVM' indicates
+// the KVM Protection Source environment. 'kAWS' indicates the AWS Protection Source environment. 'kExchange' indicates
+// the Exchange Protection Source environment. 'kHyperVVSS' indicates the HyperV VSS Protection Source environment.
+// 'kOracle' indicates the Oracle Protection Source environment. 'kGCP' indicates the Google Cloud Platform Protection
+// Source environment. 'kFlashBlade' indicates the Flash Blade Protection Source environment. 'kAWSNative' indicates the
+// AWS Native Protection Source environment. 'kO365' indicates the Office 365 Protection Source environment.
+// 'kO365Outlook' indicates Office 365 outlook Protection Source environment. 'kHyperFlex' indicates the Hyper Flex
+// Protection Source environment. 'kGCPNative' indicates the GCP Native Protection Source environment. 'kAzureNative'
+// indicates the Azure Native Protection Source environment. 'kKubernetes' indicates a Kubernetes Protection Source
+// environment. 'kElastifile' indicates Elastifile Protection Source environment. 'kAD' indicates Active Directory
+// Protection Source environment. 'kRDSSnapshotManager' indicates AWS RDS Protection Source environment. 'kCassandra'
+// indicates Cassandra Protection Source environment. 'kMongoDB' indicates MongoDB Protection Source environment.
+// 'kCouchbase' indicates Couchbase Protection Source environment. 'kHdfs' indicates Hdfs Protection Source environment.
+// 'kHive' indicates Hive Protection Source environment. 'kHBase' indicates HBase Protection Source environment. 'kUDA'
+// indicates Universal Data Adapter Protection Source environment. 'kSAPHANA' indicates SAP HANA protection source
+// environment. 'kO365Teams' indicates the Office365 Teams Protection Source environment. 'kO365Group' indicates the
+// Office365 Groups Protection Source environment. 'kO365Exchange' indicates the Office365 Mailbox Protection Source
+// environment. 'kO365OneDrive' indicates the Office365 OneDrive Protection Source environment. 'kO365Sharepoint'
+// indicates the Office365 SharePoint Protection Source environment. 'kO365PublicFolders' indicates the Office365
+// PublicFolders Protection Source environment. kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas,
+// kAcropolis, kPhysicalFiles, kIsilon, kGPFS, kKVM, kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade,
+// kAWSNative, kO365, kO365Outlook, kHyperFlex, kGCPNative, kAzureNative, kKubernetes, kElastifile, kAD,
+// kRDSSnapshotManager, kCassandra, kMongoDB, kCouchbase, kHdfs, kHive, kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group,
+// kO365Exchange, kO365OneDrive, kO365Sharepoint, kO365PublicFolders.
+const (
+	ApplicationInfo_Environment_Khyperv    = "kHyperV"
+	ApplicationInfo_Environment_Knimble    = "kNimble"
+	ApplicationInfo_Environment_Kphysical  = "kPhysical"
+	ApplicationInfo_Environment_Kpuppeteer = "kPuppeteer"
+	ApplicationInfo_Environment_Kpure      = "kPure"
+	ApplicationInfo_Environment_Ksql       = "kSQL"
+	ApplicationInfo_Environment_Kview      = "kView"
+	ApplicationInfo_Environment_Kvmware    = "kVMware"
+)
+
+// UnmarshalApplicationInfo unmarshals an instance of ApplicationInfo from the specified map of raw messages.
+func UnmarshalApplicationInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ApplicationInfo)
+	err = core.UnmarshalModel(m, "applicationTreeInfo", &obj.ApplicationTreeInfo, UnmarshalProtectionSourceNode)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "applicationTreeInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "environment", &obj.Environment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "environment-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -8436,6 +8676,147 @@ func UnmarshalCascadedTargetConfiguration(m map[string]json.RawMessage, result i
 	return
 }
 
+// CassandraConnectParams : Specifies an Object containing information about a registered cassandra source.
+type CassandraConnectParams struct {
+	// Specifies an Object containing information on various Cassandra ports.
+	CassandraPortsInfo *CassandraPortsInfo `json:"cassandraPortsInfo,omitempty"`
+
+	// Specifies an Object containing information on Cassandra security.
+	CassandraSecurityInfo *CassandraSecurityInfo `json:"cassandraSecurityInfo,omitempty"`
+
+	// Cassandra version.
+	CassandraVersion *string `json:"cassandraVersion,omitempty"`
+
+	// Specifies the commit log archival location for cassandra node.
+	CommitLogBackupLocation *string `json:"commitLogBackupLocation,omitempty"`
+
+	// Specifies the Directory path containing Config YAML for discovery.
+	ConfigDirectory *string `json:"configDirectory,omitempty"`
+
+	// Specifies the List of all physical data center or virtual data center. In most cases, the data centers will be
+	// listed after discovery operation however, if they are not listed, you must manually type the data center names.
+	// Leaving the field blank will disallow data center-specific backup or restore. Entering a subset of all data centers
+	// may cause problems in data movement.
+	DataCenters []string `json:"dataCenters,omitempty"`
+
+	// Specifies the Directory from where DSE specific configuration can be read.
+	DseConfigDirectory *string `json:"dseConfigDirectory,omitempty"`
+
+	// DSE version.
+	DseVersion *string `json:"dseVersion,omitempty"`
+
+	// Specifies whether this cluster has DSE Authenticator.
+	IsDseAuthenticator *bool `json:"isDseAuthenticator,omitempty"`
+
+	// Specifies whether this cluster has DSE tiered storage.
+	IsDseTieredStorage *bool `json:"isDseTieredStorage,omitempty"`
+
+	// Specifies if JMX Authentication enabled in this cluster.
+	IsJmxAuthEnable *bool `json:"isJmxAuthEnable,omitempty"`
+
+	// Specifies the Kerberos Principal for Kerberos connection.
+	KerberosPrincipal *string `json:"kerberosPrincipal,omitempty"`
+
+	// Specifies the Primary Host for the Cassandra cluster.
+	PrimaryHost *string `json:"primaryHost,omitempty"`
+
+	// Specifies the Seed nodes of this Cassandra cluster.
+	Seeds []string `json:"seeds,omitempty"`
+
+	// Specifies the Solr node IP Addresses.
+	SolrNodes []string `json:"solrNodes,omitempty"`
+
+	// Specifies the Solr node Port.
+	SolrPort *int64 `json:"solrPort,omitempty"`
+}
+
+// UnmarshalCassandraConnectParams unmarshals an instance of CassandraConnectParams from the specified map of raw messages.
+func UnmarshalCassandraConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(CassandraConnectParams)
+	err = core.UnmarshalModel(m, "cassandraPortsInfo", &obj.CassandraPortsInfo, UnmarshalCassandraPortsInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraPortsInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "cassandraSecurityInfo", &obj.CassandraSecurityInfo, UnmarshalCassandraSecurityInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraSecurityInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "cassandraVersion", &obj.CassandraVersion)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraVersion-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "commitLogBackupLocation", &obj.CommitLogBackupLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "commitLogBackupLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "configDirectory", &obj.ConfigDirectory)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "configDirectory-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dataCenters", &obj.DataCenters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dataCenters-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dseConfigDirectory", &obj.DseConfigDirectory)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dseConfigDirectory-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dseVersion", &obj.DseVersion)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dseVersion-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isDseAuthenticator", &obj.IsDseAuthenticator)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isDseAuthenticator-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isDseTieredStorage", &obj.IsDseTieredStorage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isDseTieredStorage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isJmxAuthEnable", &obj.IsJmxAuthEnable)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isJmxAuthEnable-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kerberosPrincipal", &obj.KerberosPrincipal)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kerberosPrincipal-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "primaryHost", &obj.PrimaryHost)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "primaryHost-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "seeds", &obj.Seeds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "seeds-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "solrNodes", &obj.SolrNodes)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "solrNodes-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "solrPort", &obj.SolrPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "solrPort-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // CassandraIndexedObject : Specifies a Cassandra indexed object.
 type CassandraIndexedObject struct {
 	// Specifies tag applied to the object.
@@ -8612,6 +8993,132 @@ func UnmarshalCassandraOnPremSearchParams(m map[string]json.RawMessage, result i
 	err = core.UnmarshalPrimitive(m, "sourceIds", &obj.SourceIds)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "sourceIds-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// CassandraPortsInfo : Specifies an Object containing information on various Cassandra ports.
+type CassandraPortsInfo struct {
+	// Specifies the Cassandra JMX port.
+	JmxPort *int64 `json:"jmxPort,omitempty"`
+
+	// Specifies the port for the CQL native transport.
+	NativeTransportPort *int64 `json:"nativeTransportPort,omitempty"`
+
+	// Specifies the Remote Procedure Call (RPC) port for general mechanism for client-server applications.
+	RpcPort *int64 `json:"rpcPort,omitempty"`
+
+	// Specifies the SSL port for encrypted communication.
+	SslStoragePort *int64 `json:"sslStoragePort,omitempty"`
+
+	// Specifies the TCP port for data. Internally used by Cassandra bulk loader.
+	StoragePort *int64 `json:"storagePort,omitempty"`
+}
+
+// UnmarshalCassandraPortsInfo unmarshals an instance of CassandraPortsInfo from the specified map of raw messages.
+func UnmarshalCassandraPortsInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(CassandraPortsInfo)
+	err = core.UnmarshalPrimitive(m, "jmxPort", &obj.JmxPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "jmxPort-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "nativeTransportPort", &obj.NativeTransportPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "nativeTransportPort-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "rpcPort", &obj.RpcPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "rpcPort-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sslStoragePort", &obj.SslStoragePort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sslStoragePort-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "storagePort", &obj.StoragePort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storagePort-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// CassandraSecurityInfo : Specifies an Object containing information on Cassandra security.
+type CassandraSecurityInfo struct {
+	// Is Cassandra authentication required ?.
+	CassandraAuthRequired *bool `json:"cassandraAuthRequired,omitempty"`
+
+	// Cassandra Authentication type. Enum: [PASSWORD KERBEROS LDAP] Specifies the Cassandra auth type.'PASSWORD'
+	// 'KERBEROS' 'LDAP'.
+	CassandraAuthType *string `json:"cassandraAuthType,omitempty"`
+
+	// Cassandra Authenticator/Authorizer.
+	CassandraAuthorizer *string `json:"cassandraAuthorizer,omitempty"`
+
+	// Is Client Encryption enabled for this cluster ?.
+	ClientEncryption *bool `json:"clientEncryption,omitempty"`
+
+	// Is DSE Authorization enabled for this cluster ?.
+	DseAuthorization *bool `json:"dseAuthorization,omitempty"`
+
+	// Is 'Server encryption request client authentication' enabled for this cluster ?.
+	ServerEncryptionReqClientAuth *bool `json:"serverEncryptionReqClientAuth,omitempty"`
+
+	// 'Server internal node Encryption' type for this cluster.
+	ServerInternodeEncryptionType *string `json:"serverInternodeEncryptionType,omitempty"`
+}
+
+// Constants associated with the CassandraSecurityInfo.CassandraAuthType property.
+// Cassandra Authentication type. Enum: [PASSWORD KERBEROS LDAP] Specifies the Cassandra auth type.'PASSWORD' 'KERBEROS'
+// 'LDAP'.
+const (
+	CassandraSecurityInfo_CassandraAuthType_Kerberos = "KERBEROS"
+	CassandraSecurityInfo_CassandraAuthType_Ldap     = "LDAP"
+	CassandraSecurityInfo_CassandraAuthType_Password = "PASSWORD"
+)
+
+// UnmarshalCassandraSecurityInfo unmarshals an instance of CassandraSecurityInfo from the specified map of raw messages.
+func UnmarshalCassandraSecurityInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(CassandraSecurityInfo)
+	err = core.UnmarshalPrimitive(m, "cassandraAuthRequired", &obj.CassandraAuthRequired)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraAuthRequired-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "cassandraAuthType", &obj.CassandraAuthType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraAuthType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "cassandraAuthorizer", &obj.CassandraAuthorizer)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraAuthorizer-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "clientEncryption", &obj.ClientEncryption)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clientEncryption-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dseAuthorization", &obj.DseAuthorization)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dseAuthorization-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "serverEncryptionReqClientAuth", &obj.ServerEncryptionReqClientAuth)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "serverEncryptionReqClientAuth-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "serverInternodeEncryptionType", &obj.ServerInternodeEncryptionType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "serverInternodeEncryptionType-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -10375,6 +10882,42 @@ func UnmarshalConnectionConfig(m map[string]json.RawMessage, result interface{})
 	return
 }
 
+// ConnectorConnectivityStatus : Specifies status information for the data-source connector. For example if it's currently connected to the cluster,
+// when it last connected to the cluster successfully, etc.
+type ConnectorConnectivityStatus struct {
+	// Specifies whether the connector is currently connected to the cluster.
+	IsConnected *bool `json:"isConnected" validate:"required"`
+
+	// Specifies the last timestamp in UNIX time (seconds) when the connector had successfully connected to the cluster.
+	// This property can be present even if the connector is currently disconnected.
+	LastConnectedTimestampSecs *int64 `json:"lastConnectedTimestampSecs,omitempty"`
+
+	// Specifies error message when the connector is unable to connect to the cluster.
+	Message *string `json:"message,omitempty"`
+}
+
+// UnmarshalConnectorConnectivityStatus unmarshals an instance of ConnectorConnectivityStatus from the specified map of raw messages.
+func UnmarshalConnectorConnectivityStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConnectorConnectivityStatus)
+	err = core.UnmarshalPrimitive(m, "isConnected", &obj.IsConnected)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isConnected-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "lastConnectedTimestampSecs", &obj.LastConnectedTimestampSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "lastConnectedTimestampSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "message", &obj.Message)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "message-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // ConnectorImageFile : Specifies the URL to access the connector image file and the platform on which the image can be deployed. The
 // software version of the connector is assumed to be derivable from the name of the image file.
 type ConnectorImageFile struct {
@@ -10445,6 +10988,203 @@ func UnmarshalConnectorMetadata(m map[string]json.RawMessage, result interface{}
 	return
 }
 
+// ConnectorParameters : Specifies the parameters required to establish a connection with a particular environment.
+type ConnectorParameters struct {
+	// ID of the Bifrost (HyX or Rigel) network realm (i.e. a connection) associated with the source.
+	ConnectionID *int64 `json:"connectionId,omitempty"`
+
+	// Specifies the Id of the connector group. Each connector group is collection of Rigel/hyx. Each entity will be tagged
+	// with connector group id.
+	ConnectorGroupID *int64 `json:"connectorGroupId,omitempty"`
+
+	// Specify an IP address or URL of the environment. (such as the IP address of the vCenter Server for a VMware
+	// environment).
+	Endpoint *string `json:"endpoint,omitempty"`
+
+	// Specifies the environment like VMware, SQL, where the Protection Source exists. Supported environment types such as
+	// 'kView', 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer' refers to Cohesity's Remote Adapter. 'kVMware' indicates the
+	// VMware Protection Source environment. 'kHyperV' indicates the HyperV Protection Source environment. 'kSQL' indicates
+	// the SQL Protection Source environment. 'kView' indicates the View Protection Source environment. 'kPuppeteer'
+	// indicates the Cohesity's Remote Adapter. 'kPhysical' indicates the physical Protection Source environment. 'kPure'
+	// indicates the Pure Storage Protection Source environment. 'kNimble' indicates the Nimble Storage Protection Source
+	// environment. 'kHpe3Par' indicates the Hpe 3Par Storage Protection Source environment.'kAzure' indicates the
+	// Microsoft's Azure Protection Source environment. 'kNetapp' indicates the Netapp Protection Source environment.
+	// 'kAgent' indicates the Agent Protection Source environment. 'kGenericNas' indicates the Generic Network Attached
+	// Storage Protection Source environment. 'kAcropolis' indicates the Acropolis Protection Source environment.
+	// 'kPhysicalFiles' indicates the Physical Files Protection Source environment. 'kIbmFlashSystem' indicates the IBM
+	// Flash System Protection Source environment. 'kIsilon' indicates the Dell EMC's Isilon Protection Source environment.
+	// 'kGPFS' indicates IBM's GPFS Protection Source environment. 'kKVM' indicates the KVM Protection Source environment.
+	// 'kAWS' indicates the AWS Protection Source environment. 'kExchange' indicates the Exchange Protection Source
+	// environment. 'kHyperVVSS' indicates the HyperV VSS Protection Source environment. 'kOracle' indicates the Oracle
+	// Protection Source environment. 'kGCP' indicates the Google Cloud Platform Protection Source environment.
+	// 'kFlashBlade' indicates the Flash Blade Protection Source environment. 'kAWSNative' indicates the AWS Native
+	// Protection Source environment. 'kO365' indicates the Office 365 Protection Source environment. 'kO365Outlook'
+	// indicates Office 365 outlook Protection Source environment. 'kHyperFlex' indicates the Hyper Flex Protection Source
+	// environment. 'kGCPNative' indicates the GCP Native Protection Source environment. 'kAzureNative' indicates the Azure
+	// Native Protection Source environment. 'kKubernetes' indicates a Kubernetes Protection Source environment.
+	// 'kElastifile' indicates Elastifile Protection Source environment. 'kAD' indicates Active Directory Protection Source
+	// environment. 'kRDSSnapshotManager' indicates AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra
+	// Protection Source environment. 'kMongoDB' indicates MongoDB Protection Source environment. 'kCouchbase' indicates
+	// Couchbase Protection Source environment. 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates
+	// Hive Protection Source environment. 'kHBase' indicates HBase Protection Source environment. 'kUDA' indicates
+	// Universal Data Adapter Protection Source environment. 'kSAPHANA' indicates SAP HANA protection source environment.
+	// 'kO365Teams' indicates the Office365 Teams Protection Source environment. 'kO365Group' indicates the Office365
+	// Groups Protection Source environment. 'kO365Exchange' indicates the Office365 Mailbox Protection Source environment.
+	// 'kO365OneDrive' indicates the Office365 OneDrive Protection Source environment. 'kO365Sharepoint' indicates the
+	// Office365 SharePoint Protection Source environment. 'kO365PublicFolders' indicates the Office365 PublicFolders
+	// Protection Source environment. kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas, kAcropolis,
+	// kPhysicalFiles, kIsilon, kGPFS, kKVM, kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade, kAWSNative, kO365,
+	// kO365Outlook, kHyperFlex, kGCPNative, kAzureNative, kKubernetes, kElastifile, kAD, kRDSSnapshotManager, kCassandra,
+	// kMongoDB, kCouchbase, kHdfs, kHive, kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group, kO365Exchange, kO365OneDrive,
+	// kO365Sharepoint, kO365PublicFolders.
+	Environment *string `json:"environment,omitempty"`
+
+	// Specifies a Unique id that is generated when the Source is registered. This is a convenience field that is used to
+	// maintain an index to different connection params.
+	ID *int64 `json:"id,omitempty"`
+
+	// Version is updated each time the connector parameters are updated. This is used to discard older connector
+	// parameters.
+	Version *int64 `json:"version,omitempty"`
+}
+
+// Constants associated with the ConnectorParameters.Environment property.
+// Specifies the environment like VMware, SQL, where the Protection Source exists. Supported environment types such as
+// 'kView', 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer' refers to Cohesity's Remote Adapter. 'kVMware' indicates the
+// VMware Protection Source environment. 'kHyperV' indicates the HyperV Protection Source environment. 'kSQL' indicates
+// the SQL Protection Source environment. 'kView' indicates the View Protection Source environment. 'kPuppeteer'
+// indicates the Cohesity's Remote Adapter. 'kPhysical' indicates the physical Protection Source environment. 'kPure'
+// indicates the Pure Storage Protection Source environment. 'kNimble' indicates the Nimble Storage Protection Source
+// environment. 'kHpe3Par' indicates the Hpe 3Par Storage Protection Source environment.'kAzure' indicates the
+// Microsoft's Azure Protection Source environment. 'kNetapp' indicates the Netapp Protection Source environment.
+// 'kAgent' indicates the Agent Protection Source environment. 'kGenericNas' indicates the Generic Network Attached
+// Storage Protection Source environment. 'kAcropolis' indicates the Acropolis Protection Source environment.
+// 'kPhysicalFiles' indicates the Physical Files Protection Source environment. 'kIbmFlashSystem' indicates the IBM
+// Flash System Protection Source environment. 'kIsilon' indicates the Dell EMC's Isilon Protection Source environment.
+// 'kGPFS' indicates IBM's GPFS Protection Source environment. 'kKVM' indicates the KVM Protection Source environment.
+// 'kAWS' indicates the AWS Protection Source environment. 'kExchange' indicates the Exchange Protection Source
+// environment. 'kHyperVVSS' indicates the HyperV VSS Protection Source environment. 'kOracle' indicates the Oracle
+// Protection Source environment. 'kGCP' indicates the Google Cloud Platform Protection Source environment.
+// 'kFlashBlade' indicates the Flash Blade Protection Source environment. 'kAWSNative' indicates the AWS Native
+// Protection Source environment. 'kO365' indicates the Office 365 Protection Source environment. 'kO365Outlook'
+// indicates Office 365 outlook Protection Source environment. 'kHyperFlex' indicates the Hyper Flex Protection Source
+// environment. 'kGCPNative' indicates the GCP Native Protection Source environment. 'kAzureNative' indicates the Azure
+// Native Protection Source environment. 'kKubernetes' indicates a Kubernetes Protection Source environment.
+// 'kElastifile' indicates Elastifile Protection Source environment. 'kAD' indicates Active Directory Protection Source
+// environment. 'kRDSSnapshotManager' indicates AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra
+// Protection Source environment. 'kMongoDB' indicates MongoDB Protection Source environment. 'kCouchbase' indicates
+// Couchbase Protection Source environment. 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates Hive
+// Protection Source environment. 'kHBase' indicates HBase Protection Source environment. 'kUDA' indicates Universal
+// Data Adapter Protection Source environment. 'kSAPHANA' indicates SAP HANA protection source environment. 'kO365Teams'
+// indicates the Office365 Teams Protection Source environment. 'kO365Group' indicates the Office365 Groups Protection
+// Source environment. 'kO365Exchange' indicates the Office365 Mailbox Protection Source environment. 'kO365OneDrive'
+// indicates the Office365 OneDrive Protection Source environment. 'kO365Sharepoint' indicates the Office365 SharePoint
+// Protection Source environment. 'kO365PublicFolders' indicates the Office365 PublicFolders Protection Source
+// environment. kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas, kAcropolis, kPhysicalFiles, kIsilon,
+// kGPFS, kKVM, kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade, kAWSNative, kO365, kO365Outlook, kHyperFlex,
+// kGCPNative, kAzureNative, kKubernetes, kElastifile, kAD, kRDSSnapshotManager, kCassandra, kMongoDB, kCouchbase,
+// kHdfs, kHive, kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group, kO365Exchange, kO365OneDrive, kO365Sharepoint,
+// kO365PublicFolders.
+const (
+	ConnectorParameters_Environment_Khyperv    = "kHyperV"
+	ConnectorParameters_Environment_Knimble    = "kNimble"
+	ConnectorParameters_Environment_Kphysical  = "kPhysical"
+	ConnectorParameters_Environment_Kpuppeteer = "kPuppeteer"
+	ConnectorParameters_Environment_Kpure      = "kPure"
+	ConnectorParameters_Environment_Ksql       = "kSQL"
+	ConnectorParameters_Environment_Kview      = "kView"
+	ConnectorParameters_Environment_Kvmware    = "kVMware"
+)
+
+// UnmarshalConnectorParameters unmarshals an instance of ConnectorParameters from the specified map of raw messages.
+func UnmarshalConnectorParameters(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConnectorParameters)
+	err = core.UnmarshalPrimitive(m, "connectionId", &obj.ConnectionID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "connectionId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "connectorGroupId", &obj.ConnectorGroupID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "connectorGroupId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endpoint", &obj.Endpoint)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endpoint-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "environment", &obj.Environment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "environment-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "version", &obj.Version)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "version-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConnectorUpgradeStatus : Specifies upgrade status for the data-source connector. For example when the upgrade started, current status of the
+// upgrade, errors for upgrade failure etc.
+type ConnectorUpgradeStatus struct {
+	// Specifies the last timestamp in UNIX time (milliseconds) when the connector upgrade status was fetched.
+	LastStatusFetchedTimestampMsecs *int64 `json:"lastStatusFetchedTimestampMsecs,omitempty"`
+
+	// Specifies error message for upgrade failure.
+	Message *string `json:"message,omitempty"`
+
+	// Specifies the last timestamp in UNIX time (milliseconds) when the connector upgrade was triggered.
+	StartTimestampMSecs *int64 `json:"startTimestampMSecs,omitempty"`
+
+	// Specifies the last fetched upgrade status of the connector.
+	Status *string `json:"status" validate:"required"`
+}
+
+// Constants associated with the ConnectorUpgradeStatus.Status property.
+// Specifies the last fetched upgrade status of the connector.
+const (
+	ConnectorUpgradeStatus_Status_Failed     = "Failed"
+	ConnectorUpgradeStatus_Status_Inprogress = "InProgress"
+	ConnectorUpgradeStatus_Status_Notstarted = "NotStarted"
+	ConnectorUpgradeStatus_Status_Succeeded  = "Succeeded"
+)
+
+// UnmarshalConnectorUpgradeStatus unmarshals an instance of ConnectorUpgradeStatus from the specified map of raw messages.
+func UnmarshalConnectorUpgradeStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConnectorUpgradeStatus)
+	err = core.UnmarshalPrimitive(m, "lastStatusFetchedTimestampMsecs", &obj.LastStatusFetchedTimestampMsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "lastStatusFetchedTimestampMsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "message", &obj.Message)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "message-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimestampMSecs", &obj.StartTimestampMSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimestampMSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // CouchBaseOnPremSearchParams : Parameters required to search CouchBase on a cluster.
 type CouchBaseOnPremSearchParams struct {
 	// Specifies Couchbase object types be searched. For Couchbase it can only be set to 'CouchbaseBuckets'.
@@ -10491,6 +11231,48 @@ func UnmarshalCouchBaseOnPremSearchParams(m map[string]json.RawMessage, result i
 	err = core.UnmarshalPrimitive(m, "sourceIds", &obj.SourceIds)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "sourceIds-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// CouchbaseConnectParams : Specifies an Object containing information about a registered couchbase source.
+type CouchbaseConnectParams struct {
+	// Specifies the Carrier direct/sll port.
+	CarrierDirectPort *int64 `json:"carrierDirectPort,omitempty"`
+
+	// Specifies the HTTP direct/sll port.
+	HttpDirectPort *int64 `json:"httpDirectPort,omitempty"`
+
+	// Specifies whether this cluster allows connection through SSL only.
+	RequiresSsl *bool `json:"requiresSsl,omitempty"`
+
+	// Specifies the Seeds of this Couchbase Cluster.
+	Seeds []string `json:"seeds,omitempty"`
+}
+
+// UnmarshalCouchbaseConnectParams unmarshals an instance of CouchbaseConnectParams from the specified map of raw messages.
+func UnmarshalCouchbaseConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(CouchbaseConnectParams)
+	err = core.UnmarshalPrimitive(m, "carrierDirectPort", &obj.CarrierDirectPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "carrierDirectPort-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "httpDirectPort", &obj.HttpDirectPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "httpDirectPort-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "requiresSsl", &obj.RequiresSsl)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "requiresSsl-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "seeds", &obj.Seeds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "seeds-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -10789,7 +11571,7 @@ type CreateAccessTokenOptions struct {
 	// is the default domain.
 	Domain *string `json:"domain,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -10831,7 +11613,7 @@ type CreateDataSourceConnectionOptions struct {
 	// Id of the tenant accessing the cluster.
 	XIBMTenantID *string `json:"X-IBM-Tenant-Id,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -10887,7 +11669,7 @@ type CreateDownloadFilesAndFoldersRecoveryOptions struct {
 	// snapshot.
 	GlacierRetrievalType *string `json:"glacierRetrievalType,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -11023,15 +11805,19 @@ type CreateProtectionGroupOptions struct {
 	// Specifies the parameters specific to MSSQL Protection Group.
 	MssqlParams *MSSQLProtectionGroupParams `json:"mssqlParams,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Specifies the parameters which are related to Kubernetes Protection Groups.
+	KubernetesParams *KubernetesProtectionGroupParams `json:"kubernetesParams,omitempty"`
+
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
 // Constants associated with the CreateProtectionGroupOptions.Environment property.
 // Specifies the environment type of the Protection Group.
 const (
-	CreateProtectionGroupOptions_Environment_Kphysical = "kPhysical"
-	CreateProtectionGroupOptions_Environment_Ksql      = "kSQL"
+	CreateProtectionGroupOptions_Environment_Kkubernetes = "kKubernetes"
+	CreateProtectionGroupOptions_Environment_Kphysical   = "kPhysical"
+	CreateProtectionGroupOptions_Environment_Ksql        = "kSQL"
 )
 
 // Constants associated with the CreateProtectionGroupOptions.Priority property.
@@ -11169,6 +11955,12 @@ func (_options *CreateProtectionGroupOptions) SetMssqlParams(mssqlParams *MSSQLP
 	return _options
 }
 
+// SetKubernetesParams : Allow user to set KubernetesParams
+func (_options *CreateProtectionGroupOptions) SetKubernetesParams(kubernetesParams *KubernetesProtectionGroupParams) *CreateProtectionGroupOptions {
+	_options.KubernetesParams = kubernetesParams
+	return _options
+}
+
 // SetHeaders : Allow user to set Headers
 func (options *CreateProtectionGroupOptions) SetHeaders(param map[string]string) *CreateProtectionGroupOptions {
 	options.Headers = param
@@ -11200,7 +11992,7 @@ type CreateProtectionGroupRunOptions struct {
 	// Specifies the replication and archival targets.
 	TargetsConfig *RunTargetsConfiguration `json:"targetsConfig,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -11339,7 +12131,7 @@ type CreateProtectionPolicyOptions struct {
 	// Specifies the parent policy template id to which the policy is linked to.
 	TemplateID *string `json:"templateId,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -11464,6 +12256,9 @@ type CreateRecoveryOptions struct {
 	// Specifies the recovery options specific to Physical environment.
 	PhysicalParams *RecoverPhysicalParams `json:"physicalParams,omitempty"`
 
+	// Specifies the recovery options specific to Kubernetes environment.
+	KubernetesParams *RecoveryRequestParamsKubernetesParams `json:"kubernetesParams,omitempty"`
+
 	// Specifies the recovery options specific to Sql environment.
 	MssqlParams *RecoverSqlParams `json:"mssqlParams,omitempty"`
 
@@ -11471,15 +12266,16 @@ type CreateRecoveryOptions struct {
 	// requests.
 	RequestInitiatorType *string `json:"requestInitiatorType,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
 // Constants associated with the CreateRecoveryOptions.SnapshotEnvironment property.
 // Specifies the type of environment of snapshots for which the Recovery has to be performed.
 const (
-	CreateRecoveryOptions_SnapshotEnvironment_Kphysical = "kPhysical"
-	CreateRecoveryOptions_SnapshotEnvironment_Ksql      = "kSQL"
+	CreateRecoveryOptions_SnapshotEnvironment_Kkubernetes = "kKubernetes"
+	CreateRecoveryOptions_SnapshotEnvironment_Kphysical   = "kPhysical"
+	CreateRecoveryOptions_SnapshotEnvironment_Ksql        = "kSQL"
 )
 
 // Constants associated with the CreateRecoveryOptions.RequestInitiatorType property.
@@ -11520,6 +12316,12 @@ func (_options *CreateRecoveryOptions) SetSnapshotEnvironment(snapshotEnvironmen
 // SetPhysicalParams : Allow user to set PhysicalParams
 func (_options *CreateRecoveryOptions) SetPhysicalParams(physicalParams *RecoverPhysicalParams) *CreateRecoveryOptions {
 	_options.PhysicalParams = physicalParams
+	return _options
+}
+
+// SetKubernetesParams : Allow user to set KubernetesParams
+func (_options *CreateRecoveryOptions) SetKubernetesParams(kubernetesParams *RecoveryRequestParamsKubernetesParams) *CreateRecoveryOptions {
+	_options.KubernetesParams = kubernetesParams
 	return _options
 }
 
@@ -11638,6 +12440,32 @@ func UnmarshalCreationInfo(m map[string]json.RawMessage, result interface{}) (er
 	err = core.UnmarshalPrimitive(m, "userName", &obj.UserName)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "userName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// Credentials : Specifies the object to hold username and password.
+type Credentials struct {
+	// Specifies the username to access target entity.
+	Username *string `json:"username" validate:"required"`
+
+	// Specifies the password to access target entity.
+	Password *string `json:"password" validate:"required"`
+}
+
+// UnmarshalCredentials unmarshals an instance of Credentials from the specified map of raw messages.
+func UnmarshalCredentials(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(Credentials)
+	err = core.UnmarshalPrimitive(m, "username", &obj.Username)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "username-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "password", &obj.Password)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "password-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -13574,6 +14402,74 @@ func UnmarshalEntityPermissionInfo(m map[string]json.RawMessage, result interfac
 		return
 	}
 	err = core.UnmarshalModel(m, "users", &obj.Users, UnmarshalEntityUserInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "users-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// EntityPermissionInformation : Specifies the permission information of entities.
+type EntityPermissionInformation struct {
+	// Specifies the entity id.
+	EntityID *int64 `json:"entityId,omitempty"`
+
+	// Specifies groups that have access to entity in case of restricted user.
+	Groups []GroupInfo `json:"groups,omitempty"`
+
+	// Specifies whether the Entity Permission Information is inferred or not. For example, SQL application hosted over
+	// vCenter will have inferred entity permission information.
+	IsInferred *bool `json:"isInferred,omitempty"`
+
+	// Specifies whether this entity is registered by the SP or not. This will be populated only if the entity is a root
+	// entity. Refer to magneto/base/permissions.proto for details.
+	IsRegisteredBySp *bool `json:"isRegisteredBySp,omitempty"`
+
+	// Specifies the tenant id that registered this entity. This will be populated only if the entity is a root entity.
+	RegisteringTenantID *string `json:"registeringTenantId,omitempty"`
+
+	// Specifies struct with basic tenant details.
+	Tenant *TenantInfo `json:"tenant,omitempty"`
+
+	// Specifies users that have access to entity in case of restricted user.
+	Users []UserInfo `json:"users,omitempty"`
+}
+
+// UnmarshalEntityPermissionInformation unmarshals an instance of EntityPermissionInformation from the specified map of raw messages.
+func UnmarshalEntityPermissionInformation(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(EntityPermissionInformation)
+	err = core.UnmarshalPrimitive(m, "entityId", &obj.EntityID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "entityId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "groups", &obj.Groups, UnmarshalGroupInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "groups-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isInferred", &obj.IsInferred)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isInferred-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isRegisteredBySp", &obj.IsRegisteredBySp)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isRegisteredBySp-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "registeringTenantId", &obj.RegisteringTenantID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "registeringTenantId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "tenant", &obj.Tenant, UnmarshalTenantInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "tenant-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "users", &obj.Users, UnmarshalUserInfo)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "users-error", common.GetComponentInfo())
 		return
@@ -15755,8 +16651,9 @@ const (
 
 // Constants associated with the GetProtectionGroupsOptions.Environments property.
 const (
-	GetProtectionGroupsOptions_Environments_Kphysical = "kPhysical"
-	GetProtectionGroupsOptions_Environments_Ksql      = "kSQL"
+	GetProtectionGroupsOptions_Environments_Kkubernetes = "kKubernetes"
+	GetProtectionGroupsOptions_Environments_Kphysical   = "kPhysical"
+	GetProtectionGroupsOptions_Environments_Ksql        = "kSQL"
 )
 
 // Constants associated with the GetProtectionGroupsOptions.LastRunLocalBackupStatus property.
@@ -16262,8 +17159,9 @@ const (
 
 // Constants associated with the GetRecoveriesOptions.SnapshotEnvironments property.
 const (
-	GetRecoveriesOptions_SnapshotEnvironments_Kphysical = "kPhysical"
-	GetRecoveriesOptions_SnapshotEnvironments_Ksql      = "kSQL"
+	GetRecoveriesOptions_SnapshotEnvironments_Kkubernetes = "kKubernetes"
+	GetRecoveriesOptions_SnapshotEnvironments_Kphysical   = "kPhysical"
+	GetRecoveriesOptions_SnapshotEnvironments_Ksql        = "kSQL"
 )
 
 // Constants associated with the GetRecoveriesOptions.Status property.
@@ -16440,6 +17338,84 @@ func (_options *GetRecoveryByIdOptions) SetXIBMTenantID(xIBMTenantID string) *Ge
 func (options *GetRecoveryByIdOptions) SetHeaders(param map[string]string) *GetRecoveryByIdOptions {
 	options.Headers = param
 	return options
+}
+
+// GetRegistrationInfoResponseStats : Specifies the number of protected and unprotected objects, and their sizes information of the given entity.
+type GetRegistrationInfoResponseStats struct {
+	// Specifies the number of objects that are protected under the given entity.
+	ProtectedCount *int64 `json:"protectedCount,omitempty"`
+
+	// Specifies the total size of the protected objects under the given entity.
+	ProtectedSize *int64 `json:"protectedSize,omitempty"`
+
+	// Specifies the number of objects that are not protected under the given entity.
+	UnprotectedCount *int64 `json:"unprotectedCount,omitempty"`
+
+	// Specifies the total size of the unprotected objects under the given entity.
+	UnprotectedSize *int64 `json:"unprotectedSize,omitempty"`
+}
+
+// UnmarshalGetRegistrationInfoResponseStats unmarshals an instance of GetRegistrationInfoResponseStats from the specified map of raw messages.
+func UnmarshalGetRegistrationInfoResponseStats(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetRegistrationInfoResponseStats)
+	err = core.UnmarshalPrimitive(m, "protectedCount", &obj.ProtectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectedSize", &obj.ProtectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedSize-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedCount", &obj.UnprotectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedSize", &obj.UnprotectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedSize-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetRegistrationInfoResponse : Specifies the registration, protection and permission information of all or a subset of the registered Protection
+// Source Trees or Views on the Cohesity Cluster.
+type GetRegistrationInfoResponse struct {
+	// Specifies the registration, protection and permission information of either all or a subset of registered Protection
+	// Sources matching the filter parameters. overrideDescription: true.
+	RootNodes []ProtectionSourceTreeInfo `json:"rootNodes,omitempty"`
+
+	// Specifies the sum of all the stats of protection of Protection Sources and views selected by the query parameters.
+	Stats *GetRegistrationInfoResponseStats `json:"stats,omitempty"`
+
+	// Specifies the breakdown of the stats by environment overrideDescription: true.
+	StatsByEnv []ProtectionSummaryByEnv `json:"statsByEnv,omitempty"`
+}
+
+// UnmarshalGetRegistrationInfoResponse unmarshals an instance of GetRegistrationInfoResponse from the specified map of raw messages.
+func UnmarshalGetRegistrationInfoResponse(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetRegistrationInfoResponse)
+	err = core.UnmarshalModel(m, "rootNodes", &obj.RootNodes, UnmarshalProtectionSourceTreeInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "rootNodes-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalGetRegistrationInfoResponseStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "statsByEnv", &obj.StatsByEnv, UnmarshalProtectionSummaryByEnv)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "statsByEnv-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
 }
 
 // GetRestorePointsInTimeRangeOptions : The GetRestorePointsInTimeRange options.
@@ -16711,7 +17687,7 @@ func (options *GetUpgradeTasksOptions) SetHeaders(param map[string]string) *GetU
 
 // GetUsersOptions : The GetUsers options.
 type GetUsersOptions struct {
-	// Access-token that is received from the connector.
+	// Access-token that is received from the connector. Login API is not yet supported yet. User needs to fetch this.
 	SessionName *string `json:"session-name" validate:"required"`
 
 	// TenantIds contains ids of the tenants for which objects are to be returned.
@@ -16795,7 +17771,7 @@ func (options *GetUsersOptions) SetHeaders(param map[string]string) *GetUsersOpt
 	return options
 }
 
-// GoogleAccountInfo : Google Account Information of a Helios BaaS user.
+// GoogleAccountInfo : Google Account Information of a Helios BRS user.
 type GoogleAccountInfo struct {
 	// Specifies the Account Id assigned by Google.
 	AccountID *string `json:"accountId,omitempty"`
@@ -16949,6 +17925,98 @@ func UnmarshalGroup(m map[string]json.RawMessage, result interface{}) (err error
 	err = core.UnmarshalPrimitive(m, "domain", &obj.Domain)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "domain-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GroupInfo : Specifies struct with basic group details.
+type GroupInfo struct {
+	// Specifies domain name of the user.
+	Domain *string `json:"domain,omitempty"`
+
+	// Specifies group name of the group.
+	GroupName *string `json:"groupName,omitempty"`
+
+	// Specifies unique Security ID (SID) of the user.
+	Sid *string `json:"sid,omitempty"`
+
+	// Specifies the tenants to which the group belongs to.
+	TenantIds []string `json:"tenantIds,omitempty"`
+}
+
+// UnmarshalGroupInfo unmarshals an instance of GroupInfo from the specified map of raw messages.
+func UnmarshalGroupInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GroupInfo)
+	err = core.UnmarshalPrimitive(m, "domain", &obj.Domain)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "domain-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "groupName", &obj.GroupName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "groupName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sid", &obj.Sid)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sid-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "tenantIds", &obj.TenantIds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "tenantIds-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// HBaseConnectParams : Specifies an Object containing information about a registered HBase source.
+type HBaseConnectParams struct {
+	// Specifies an Object containing information about discovering a Hadoop source.
+	HbaseDiscoveryParams *HadoopDiscoveryParams `json:"hbaseDiscoveryParams,omitempty"`
+
+	// The entity id of the HDFS source for this HBase.
+	HdfsEntityID *int64 `json:"hdfsEntityId,omitempty"`
+
+	// Specifies the kerberos principal.
+	KerberosPrincipal *string `json:"kerberosPrincipal,omitempty"`
+
+	// Specifies the HBase data root directory.
+	RootDataDirectory *string `json:"rootDataDirectory,omitempty"`
+
+	// Specifies the HBase zookeeper quorum.
+	ZookeeperQuorum []string `json:"zookeeperQuorum,omitempty"`
+}
+
+// UnmarshalHBaseConnectParams unmarshals an instance of HBaseConnectParams from the specified map of raw messages.
+func UnmarshalHBaseConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(HBaseConnectParams)
+	err = core.UnmarshalModel(m, "hbaseDiscoveryParams", &obj.HbaseDiscoveryParams, UnmarshalHadoopDiscoveryParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hbaseDiscoveryParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "hdfsEntityId", &obj.HdfsEntityID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hdfsEntityId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kerberosPrincipal", &obj.KerberosPrincipal)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kerberosPrincipal-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "rootDataDirectory", &obj.RootDataDirectory)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "rootDataDirectory-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "zookeeperQuorum", &obj.ZookeeperQuorum)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "zookeeperQuorum-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -17121,6 +18189,32 @@ func UnmarshalHDFSOnPremSearchParams(m map[string]json.RawMessage, result interf
 	return
 }
 
+// HadoopDiscoveryParams : Specifies an Object containing information about discovering a Hadoop source.
+type HadoopDiscoveryParams struct {
+	// Specifies the configuration directory.
+	ConfigDirectory *string `json:"configDirectory,omitempty"`
+
+	// Specifies the host IP.
+	Host *string `json:"host,omitempty"`
+}
+
+// UnmarshalHadoopDiscoveryParams unmarshals an instance of HadoopDiscoveryParams from the specified map of raw messages.
+func UnmarshalHadoopDiscoveryParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(HadoopDiscoveryParams)
+	err = core.UnmarshalPrimitive(m, "configDirectory", &obj.ConfigDirectory)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "configDirectory-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "host", &obj.Host)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "host-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // HbaseIndexedObject : Specifies an Hbase indexed object.
 type HbaseIndexedObject struct {
 	// Specifies tag applied to the object.
@@ -17287,6 +18381,94 @@ func UnmarshalHbaseOnPremSearchParams(m map[string]json.RawMessage, result inter
 	return
 }
 
+// HdfsConnectParams : Specifies an Object containing information about a registered Hdfs source.
+type HdfsConnectParams struct {
+	// Specifies the Hadoop Distribution. Hadoop distribution. 'CDH' indicates Hadoop distribution type Cloudera. 'HDP'
+	// indicates Hadoop distribution type Hortonworks.
+	HadoopDistribution *string `json:"hadoopDistribution,omitempty"`
+
+	// Specifies the Hadoop version.
+	HadoopVersion *string `json:"hadoopVersion,omitempty"`
+
+	// Specifies the Hdfs connection type. Hdfs connection type. 'DFS' indicates Hdfs connection type DFS. 'WEBHDFS'
+	// indicates Hdfs connection type WEBHDFS. 'HTTPFSLB' indicates Hdfs connection type HTTPFS_LB. 'HTTPFS' indicates Hdfs
+	// connection type HTTPFS.
+	HdfsConnectionType *string `json:"hdfsConnectionType,omitempty"`
+
+	// Specifies an Object containing information about discovering a Hadoop source.
+	HdfsDiscoveryParams *HadoopDiscoveryParams `json:"hdfsDiscoveryParams,omitempty"`
+
+	// Specifies the kerberos principal.
+	KerberosPrincipal *string `json:"kerberosPrincipal,omitempty"`
+
+	// Specifies the Namenode host or Nameservice.
+	Namenode *string `json:"namenode,omitempty"`
+
+	// Specifies the Webhdfs Port.
+	Port *int64 `json:"port,omitempty"`
+}
+
+// Constants associated with the HdfsConnectParams.HadoopDistribution property.
+// Specifies the Hadoop Distribution. Hadoop distribution. 'CDH' indicates Hadoop distribution type Cloudera. 'HDP'
+// indicates Hadoop distribution type Hortonworks.
+const (
+	HdfsConnectParams_HadoopDistribution_Cdh = "CDH"
+	HdfsConnectParams_HadoopDistribution_Hdp = "HDP"
+)
+
+// Constants associated with the HdfsConnectParams.HdfsConnectionType property.
+// Specifies the Hdfs connection type. Hdfs connection type. 'DFS' indicates Hdfs connection type DFS. 'WEBHDFS'
+// indicates Hdfs connection type WEBHDFS. 'HTTPFSLB' indicates Hdfs connection type HTTPFS_LB. 'HTTPFS' indicates Hdfs
+// connection type HTTPFS.
+const (
+	HdfsConnectParams_HdfsConnectionType_Dfs      = "DFS"
+	HdfsConnectParams_HdfsConnectionType_Httpfs   = "HTTPFS"
+	HdfsConnectParams_HdfsConnectionType_Httpfslb = "HTTPFSLB"
+	HdfsConnectParams_HdfsConnectionType_Webhdfs  = "WEBHDFS"
+)
+
+// UnmarshalHdfsConnectParams unmarshals an instance of HdfsConnectParams from the specified map of raw messages.
+func UnmarshalHdfsConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(HdfsConnectParams)
+	err = core.UnmarshalPrimitive(m, "hadoopDistribution", &obj.HadoopDistribution)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hadoopDistribution-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "hadoopVersion", &obj.HadoopVersion)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hadoopVersion-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "hdfsConnectionType", &obj.HdfsConnectionType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hdfsConnectionType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "hdfsDiscoveryParams", &obj.HdfsDiscoveryParams, UnmarshalHadoopDiscoveryParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hdfsDiscoveryParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kerberosPrincipal", &obj.KerberosPrincipal)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kerberosPrincipal-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "namenode", &obj.Namenode)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "namenode-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "port", &obj.Port)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "port-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // HeliosTagInfo : Specifies the helios tag info for an object.
 type HeliosTagInfo struct {
 	// Specifies category of tag applied to the object.
@@ -17378,6 +18560,64 @@ func UnmarshalHeliosTagInfo(m map[string]json.RawMessage, result interface{}) (e
 	err = core.UnmarshalPrimitive(m, "uuid", &obj.UUID)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "uuid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// HiveConnectParams : Specifies an Object containing information about a registered Hive source.
+type HiveConnectParams struct {
+	// Specifies if max entity count exceeded for protection source view.
+	EntityThresholdExceeded *bool `json:"entityThresholdExceeded,omitempty"`
+
+	// Specifies the entity id of the HDFS source for this Hive.
+	HdfsEntityID *int64 `json:"hdfsEntityId,omitempty"`
+
+	// Specifies an Object containing information about discovering a Hadoop source.
+	HiveDiscoveryParams *HadoopDiscoveryParams `json:"hiveDiscoveryParams,omitempty"`
+
+	// Specifies the kerberos principal.
+	KerberosPrincipal *string `json:"kerberosPrincipal,omitempty"`
+
+	// Specifies the Hive metastore host.
+	Metastore *string `json:"metastore,omitempty"`
+
+	// Specifies the Hive metastore thrift Port.
+	ThriftPort *int64 `json:"thriftPort,omitempty"`
+}
+
+// UnmarshalHiveConnectParams unmarshals an instance of HiveConnectParams from the specified map of raw messages.
+func UnmarshalHiveConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(HiveConnectParams)
+	err = core.UnmarshalPrimitive(m, "entityThresholdExceeded", &obj.EntityThresholdExceeded)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "entityThresholdExceeded-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "hdfsEntityId", &obj.HdfsEntityID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hdfsEntityId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "hiveDiscoveryParams", &obj.HiveDiscoveryParams, UnmarshalHadoopDiscoveryParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hiveDiscoveryParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kerberosPrincipal", &obj.KerberosPrincipal)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kerberosPrincipal-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "metastore", &obj.Metastore)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "metastore-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "thriftPort", &obj.ThriftPort)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "thriftPort-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -18232,6 +19472,32 @@ func UnmarshalIsilonObjectParams(m map[string]json.RawMessage, result interface{
 	return
 }
 
+// K8sLabel : K8sLabel struct
+type K8sLabel struct {
+	// Key for label.
+	Key *string `json:"key,omitempty"`
+
+	// Value for label.
+	Value *string `json:"value,omitempty"`
+}
+
+// UnmarshalK8sLabel unmarshals an instance of K8sLabel from the specified map of raw messages.
+func UnmarshalK8sLabel(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(K8sLabel)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // KeyValuePair : Specifies a map structure to store Key and Values.
 type KeyValuePair struct {
 	// key.
@@ -18265,6 +19531,1475 @@ func UnmarshalKeyValuePair(m map[string]json.RawMessage, result interface{}) (er
 	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KeyValueStrPair : KeyValueStrPair struct
+type KeyValueStrPair struct {
+	Key *string `json:"key,omitempty"`
+
+	Value *string `json:"value,omitempty"`
+}
+
+// UnmarshalKeyValueStrPair unmarshals an instance of KeyValueStrPair from the specified map of raw messages.
+func UnmarshalKeyValueStrPair(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KeyValueStrPair)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesAutoProtectConfig : Specifies the parameters to auto protect the source after registration.
+type KubernetesAutoProtectConfig struct {
+	// Specifies the error message in case source registration is successful but protection job creation fails.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
+	// Specifies if entire source should be auto protected after registration. Default: False.
+	IsDefaultAutoProtected *bool `json:"isDefaultAutoProtected" validate:"required"`
+
+	// Specifies the protection policy to auto protect the source with.
+	PolicyID *string `json:"policyId" validate:"required"`
+
+	// Specifies the protection group Id after it is successfully created.
+	ProtectionGroupID *string `json:"protectionGroupId,omitempty"`
+
+	// Specifies the storage domain id for the protection job.
+	StorageDomainID *int64 `json:"storageDomainId,omitempty"`
+}
+
+// NewKubernetesAutoProtectConfig : Instantiate KubernetesAutoProtectConfig (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesAutoProtectConfig(isDefaultAutoProtected bool, policyID string) (_model *KubernetesAutoProtectConfig, err error) {
+	_model = &KubernetesAutoProtectConfig{
+		IsDefaultAutoProtected: core.BoolPtr(isDefaultAutoProtected),
+		PolicyID:               core.StringPtr(policyID),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesAutoProtectConfig unmarshals an instance of KubernetesAutoProtectConfig from the specified map of raw messages.
+func UnmarshalKubernetesAutoProtectConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesAutoProtectConfig)
+	err = core.UnmarshalPrimitive(m, "errorMessage", &obj.ErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isDefaultAutoProtected", &obj.IsDefaultAutoProtected)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isDefaultAutoProtected-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "policyId", &obj.PolicyID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "policyId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectionGroupId", &obj.ProtectionGroupID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectionGroupId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "storageDomainId", &obj.StorageDomainID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageDomainId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesFilterParams : Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+// included by this filter.
+type KubernetesFilterParams struct {
+	// Whether to include all the labels or any of them while performing inclusion/exclusion of objects.
+	LabelCombinationMethod *string `json:"labelCombinationMethod,omitempty"`
+
+	// Array of Object to represent Label that Specify Objects (e.g.: Persistent Volumes and Persistent Volume Claims) to
+	// Include or Exclude.It will be a two-dimensional array, where each inner array will consist of a key and value
+	// representing labels. Using this two dimensional array of Labels, the Cluster generates a list of items to include in
+	// the filter, which are derived from intersections or the union of these labels, as decided by operation parameter.
+	LabelVector []KubernetesLabel `json:"labelVector,omitempty"`
+
+	// Array of objects that are to be included.
+	Objects []int64 `json:"objects,omitempty"`
+}
+
+// Constants associated with the KubernetesFilterParams.LabelCombinationMethod property.
+// Whether to include all the labels or any of them while performing inclusion/exclusion of objects.
+const (
+	KubernetesFilterParams_LabelCombinationMethod_And = "AND"
+	KubernetesFilterParams_LabelCombinationMethod_Or  = "OR"
+)
+
+// UnmarshalKubernetesFilterParams unmarshals an instance of KubernetesFilterParams from the specified map of raw messages.
+func UnmarshalKubernetesFilterParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesFilterParams)
+	err = core.UnmarshalPrimitive(m, "labelCombinationMethod", &obj.LabelCombinationMethod)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "labelCombinationMethod-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "labelVector", &obj.LabelVector, UnmarshalKubernetesLabel)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "labelVector-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "objects", &obj.Objects)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesHook : Specifies the set of parameters for applying scripts.
+type KubernetesHook struct {
+	// Specifies the commands.
+	Commands []string `json:"commands" validate:"required"`
+
+	// Specifies the name of the container.
+	Container *string `json:"container,omitempty"`
+
+	// Specifies whether to fail on error or not.
+	FailOnError *bool `json:"failOnError,omitempty"`
+
+	// Specifies timeout for the operation.
+	Timeout *int64 `json:"timeout,omitempty"`
+}
+
+// NewKubernetesHook : Instantiate KubernetesHook (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesHook(commands []string) (_model *KubernetesHook, err error) {
+	_model = &KubernetesHook{
+		Commands: commands,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesHook unmarshals an instance of KubernetesHook from the specified map of raw messages.
+func UnmarshalKubernetesHook(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesHook)
+	err = core.UnmarshalPrimitive(m, "commands", &obj.Commands)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "commands-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "container", &obj.Container)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "container-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "failOnError", &obj.FailOnError)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "failOnError-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "timeout", &obj.Timeout)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "timeout-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesLabel : Represents a single Kubernetes label.
+type KubernetesLabel struct {
+	// The key of the label, used to identify the label.
+	Key *string `json:"key,omitempty"`
+
+	// The value associated with the label key.
+	Value *string `json:"value,omitempty"`
+}
+
+// UnmarshalKubernetesLabel unmarshals an instance of KubernetesLabel from the specified map of raw messages.
+func UnmarshalKubernetesLabel(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesLabel)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesLabelAttribute : Specifies a Kubernetes label.
+type KubernetesLabelAttribute struct {
+	// Specifies the Cohesity id of the K8s label.
+	ID *int64 `json:"id,omitempty"`
+
+	// Specifies the appended key and value of the K8s label.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies Kubernetes Unique Identifier (UUID) of the K8s label.
+	UUID *string `json:"uuid,omitempty"`
+}
+
+// UnmarshalKubernetesLabelAttribute unmarshals an instance of KubernetesLabelAttribute from the specified map of raw messages.
+func UnmarshalKubernetesLabelAttribute(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesLabelAttribute)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uuid", &obj.UUID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uuid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesLabelObject : Specifies the object containing key value pair for resource label and annotations to annotate cohesity deployed
+// resources and services for a k8s source.
+type KubernetesLabelObject struct {
+	// Specifies the label key.
+	Key *string `json:"key" validate:"required"`
+
+	// Specifies the label value.
+	Value *string `json:"value,omitempty"`
+}
+
+// NewKubernetesLabelObject : Instantiate KubernetesLabelObject (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesLabelObject(key string) (_model *KubernetesLabelObject, err error) {
+	_model = &KubernetesLabelObject{
+		Key: core.StringPtr(key),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesLabelObject unmarshals an instance of KubernetesLabelObject from the specified map of raw messages.
+func UnmarshalKubernetesLabelObject(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesLabelObject)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesNamespaceRecoveryNewSourceConfigSource : Specifies the id of the parent source to recover the Namespaces.
+type KubernetesNamespaceRecoveryNewSourceConfigSource struct {
+	// Specifies the id of the object.
+	ID *int64 `json:"id" validate:"required"`
+
+	// Specifies the name of the object.
+	Name *string `json:"name,omitempty"`
+}
+
+// NewKubernetesNamespaceRecoveryNewSourceConfigSource : Instantiate KubernetesNamespaceRecoveryNewSourceConfigSource (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesNamespaceRecoveryNewSourceConfigSource(id int64) (_model *KubernetesNamespaceRecoveryNewSourceConfigSource, err error) {
+	_model = &KubernetesNamespaceRecoveryNewSourceConfigSource{
+		ID: core.Int64Ptr(id),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesNamespaceRecoveryNewSourceConfigSource unmarshals an instance of KubernetesNamespaceRecoveryNewSourceConfigSource from the specified map of raw messages.
+func UnmarshalKubernetesNamespaceRecoveryNewSourceConfigSource(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesNamespaceRecoveryNewSourceConfigSource)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesNamespaceRecoveryTargetConfigNewSourceConfig : Specifies the new source configuration if a Kubernetes Namespace is being restored to a different source than the one
+// from which it was protected.
+type KubernetesNamespaceRecoveryTargetConfigNewSourceConfig struct {
+	// Specifies the id of the parent source to recover the Namespaces.
+	Source *KubernetesNamespaceRecoveryNewSourceConfigSource `json:"source" validate:"required"`
+}
+
+// NewKubernetesNamespaceRecoveryTargetConfigNewSourceConfig : Instantiate KubernetesNamespaceRecoveryTargetConfigNewSourceConfig (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesNamespaceRecoveryTargetConfigNewSourceConfig(source *KubernetesNamespaceRecoveryNewSourceConfigSource) (_model *KubernetesNamespaceRecoveryTargetConfigNewSourceConfig, err error) {
+	_model = &KubernetesNamespaceRecoveryTargetConfigNewSourceConfig{
+		Source: source,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesNamespaceRecoveryTargetConfigNewSourceConfig unmarshals an instance of KubernetesNamespaceRecoveryTargetConfigNewSourceConfig from the specified map of raw messages.
+func UnmarshalKubernetesNamespaceRecoveryTargetConfigNewSourceConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesNamespaceRecoveryTargetConfigNewSourceConfig)
+	err = core.UnmarshalModel(m, "source", &obj.Source, UnmarshalKubernetesNamespaceRecoveryNewSourceConfigSource)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "source-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesProtectionGroupObjectParams : Specifies the object parameters to create Kubernetes Protection Group.
+type KubernetesProtectionGroupObjectParams struct {
+	// Specifies whether to backup pvc and related resources only.
+	BackupOnlyPvc *bool `json:"backupOnlyPvc,omitempty"`
+
+	// Specifies a list of pvcs to exclude from being protected. This is only applicable to kubernetes.
+	ExcludePvcs []KubernetesPvcInfo `json:"excludePvcs,omitempty"`
+
+	// Specifies the resources to exclude during backup.
+	ExcludedResources []string `json:"excludedResources,omitempty"`
+
+	// Specifies the id of the object.
+	ID *int64 `json:"id" validate:"required"`
+
+	// Specifies a list of Pvcs to include in the protection. This is only applicable to kubernetes.
+	IncludePvcs []KubernetesPvcInfo `json:"includePvcs,omitempty"`
+
+	// Specifies the resources to include during backup.
+	IncludedResources []string `json:"includedResources,omitempty"`
+
+	// Specifies the name of the object.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies the quiescing rules are which specified by the user for doing backup.
+	QuiesceGroups []QuiesceGroup `json:"quiesceGroups,omitempty"`
+}
+
+// NewKubernetesProtectionGroupObjectParams : Instantiate KubernetesProtectionGroupObjectParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesProtectionGroupObjectParams(id int64) (_model *KubernetesProtectionGroupObjectParams, err error) {
+	_model = &KubernetesProtectionGroupObjectParams{
+		ID: core.Int64Ptr(id),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesProtectionGroupObjectParams unmarshals an instance of KubernetesProtectionGroupObjectParams from the specified map of raw messages.
+func UnmarshalKubernetesProtectionGroupObjectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesProtectionGroupObjectParams)
+	err = core.UnmarshalPrimitive(m, "backupOnlyPvc", &obj.BackupOnlyPvc)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "backupOnlyPvc-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "excludePvcs", &obj.ExcludePvcs, UnmarshalKubernetesPvcInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludePvcs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "excludedResources", &obj.ExcludedResources)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludedResources-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "includePvcs", &obj.IncludePvcs, UnmarshalKubernetesPvcInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includePvcs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "includedResources", &obj.IncludedResources)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includedResources-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "quiesceGroups", &obj.QuiesceGroups, UnmarshalQuiesceGroup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "quiesceGroups-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesProtectionGroupParams : Specifies the parameters which are related to Kubernetes Protection Groups.
+type KubernetesProtectionGroupParams struct {
+	// Specifies if indexing of files and folders is allowed or not while backing up namespace. If allowed files and folder
+	// can be recovered.
+	EnableIndexing *bool `json:"enableIndexing,omitempty"`
+
+	// Array of arrays of label IDs that specify labels to exclude. Optionally specify a list of labels to exclude from
+	// protecting by listing protection source ids of labels in this two dimensional array. Using this two dimensional
+	// array of label IDs, the Cluster generates a list of namespaces to exclude from protecting, which are derived from
+	// intersections of the inner arrays and union of the outer array.
+	ExcludeLabelIds [][]int64 `json:"excludeLabelIds,omitempty"`
+
+	// Specifies the objects to be excluded in the Protection Group.
+	ExcludeObjectIds []int64 `json:"excludeObjectIds,omitempty"`
+
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	ExcludeParams *KubernetesFilterParams `json:"excludeParams,omitempty"`
+
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	IncludeParams *KubernetesFilterParams `json:"includeParams,omitempty"`
+
+	// Array of array of label IDs that specify labels to protect. Optionally specify a list of labels to protect by
+	// listing protection source ids of labels in this two dimensional array. Using this two dimensional array of label
+	// IDs, the cluster generates a list of namespaces to protect, which are derived from intersections of the inner arrays
+	// and union of the outer array.
+	LabelIds [][]int64 `json:"labelIds,omitempty"`
+
+	// Specifies if CSI snapshots should be used for backup of namespaces.
+	LeverageCSISnapshot *bool `json:"leverageCSISnapshot,omitempty"`
+
+	// Specifies if snapshot backup fails, non-snapshot backup will be proceeded.
+	NonSnapshotBackup *bool `json:"nonSnapshotBackup,omitempty"`
+
+	// Specifies the objects included in the Protection Group.
+	Objects []KubernetesProtectionGroupObjectParams `json:"objects,omitempty"`
+
+	// Specifies the id of the parent of the objects.
+	SourceID *int64 `json:"sourceId,omitempty"`
+
+	// Specifies the name of the parent of the objects.
+	SourceName *string `json:"sourceName,omitempty"`
+
+	// Specifies VLAN params associated with the backup/restore operation.
+	VlanParams *VlanParams `json:"vlanParams,omitempty"`
+
+	// Specifies whether to process with backup if volumes backup fails.
+	VolumeBackupFailure *bool `json:"volumeBackupFailure,omitempty"`
+}
+
+// UnmarshalKubernetesProtectionGroupParams unmarshals an instance of KubernetesProtectionGroupParams from the specified map of raw messages.
+func UnmarshalKubernetesProtectionGroupParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesProtectionGroupParams)
+	err = core.UnmarshalPrimitive(m, "enableIndexing", &obj.EnableIndexing)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "enableIndexing-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "excludeLabelIds", &obj.ExcludeLabelIds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludeLabelIds-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "excludeObjectIds", &obj.ExcludeObjectIds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludeObjectIds-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "excludeParams", &obj.ExcludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludeParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "includeParams", &obj.IncludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includeParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "labelIds", &obj.LabelIds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "labelIds-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "leverageCSISnapshot", &obj.LeverageCSISnapshot)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "leverageCSISnapshot-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "nonSnapshotBackup", &obj.NonSnapshotBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "nonSnapshotBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalKubernetesProtectionGroupObjectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sourceId", &obj.SourceID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sourceName", &obj.SourceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanParams", &obj.VlanParams, UnmarshalVlanParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "volumeBackupFailure", &obj.VolumeBackupFailure)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "volumeBackupFailure-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesProtectionSource : Specifies a Protection Source in Kubernetes environment.
+type KubernetesProtectionSource struct {
+	// Specifies the location of Datamover image in private registry.
+	DatamoverImageLocation *string `json:"datamoverImageLocation,omitempty"`
+
+	// Specifies Type of service to be deployed for communication with DataMover pods. Currently, LoadBalancer and NodePort
+	// are supported. [default = kNodePort].
+	DatamoverServiceType *int64 `json:"datamoverServiceType,omitempty"`
+
+	// Specifies if the deployed Datamover image needs to be upgraded for this kubernetes entity.
+	DatamoverUpgradability *string `json:"datamoverUpgradability,omitempty"`
+
+	// Specifies VLAN parameters for the restore operation.
+	DefaultVlanParams *VlanParameters `json:"defaultVlanParams,omitempty"`
+
+	// Specifies an optional description of the object.
+	Description *string `json:"description,omitempty"`
+
+	// Specifies the type of the entity in a Kubernetes environment. Determines the K8s distribution. kIKS, kROKS.
+	Distribution *string `json:"distribution,omitempty"`
+
+	// Specifies the location of the image for init containers.
+	InitContainerImageLocation *string `json:"initContainerImageLocation,omitempty"`
+
+	// Specifies the list of label attributes of this source.
+	LabelAttributes []KubernetesLabelAttribute `json:"labelAttributes,omitempty"`
+
+	// Specifies a unique name of the Protection Source.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies the pritority class name during registration.
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
+
+	// Specifies resource Annotations information provided during registration.
+	ResourceAnnotationList []K8sLabel `json:"resourceAnnotationList,omitempty"`
+
+	// Specifies resource labels information provided during registration.
+	ResourceLabelList []K8sLabel `json:"resourceLabelList,omitempty"`
+
+	// Specifies the SAN field for agent certificate.
+	SanField []string `json:"sanField,omitempty"`
+
+	// Specifies annotations to be put on services for IP allocation. Applicable only when service is of type LoadBalancer.
+	ServiceAnnotations []ServiceAnnotationsEntry `json:"serviceAnnotations,omitempty"`
+
+	// Specifies storage class information of source.
+	StorageClass []KubernetesStorageClassInfo `json:"storageClass,omitempty"`
+
+	// Specifies the type of the entity in a Kubernetes environment. Specifies the type of a Kubernetes Protection Source.
+	// 'kCluster' indicates a Kubernetes Cluster. 'kNamespace' indicates a namespace in a Kubernetes Cluster. 'kService'
+	// indicates a service running on a Kubernetes Cluster.
+	Type *string `json:"type,omitempty"`
+
+	// Specifies the UUID of the object.
+	UUID *string `json:"uuid,omitempty"`
+
+	// Specifies the location of Velero AWS plugin image in private registry.
+	VeleroAwsPluginImageLocation *string `json:"veleroAwsPluginImageLocation,omitempty"`
+
+	// Specifies the location of Velero image in private registry.
+	VeleroImageLocation *string `json:"veleroImageLocation,omitempty"`
+
+	// Specifies the location of the image for openshift plugin container.
+	VeleroOpenshiftPluginImageLocation *string `json:"veleroOpenshiftPluginImageLocation,omitempty"`
+
+	// Specifies if the deployed Velero image needs to be upgraded for this kubernetes entity.
+	VeleroUpgradability *string `json:"veleroUpgradability,omitempty"`
+
+	// Specifies VLAN information provided during registration.
+	VlanInfoVec []KubernetesVlanInfo `json:"vlanInfoVec,omitempty"`
+}
+
+// Constants associated with the KubernetesProtectionSource.Distribution property.
+// Specifies the type of the entity in a Kubernetes environment. Determines the K8s distribution. kIKS, kROKS.
+const (
+	KubernetesProtectionSource_Distribution_Kaks         = "kAKS"
+	KubernetesProtectionSource_Distribution_Keks         = "kEKS"
+	KubernetesProtectionSource_Distribution_Kgke         = "kGKE"
+	KubernetesProtectionSource_Distribution_Kmainline    = "kMainline"
+	KubernetesProtectionSource_Distribution_Kopenshift   = "kOpenshift"
+	KubernetesProtectionSource_Distribution_Krancher     = "kRancher"
+	KubernetesProtectionSource_Distribution_Kvmwaretanzu = "kVMwareTanzu"
+)
+
+// Constants associated with the KubernetesProtectionSource.Type property.
+// Specifies the type of the entity in a Kubernetes environment. Specifies the type of a Kubernetes Protection Source.
+// 'kCluster' indicates a Kubernetes Cluster. 'kNamespace' indicates a namespace in a Kubernetes Cluster. 'kService'
+// indicates a service running on a Kubernetes Cluster.
+const (
+	KubernetesProtectionSource_Type_Kcluster   = "kCluster"
+	KubernetesProtectionSource_Type_Knamespace = "kNamespace"
+	KubernetesProtectionSource_Type_Kservice   = "kService"
+)
+
+// UnmarshalKubernetesProtectionSource unmarshals an instance of KubernetesProtectionSource from the specified map of raw messages.
+func UnmarshalKubernetesProtectionSource(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesProtectionSource)
+	err = core.UnmarshalPrimitive(m, "datamoverImageLocation", &obj.DatamoverImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datamoverImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "datamoverServiceType", &obj.DatamoverServiceType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datamoverServiceType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "datamoverUpgradability", &obj.DatamoverUpgradability)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datamoverUpgradability-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "defaultVlanParams", &obj.DefaultVlanParams, UnmarshalVlanParameters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "defaultVlanParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "description", &obj.Description)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "description-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "distribution", &obj.Distribution)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "distribution-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "initContainerImageLocation", &obj.InitContainerImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "initContainerImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "labelAttributes", &obj.LabelAttributes, UnmarshalKubernetesLabelAttribute)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "labelAttributes-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "priorityClassName", &obj.PriorityClassName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "priorityClassName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "resourceAnnotationList", &obj.ResourceAnnotationList, UnmarshalK8sLabel)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resourceAnnotationList-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "resourceLabelList", &obj.ResourceLabelList, UnmarshalK8sLabel)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resourceLabelList-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sanField", &obj.SanField)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sanField-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "serviceAnnotations", &obj.ServiceAnnotations, UnmarshalServiceAnnotationsEntry)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "serviceAnnotations-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "storageClass", &obj.StorageClass, UnmarshalKubernetesStorageClassInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageClass-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "type", &obj.Type)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "type-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uuid", &obj.UUID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uuid-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroAwsPluginImageLocation", &obj.VeleroAwsPluginImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroAwsPluginImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroImageLocation", &obj.VeleroImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroOpenshiftPluginImageLocation", &obj.VeleroOpenshiftPluginImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroOpenshiftPluginImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroUpgradability", &obj.VeleroUpgradability)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroUpgradability-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanInfoVec", &obj.VlanInfoVec, UnmarshalKubernetesVlanInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanInfoVec-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesPvcInfo : Specifies the parameters which are related to Kubernetes PVC.
+type KubernetesPvcInfo struct {
+	// Specifies the id of the pvc.
+	ID *int64 `json:"id,omitempty"`
+
+	// Name of the pvc.
+	Name *string `json:"name,omitempty"`
+}
+
+// UnmarshalKubernetesPvcInfo unmarshals an instance of KubernetesPvcInfo from the specified map of raw messages.
+func UnmarshalKubernetesPvcInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesPvcInfo)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesRecoverFilesNewTargetConfigTargetNamespace : Specifies the target namespace to recover files and folders to.
+type KubernetesRecoverFilesNewTargetConfigTargetNamespace struct {
+	// Specifies the id of the object.
+	ID *int64 `json:"id" validate:"required"`
+
+	// Specifies the name of the object.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies the id of the parent source of the target.
+	ParentSourceID *int64 `json:"parentSourceId,omitempty"`
+
+	// Specifies the name of the parent source of the target.
+	ParentSourceName *string `json:"parentSourceName,omitempty"`
+}
+
+// NewKubernetesRecoverFilesNewTargetConfigTargetNamespace : Instantiate KubernetesRecoverFilesNewTargetConfigTargetNamespace (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesRecoverFilesNewTargetConfigTargetNamespace(id int64) (_model *KubernetesRecoverFilesNewTargetConfigTargetNamespace, err error) {
+	_model = &KubernetesRecoverFilesNewTargetConfigTargetNamespace{
+		ID: core.Int64Ptr(id),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesRecoverFilesNewTargetConfigTargetNamespace unmarshals an instance of KubernetesRecoverFilesNewTargetConfigTargetNamespace from the specified map of raw messages.
+func UnmarshalKubernetesRecoverFilesNewTargetConfigTargetNamespace(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesRecoverFilesNewTargetConfigTargetNamespace)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "parentSourceId", &obj.ParentSourceID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "parentSourceId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "parentSourceName", &obj.ParentSourceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "parentSourceName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesRecoverFilesNewTargetConfigTargetPvc : Specifies the target PVC(Persistent Volume Claim) to recover files and folders to.
+type KubernetesRecoverFilesNewTargetConfigTargetPvc struct {
+	// Specifies the id of the object.
+	ID *int64 `json:"id" validate:"required"`
+
+	// Specifies the name of the object.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies the id of the parent source of the target.
+	ParentSourceID *int64 `json:"parentSourceId,omitempty"`
+
+	// Specifies the name of the parent source of the target.
+	ParentSourceName *string `json:"parentSourceName,omitempty"`
+}
+
+// NewKubernetesRecoverFilesNewTargetConfigTargetPvc : Instantiate KubernetesRecoverFilesNewTargetConfigTargetPvc (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesRecoverFilesNewTargetConfigTargetPvc(id int64) (_model *KubernetesRecoverFilesNewTargetConfigTargetPvc, err error) {
+	_model = &KubernetesRecoverFilesNewTargetConfigTargetPvc{
+		ID: core.Int64Ptr(id),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesRecoverFilesNewTargetConfigTargetPvc unmarshals an instance of KubernetesRecoverFilesNewTargetConfigTargetPvc from the specified map of raw messages.
+func UnmarshalKubernetesRecoverFilesNewTargetConfigTargetPvc(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesRecoverFilesNewTargetConfigTargetPvc)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "parentSourceId", &obj.ParentSourceID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "parentSourceId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "parentSourceName", &obj.ParentSourceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "parentSourceName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesRecoverFilesNewTargetConfigTargetSource : Specifies the target kubernetes to recover files and folders to.
+type KubernetesRecoverFilesNewTargetConfigTargetSource struct {
+	// Specifies the id of the object.
+	ID *int64 `json:"id" validate:"required"`
+
+	// Specifies the name of the object.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies the id of the parent source of the target.
+	ParentSourceID *int64 `json:"parentSourceId,omitempty"`
+
+	// Specifies the name of the parent source of the target.
+	ParentSourceName *string `json:"parentSourceName,omitempty"`
+}
+
+// NewKubernetesRecoverFilesNewTargetConfigTargetSource : Instantiate KubernetesRecoverFilesNewTargetConfigTargetSource (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesRecoverFilesNewTargetConfigTargetSource(id int64) (_model *KubernetesRecoverFilesNewTargetConfigTargetSource, err error) {
+	_model = &KubernetesRecoverFilesNewTargetConfigTargetSource{
+		ID: core.Int64Ptr(id),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesRecoverFilesNewTargetConfigTargetSource unmarshals an instance of KubernetesRecoverFilesNewTargetConfigTargetSource from the specified map of raw messages.
+func UnmarshalKubernetesRecoverFilesNewTargetConfigTargetSource(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesRecoverFilesNewTargetConfigTargetSource)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "parentSourceId", &obj.ParentSourceID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "parentSourceId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "parentSourceName", &obj.ParentSourceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "parentSourceName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesServiceAnnotationObject : Specifies the service annotation key value pair while registering kubernetes source.
+type KubernetesServiceAnnotationObject struct {
+	// Specifies the service annotation key value.
+	Key *string `json:"key,omitempty"`
+
+	// Specifies the service annotation value.
+	Value *string `json:"value,omitempty"`
+}
+
+// UnmarshalKubernetesServiceAnnotationObject unmarshals an instance of KubernetesServiceAnnotationObject from the specified map of raw messages.
+func UnmarshalKubernetesServiceAnnotationObject(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesServiceAnnotationObject)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesSourceRegistrationParams : Specifies the parameters to register a Kubernetes source.
+type KubernetesSourceRegistrationParams struct {
+	// Specifies the parameters to auto protect the source after registration.
+	AutoProtectConfig *KubernetesAutoProtectConfig `json:"autoProtectConfig,omitempty"`
+
+	// Specifies the bearer token or private key of Kubernetes source.
+	ClientPrivateKey *string `json:"clientPrivateKey" validate:"required"`
+
+	// Specifies the datamover image location of Kubernetes source.
+	DataMoverImageLocation *string `json:"dataMoverImageLocation" validate:"required"`
+
+	// Specifies the data mover service type of Kubernetes source.
+	DatamoverServiceType *string `json:"datamoverServiceType,omitempty"`
+
+	// Specifies VLAN params associated with the backup/restore operation.
+	DefaultVlanParams *VlanParams `json:"defaultVlanParams,omitempty"`
+
+	// Specifies the endpoint of Kubernetes source.
+	Endpoint *string `json:"endpoint" validate:"required"`
+
+	// Specifies the initial container image location of Kubernetes source.
+	InitContainerImageLocation *string `json:"initContainerImageLocation,omitempty"`
+
+	// Specifies the distribution type of Kubernetes source.
+	KubernetesDistribution *string `json:"kubernetesDistribution" validate:"required"`
+
+	// Specifies the type of kubernetes source.
+	KubernetesType *string `json:"kubernetesType,omitempty"`
+
+	// Specifies the priority class name for cohesity resources.
+	PriorityClassName *string `json:"priorityClassName,omitempty"`
+
+	// Specifies resource annotations to be applied on cohesity resources.
+	ResourceAnnotations []KubernetesLabelObject `json:"resourceAnnotations,omitempty"`
+
+	// Specifies resource label to be applied on cohesity resources.
+	ResourceLabels []KubernetesLabelObject `json:"resourceLabels,omitempty"`
+
+	// Specifies the SAN field for agent certificate.
+	SanFields []string `json:"sanFields,omitempty"`
+
+	// Specifies the service annotation object of Kubernetes source.
+	ServiceAnnotations []KubernetesServiceAnnotationObject `json:"serviceAnnotations,omitempty"`
+
+	// Specifies the velero AWS plugin image location of the Kubernetes source.
+	VeleroAwsPluginImageLocation *string `json:"veleroAwsPluginImageLocation,omitempty"`
+
+	// Specifies the velero image location of the Kubernetes source.
+	VeleroImageLocation *string `json:"veleroImageLocation,omitempty"`
+
+	// Specifies the velero open shift plugin image for the Kubernetes source.
+	VeleroOpenshiftPluginImageLocation *string `json:"veleroOpenshiftPluginImageLocation,omitempty"`
+
+	// Specifies VLAN information provided during registration.
+	VlanInfoVec []KubernetesVlanInfo `json:"vlanInfoVec,omitempty"`
+}
+
+// Constants associated with the KubernetesSourceRegistrationParams.DatamoverServiceType property.
+// Specifies the data mover service type of Kubernetes source.
+const (
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Kclusterip    = "kClusterIp"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Kloadbalancer = "kLoadBalancer"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Knodeport     = "kNodePort"
+)
+
+// Constants associated with the KubernetesSourceRegistrationParams.KubernetesDistribution property.
+// Specifies the distribution type of Kubernetes source.
+const (
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kaks         = "kAKS"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Keks         = "kEKS"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kgke         = "kGKE"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kiks         = "kIKS"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kmainline    = "kMainline"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kopenshift   = "kOpenshift"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Krancher     = "kRancher"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kroks        = "kROKS"
+	KubernetesSourceRegistrationParams_KubernetesDistribution_Kvmwaretanzu = "kVMwareTanzu"
+)
+
+// Constants associated with the KubernetesSourceRegistrationParams.KubernetesType property.
+// Specifies the type of kubernetes source.
+const (
+	KubernetesSourceRegistrationParams_KubernetesType_Kcluster               = "kCluster"
+	KubernetesSourceRegistrationParams_KubernetesType_Klabel                 = "kLabel"
+	KubernetesSourceRegistrationParams_KubernetesType_Knamespace             = "kNamespace"
+	KubernetesSourceRegistrationParams_KubernetesType_Kpersistentvolume      = "kPersistentVolume"
+	KubernetesSourceRegistrationParams_KubernetesType_Kpersistentvolumeclaim = "kPersistentVolumeClaim"
+	KubernetesSourceRegistrationParams_KubernetesType_Kpvc                   = "kPVC"
+	KubernetesSourceRegistrationParams_KubernetesType_Kservice               = "kService"
+)
+
+// NewKubernetesSourceRegistrationParams : Instantiate KubernetesSourceRegistrationParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesSourceRegistrationParams(clientPrivateKey string, dataMoverImageLocation string, endpoint string, kubernetesDistribution string) (_model *KubernetesSourceRegistrationParams, err error) {
+	_model = &KubernetesSourceRegistrationParams{
+		ClientPrivateKey:       core.StringPtr(clientPrivateKey),
+		DataMoverImageLocation: core.StringPtr(dataMoverImageLocation),
+		Endpoint:               core.StringPtr(endpoint),
+		KubernetesDistribution: core.StringPtr(kubernetesDistribution),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesSourceRegistrationParams unmarshals an instance of KubernetesSourceRegistrationParams from the specified map of raw messages.
+func UnmarshalKubernetesSourceRegistrationParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesSourceRegistrationParams)
+	err = core.UnmarshalModel(m, "autoProtectConfig", &obj.AutoProtectConfig, UnmarshalKubernetesAutoProtectConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "autoProtectConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "clientPrivateKey", &obj.ClientPrivateKey)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clientPrivateKey-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dataMoverImageLocation", &obj.DataMoverImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dataMoverImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "datamoverServiceType", &obj.DatamoverServiceType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datamoverServiceType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "defaultVlanParams", &obj.DefaultVlanParams, UnmarshalVlanParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "defaultVlanParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endpoint", &obj.Endpoint)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endpoint-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "initContainerImageLocation", &obj.InitContainerImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "initContainerImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kubernetesDistribution", &obj.KubernetesDistribution)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesDistribution-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kubernetesType", &obj.KubernetesType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "priorityClassName", &obj.PriorityClassName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "priorityClassName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "resourceAnnotations", &obj.ResourceAnnotations, UnmarshalKubernetesLabelObject)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resourceAnnotations-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "resourceLabels", &obj.ResourceLabels, UnmarshalKubernetesLabelObject)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resourceLabels-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sanFields", &obj.SanFields)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sanFields-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "serviceAnnotations", &obj.ServiceAnnotations, UnmarshalKubernetesServiceAnnotationObject)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "serviceAnnotations-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroAwsPluginImageLocation", &obj.VeleroAwsPluginImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroAwsPluginImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroImageLocation", &obj.VeleroImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroOpenshiftPluginImageLocation", &obj.VeleroOpenshiftPluginImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroOpenshiftPluginImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanInfoVec", &obj.VlanInfoVec, UnmarshalKubernetesVlanInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanInfoVec-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesStorageClassInfo : Specifies a Protection Source in Kubernetes environment.
+type KubernetesStorageClassInfo struct {
+	// Specifies name of storage class.
+	Name *string `json:"name,omitempty"`
+
+	// specifies provisioner of storage class.
+	Provisioner *string `json:"provisioner,omitempty"`
+}
+
+// UnmarshalKubernetesStorageClassInfo unmarshals an instance of KubernetesStorageClassInfo from the specified map of raw messages.
+func UnmarshalKubernetesStorageClassInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesStorageClassInfo)
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "provisioner", &obj.Provisioner)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "provisioner-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesStorageClassParams : Specifies the storage class parameters for recovery of namespace.
+type KubernetesStorageClassParams struct {
+	// Specifies mapping of storage classes.
+	StorageClassMapping []KubernetesLabel `json:"storageClassMapping,omitempty"`
+
+	// Specifies whether or not to use storage class mapping.
+	UseStorageClassMapping *bool `json:"useStorageClassMapping,omitempty"`
+}
+
+// UnmarshalKubernetesStorageClassParams unmarshals an instance of KubernetesStorageClassParams from the specified map of raw messages.
+func UnmarshalKubernetesStorageClassParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesStorageClassParams)
+	err = core.UnmarshalModel(m, "storageClassMapping", &obj.StorageClassMapping, UnmarshalKubernetesLabel)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageClassMapping-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useStorageClassMapping", &obj.UseStorageClassMapping)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useStorageClassMapping-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig : Specifies the configuration for recovering to a new target.
+type KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig struct {
+	// Specifies the absolute path of the file.
+	AbsolutePath *string `json:"absolutePath" validate:"required"`
+
+	// Specifies the target namespace to recover files and folders to.
+	TargetNamespace *KubernetesRecoverFilesNewTargetConfigTargetNamespace `json:"targetNamespace,omitempty"`
+
+	// Specifies the target PVC(Persistent Volume Claim) to recover files and folders to.
+	TargetPvc *KubernetesRecoverFilesNewTargetConfigTargetPvc `json:"targetPvc" validate:"required"`
+
+	// Specifies the target kubernetes to recover files and folders to.
+	TargetSource *KubernetesRecoverFilesNewTargetConfigTargetSource `json:"targetSource,omitempty"`
+}
+
+// NewKubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig : Instantiate KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig(absolutePath string, targetPvc *KubernetesRecoverFilesNewTargetConfigTargetPvc) (_model *KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig, err error) {
+	_model = &KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig{
+		AbsolutePath: core.StringPtr(absolutePath),
+		TargetPvc:    targetPvc,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig unmarshals an instance of KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig from the specified map of raw messages.
+func UnmarshalKubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig)
+	err = core.UnmarshalPrimitive(m, "absolutePath", &obj.AbsolutePath)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "absolutePath-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "targetNamespace", &obj.TargetNamespace, UnmarshalKubernetesRecoverFilesNewTargetConfigTargetNamespace)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetNamespace-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "targetPvc", &obj.TargetPvc, UnmarshalKubernetesRecoverFilesNewTargetConfigTargetPvc)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetPvc-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "targetSource", &obj.TargetSource, UnmarshalKubernetesRecoverFilesNewTargetConfigTargetSource)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetSource-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig : Specifies the configuration for recovering to the original target.
+type KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig struct {
+	// Specifies the alternate path location to recover files to.
+	AlternatePath *string `json:"alternatePath,omitempty"`
+
+	// Specifies whether to recover files and folders to the original path location. If false, alternatePath must be
+	// specified.
+	RecoverToOriginalPath *bool `json:"recoverToOriginalPath" validate:"required"`
+}
+
+// NewKubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig : Instantiate KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig(recoverToOriginalPath bool) (_model *KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig, err error) {
+	_model = &KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig{
+		RecoverToOriginalPath: core.BoolPtr(recoverToOriginalPath),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig unmarshals an instance of KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig from the specified map of raw messages.
+func UnmarshalKubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig)
+	err = core.UnmarshalPrimitive(m, "alternatePath", &obj.AlternatePath)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "alternatePath-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoverToOriginalPath", &obj.RecoverToOriginalPath)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverToOriginalPath-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesTargetParamsForRecoverFileAndFolderVlanConfig : Specifies VLAN Params associated with the recovered files and folders. If this is not specified, then the VLAN
+// settings will be automatically selected from one of the below options: a. If VLANs are configured on Cohesity, then
+// the VLAN host/VIP will be automatically based on the client's (e.g. ESXI host) IP address. b. If VLANs are not
+// configured on Cohesity, then the partition hostname or VIPs will be used for Recovery.
+type KubernetesTargetParamsForRecoverFileAndFolderVlanConfig struct {
+	// If this is set, then the Cohesity host name or the IP address associated with this vlan is used for mounting
+	// Cohesity's view on the remote host.
+	ID *int64 `json:"id,omitempty"`
+
+	// If this is set to true, then even if VLANs are configured on the system, the partition VIPs will be used for the
+	// Recovery.
+	DisableVlan *bool `json:"disableVlan,omitempty"`
+
+	// Interface group to use for Recovery.
+	InterfaceName *string `json:"interfaceName,omitempty"`
+}
+
+// UnmarshalKubernetesTargetParamsForRecoverFileAndFolderVlanConfig unmarshals an instance of KubernetesTargetParamsForRecoverFileAndFolderVlanConfig from the specified map of raw messages.
+func UnmarshalKubernetesTargetParamsForRecoverFileAndFolderVlanConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesTargetParamsForRecoverFileAndFolderVlanConfig)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "disableVlan", &obj.DisableVlan)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "disableVlan-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "interfaceName", &obj.InterfaceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "interfaceName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig : Specifies the recovery target configuration of the Namespace recovery.
+type KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig struct {
+	// Specifies the new source configuration if a Kubernetes Namespace is being restored to a different source than the
+	// one from which it was protected.
+	NewSourceConfig *KubernetesNamespaceRecoveryTargetConfigNewSourceConfig `json:"newSourceConfig,omitempty"`
+
+	// Specifies whether or not to recover the Namespaces to a different source than they were backed up from.
+	RecoverToNewSource *bool `json:"recoverToNewSource" validate:"required"`
+}
+
+// NewKubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig : Instantiate KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig(recoverToNewSource bool) (_model *KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig, err error) {
+	_model = &KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig{
+		RecoverToNewSource: core.BoolPtr(recoverToNewSource),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig unmarshals an instance of KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig from the specified map of raw messages.
+func UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig)
+	err = core.UnmarshalModel(m, "newSourceConfig", &obj.NewSourceConfig, UnmarshalKubernetesNamespaceRecoveryTargetConfigNewSourceConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "newSourceConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoverToNewSource", &obj.RecoverToNewSource)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverToNewSource-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams : Specifies params to rename the Namespaces that are recovered. If not specified, the original names of the Namespaces
+// are preserved. If a name collision occurs then the Namespace being recovered will overwrite the Namespace already
+// present on the source.
+type KubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams struct {
+	// Specifies the prefix string to be added to recovered or cloned object names.
+	Prefix *string `json:"prefix,omitempty"`
+
+	// Specifies the suffix string to be added to recovered or cloned object names.
+	Suffix *string `json:"suffix,omitempty"`
+}
+
+// UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams unmarshals an instance of KubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams from the specified map of raw messages.
+func UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams)
+	err = core.UnmarshalPrimitive(m, "prefix", &obj.Prefix)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "prefix-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "suffix", &obj.Suffix)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "suffix-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesVlanInfo : Specifies Vlan information for Kubernetes protection source for Protection Source in Kubernetes environment.
+type KubernetesVlanInfo struct {
+	// Specifies annotations to be put on services for IP allocation. Applicable only when service is of type LoadBalancer.
+	ServiceAnnotations []KubernetesServiceAnnotationObject `json:"serviceAnnotations,omitempty"`
+
+	// Specifies VLAN params associated with the backup/restore operation.
+	VlanParams *VlanParams `json:"vlanParams,omitempty"`
+}
+
+// UnmarshalKubernetesVlanInfo unmarshals an instance of KubernetesVlanInfo from the specified map of raw messages.
+func UnmarshalKubernetesVlanInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesVlanInfo)
+	err = core.UnmarshalModel(m, "serviceAnnotations", &obj.ServiceAnnotations, UnmarshalKubernetesServiceAnnotationObject)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "serviceAnnotations-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanParams", &obj.VlanParams, UnmarshalVlanParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanParams-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -18462,7 +21197,7 @@ type ListProtectionSourcesOptions struct {
 	// should be returned.
 	AllUnderHierarchy *bool `json:"allUnderHierarchy,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -18767,6 +21502,224 @@ func (options *ListProtectionSourcesOptions) SetHeaders(param map[string]string)
 	return options
 }
 
+// ListProtectionSourcesRegistrationInfoOptions : The ListProtectionSourcesRegistrationInfo options.
+type ListProtectionSourcesRegistrationInfoOptions struct {
+	// Specifies the key to be used to encrypt the source credential. If includeSourceCredentials is set to true this key
+	// must be specified.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Return only Protection Sources that match the passed in environment type such as 'kVMware', 'kSQL', 'kView'
+	// 'kPhysical', 'kPuppeteer', 'kPure', 'kNetapp', 'kGenericNas', 'kHyperV', 'kAcropolis', or 'kAzure'. For example, set
+	// this parameter to 'kVMware' to only return the Sources (and their Object subtrees) found in the 'kVMware' (VMware
+	// vCenter Server) environment. NOTE: 'kPuppeteer' refers to Cohesity's Remote Adapter.
+	Environments []string `json:"environments,omitempty"`
+
+	// Return only the registered root nodes whose Ids are given in the list.
+	Ids []int64 `json:"ids,omitempty"`
+
+	// If specified, then a list of entities with permissions assigned to them are returned.
+	IncludeEntityPermissionInfo *bool `json:"includeEntityPermissionInfo,omitempty"`
+
+	// Filter the registered root nodes for the sids given in the list.
+	Sids []string `json:"sids,omitempty"`
+
+	// If specified, then crednetial for the registered sources will be included. Credential is first encrypted with
+	// internal key and then reencrypted with user supplied 'encryption_key'.
+	IncludeSourceCredentials *bool `json:"includeSourceCredentials,omitempty"`
+
+	// Key to be used to encrypt the source credential. If include_source_credentials is set to true this key must be
+	// specified.
+	EncryptionKey *string `json:"encryptionKey,omitempty"`
+
+	// Specifies whether to return applications tree info or not.
+	IncludeApplicationsTreeInfo *bool `json:"includeApplicationsTreeInfo,omitempty"`
+
+	// Specifies whether to prune non critical info within entities. Incase of VMs, virtual disk information will be
+	// pruned. Incase of Office365, metadata about user entities will be pruned. This can be used to limit the size of the
+	// response by caller.
+	PruneNonCriticalInfo *bool `json:"pruneNonCriticalInfo,omitempty"`
+
+	// Specifies the type of the request. Possible values are UIUser and UIAuto, which means the request is triggered by
+	// user or is an auto refresh request. Services like magneto will use this to determine the priority of the requests,
+	// so that it can more intelligently handle overload situations by prioritizing higher priority requests.
+	RequestInitiatorType *string `json:"requestInitiatorType,omitempty"`
+
+	// Specifies whether we can serve the GET request to the read replica cache. setting this to true ensures that the API
+	// request is served to the read replica. setting this to false will serve the request to the master.
+	UseCachedData *bool `json:"useCachedData,omitempty"`
+
+	// Specifies if entity external metadata should be included within the response to get entity hierarchy call.
+	IncludeExternalMetadata *bool `json:"includeExternalMetadata,omitempty"`
+
+	// Specifies the maintenance status of a source 'UnderMaintenance' indicates the source is currently under maintenance.
+	// 'ScheduledMaintenance' indicates the source is scheduled for maintenance. 'NotConfigured' indicates maintenance is
+	// not configured on the source.
+	MaintenanceStatus *string `json:"maintenanceStatus,omitempty"`
+
+	// TenantIds contains ids of the tenants for which objects are to be returned.
+	TenantIds []string `json:"tenantIds,omitempty"`
+
+	// AllUnderHierarchy specifies if objects of all the tenants under the hierarchy of the logged in user's organization
+	// should be returned.
+	AllUnderHierarchy *bool `json:"allUnderHierarchy,omitempty"`
+
+	// Allows users to set headers on API requests.
+	Headers map[string]string
+}
+
+// Constants associated with the ListProtectionSourcesRegistrationInfoOptions.Environments property.
+const (
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kacropolis     = "kAcropolis"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kaws           = "kAWS"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kawsnative     = "kAWSNative"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kawss3         = "kAwsS3"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kazure         = "kAzure"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kcassandra     = "kCassandra"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kcouchbase     = "kCouchbase"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kexchange      = "kExchange"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kflashblade    = "kFlashBlade"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kgcp           = "kGCP"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kgcpnative     = "kGCPNative"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kgenericnas    = "kGenericNas"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kgpfs          = "kGPFS"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Khbase         = "kHBase"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Khdfs          = "kHdfs"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Khive          = "kHive"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Khyperflex     = "kHyperFlex"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Khyperv        = "kHyperV"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Khypervvss     = "kHyperVVSS"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kisilon        = "kIsilon"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kkubernetes    = "kKubernetes"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kkvm           = "kKVM"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kmongodb       = "kMongoDB"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Knetapp        = "kNetapp"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Ko365          = "kO365"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Ko365outlook   = "kO365Outlook"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Koracle        = "kOracle"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kphysical      = "kPhysical"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kphysicalfiles = "kPhysicalFiles"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kpuppeteer     = "kPuppeteer"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kpure          = "kPure"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Ksql           = "kSQL"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kuda           = "kUDA"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kvcd           = "kVCD"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kview          = "kView"
+	ListProtectionSourcesRegistrationInfoOptions_Environments_Kvmware        = "kVMware"
+)
+
+// Constants associated with the ListProtectionSourcesRegistrationInfoOptions.MaintenanceStatus property.
+// Specifies the maintenance status of a source 'UnderMaintenance' indicates the source is currently under maintenance.
+// 'ScheduledMaintenance' indicates the source is scheduled for maintenance. 'NotConfigured' indicates maintenance is
+// not configured on the source.
+const (
+	ListProtectionSourcesRegistrationInfoOptions_MaintenanceStatus_Notconfigured        = "NotConfigured"
+	ListProtectionSourcesRegistrationInfoOptions_MaintenanceStatus_Scheduledmaintenance = "ScheduledMaintenance"
+	ListProtectionSourcesRegistrationInfoOptions_MaintenanceStatus_Undermaintenance     = "UnderMaintenance"
+)
+
+// NewListProtectionSourcesRegistrationInfoOptions : Instantiate ListProtectionSourcesRegistrationInfoOptions
+func (*BackupRecoveryV1) NewListProtectionSourcesRegistrationInfoOptions(xIBMTenantID string) *ListProtectionSourcesRegistrationInfoOptions {
+	return &ListProtectionSourcesRegistrationInfoOptions{
+		XIBMTenantID: core.StringPtr(xIBMTenantID),
+	}
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetXIBMTenantID(xIBMTenantID string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetEnvironments : Allow user to set Environments
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetEnvironments(environments []string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.Environments = environments
+	return _options
+}
+
+// SetIds : Allow user to set Ids
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetIds(ids []int64) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.Ids = ids
+	return _options
+}
+
+// SetIncludeEntityPermissionInfo : Allow user to set IncludeEntityPermissionInfo
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetIncludeEntityPermissionInfo(includeEntityPermissionInfo bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.IncludeEntityPermissionInfo = core.BoolPtr(includeEntityPermissionInfo)
+	return _options
+}
+
+// SetSids : Allow user to set Sids
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetSids(sids []string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.Sids = sids
+	return _options
+}
+
+// SetIncludeSourceCredentials : Allow user to set IncludeSourceCredentials
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetIncludeSourceCredentials(includeSourceCredentials bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.IncludeSourceCredentials = core.BoolPtr(includeSourceCredentials)
+	return _options
+}
+
+// SetEncryptionKey : Allow user to set EncryptionKey
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetEncryptionKey(encryptionKey string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.EncryptionKey = core.StringPtr(encryptionKey)
+	return _options
+}
+
+// SetIncludeApplicationsTreeInfo : Allow user to set IncludeApplicationsTreeInfo
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetIncludeApplicationsTreeInfo(includeApplicationsTreeInfo bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.IncludeApplicationsTreeInfo = core.BoolPtr(includeApplicationsTreeInfo)
+	return _options
+}
+
+// SetPruneNonCriticalInfo : Allow user to set PruneNonCriticalInfo
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetPruneNonCriticalInfo(pruneNonCriticalInfo bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.PruneNonCriticalInfo = core.BoolPtr(pruneNonCriticalInfo)
+	return _options
+}
+
+// SetRequestInitiatorType : Allow user to set RequestInitiatorType
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetRequestInitiatorType(requestInitiatorType string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.RequestInitiatorType = core.StringPtr(requestInitiatorType)
+	return _options
+}
+
+// SetUseCachedData : Allow user to set UseCachedData
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetUseCachedData(useCachedData bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.UseCachedData = core.BoolPtr(useCachedData)
+	return _options
+}
+
+// SetIncludeExternalMetadata : Allow user to set IncludeExternalMetadata
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetIncludeExternalMetadata(includeExternalMetadata bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.IncludeExternalMetadata = core.BoolPtr(includeExternalMetadata)
+	return _options
+}
+
+// SetMaintenanceStatus : Allow user to set MaintenanceStatus
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetMaintenanceStatus(maintenanceStatus string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.MaintenanceStatus = core.StringPtr(maintenanceStatus)
+	return _options
+}
+
+// SetTenantIds : Allow user to set TenantIds
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetTenantIds(tenantIds []string) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.TenantIds = tenantIds
+	return _options
+}
+
+// SetAllUnderHierarchy : Allow user to set AllUnderHierarchy
+func (_options *ListProtectionSourcesRegistrationInfoOptions) SetAllUnderHierarchy(allUnderHierarchy bool) *ListProtectionSourcesRegistrationInfoOptions {
+	_options.AllUnderHierarchy = core.BoolPtr(allUnderHierarchy)
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *ListProtectionSourcesRegistrationInfoOptions) SetHeaders(param map[string]string) *ListProtectionSourcesRegistrationInfoOptions {
+	options.Headers = param
+	return options
+}
+
 // LogBackupPolicy : Specifies log backup settings for a Protection Group.
 type LogBackupPolicy struct {
 	// Specifies settings that defines how frequent log backup will be performed for a Protection Group.
@@ -18923,6 +21876,25 @@ func UnmarshalLogSchedule(m map[string]json.RawMessage, result interface{}) (err
 	err = core.UnmarshalModel(m, "hourSchedule", &obj.HourSchedule, UnmarshalHourSchedule)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "hourSchedule-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// M365CsmParams : M365CsmParams struct
+type M365CsmParams struct {
+	// Specifies whether the current source allows data backup through M365 Backup Storage APIs. Enabling this, data can be
+	// optionally backed up within either Cohesity or MSFT or both depending on the backup configuration.
+	BackupAllowed *bool `json:"backupAllowed,omitempty"`
+}
+
+// UnmarshalM365CsmParams unmarshals an instance of M365CsmParams from the specified map of raw messages.
+func UnmarshalM365CsmParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(M365CsmParams)
+	err = core.UnmarshalPrimitive(m, "backupAllowed", &obj.BackupAllowed)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "backupAllowed-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -19918,6 +22890,84 @@ func UnmarshalMissingEntityParams(m map[string]json.RawMessage, result interface
 	return
 }
 
+// MongoDBConnectParams : Specifies an Object containing information about a registered mongodb source.
+type MongoDBConnectParams struct {
+	// Specifies whether authentication is configured on this MongoDB cluster. Specifies the type of an MongoDB source
+	// entity. 'SCRAM' 'LDAP' 'NONE' 'KERBEROS'.
+	AuthType *string `json:"authType,omitempty"`
+
+	// Specifies the Authenticating Database for this MongoDB cluster.
+	AuthenticatingDatabaseName *string `json:"authenticatingDatabaseName,omitempty"`
+
+	// Specifies whether connection is allowed through SSL only in this cluster.
+	RequiresSsl *bool `json:"requiresSsl,omitempty"`
+
+	// MongoDB Secondary node tag. Required only if 'useSecondaryForBackup' is true. The system will use this to identify
+	// the secondary nodes for reading backup data.
+	SecondaryNodeTag *string `json:"secondaryNodeTag,omitempty"`
+
+	// Specifies the seeds of this MongoDB Cluster.
+	Seeds []string `json:"seeds,omitempty"`
+
+	// Set this to true if you want the system to peform backups from fixed nodes.
+	UseFixedNodeForBackup *bool `json:"useFixedNodeForBackup,omitempty"`
+
+	// Set this to true if you want the system to peform backups from secondary nodes.
+	UseSecondaryForBackup *bool `json:"useSecondaryForBackup,omitempty"`
+}
+
+// Constants associated with the MongoDBConnectParams.AuthType property.
+// Specifies whether authentication is configured on this MongoDB cluster. Specifies the type of an MongoDB source
+// entity. 'SCRAM' 'LDAP' 'NONE' 'KERBEROS'.
+const (
+	MongoDBConnectParams_AuthType_Kerberos = "KERBEROS"
+	MongoDBConnectParams_AuthType_Ldap     = "LDAP"
+	MongoDBConnectParams_AuthType_None     = "NONE"
+	MongoDBConnectParams_AuthType_Scram    = "SCRAM"
+)
+
+// UnmarshalMongoDBConnectParams unmarshals an instance of MongoDBConnectParams from the specified map of raw messages.
+func UnmarshalMongoDBConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(MongoDBConnectParams)
+	err = core.UnmarshalPrimitive(m, "authType", &obj.AuthType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "authType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "authenticatingDatabaseName", &obj.AuthenticatingDatabaseName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "authenticatingDatabaseName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "requiresSsl", &obj.RequiresSsl)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "requiresSsl-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "secondaryNodeTag", &obj.SecondaryNodeTag)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "secondaryNodeTag-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "seeds", &obj.Seeds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "seeds-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useFixedNodeForBackup", &obj.UseFixedNodeForBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useFixedNodeForBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useSecondaryForBackup", &obj.UseSecondaryForBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useSecondaryForBackup-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // MongoDbOnPremSearchParams : Parameters required to search Mongo DB on a cluster.
 type MongoDbOnPremSearchParams struct {
 	// Specifies one or more MongoDB object types be searched.
@@ -20470,6 +23520,89 @@ func UnmarshalNasSourceParams(m map[string]json.RawMessage, result interface{}) 
 	return
 }
 
+// NASServerCredentials : Specifies the credentials required to mount directories on the NetApp server if given.
+type NASServerCredentials struct {
+	// Specifies the domain in which this credential is valid.
+	Domain *string `json:"domain,omitempty"`
+
+	// Specifies the protocol used by the NAS server. Specifies the protocol used by a NAS server. 'kNoProtocol' indicates
+	// no protocol set. 'kNfs3' indicates NFS v3 protocol. 'kNfs4_1' indicates NFS v4.1 protocol. 'kCifs1' indicates CIFS
+	// v1.0 protocol. 'kCifs2' indicates CIFS v2.0 protocol. 'kCifs3' indicates CIFS v3.0 protocol.
+	NasProtocol *string `json:"nasProtocol,omitempty"`
+}
+
+// Constants associated with the NASServerCredentials.NasProtocol property.
+// Specifies the protocol used by the NAS server. Specifies the protocol used by a NAS server. 'kNoProtocol' indicates
+// no protocol set. 'kNfs3' indicates NFS v3 protocol. 'kNfs4_1' indicates NFS v4.1 protocol. 'kCifs1' indicates CIFS
+// v1.0 protocol. 'kCifs2' indicates CIFS v2.0 protocol. 'kCifs3' indicates CIFS v3.0 protocol.
+const (
+	NASServerCredentials_NasProtocol_Kcifs1      = "kCifs1"
+	NASServerCredentials_NasProtocol_Kcifs2      = "kCifs2"
+	NASServerCredentials_NasProtocol_Kcifs3      = "kCifs3"
+	NASServerCredentials_NasProtocol_Knfs3       = "kNfs3"
+	NASServerCredentials_NasProtocol_Knfs41      = "kNfs4_1"
+	NASServerCredentials_NasProtocol_Knoprotocol = "kNoProtocol"
+)
+
+// UnmarshalNASServerCredentials unmarshals an instance of NASServerCredentials from the specified map of raw messages.
+func UnmarshalNASServerCredentials(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(NASServerCredentials)
+	err = core.UnmarshalPrimitive(m, "domain", &obj.Domain)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "domain-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "nasProtocol", &obj.NasProtocol)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "nasProtocol-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// NasSourceThrottlingParams : Specifies the NAS specific source throttling parameters during source registration or during backup of the source.
+type NasSourceThrottlingParams struct {
+	// Specifies the percentage value of maximum concurrent metadata to be fetched during full backup of the source.
+	MaxParallelMetadataFetchFullPercentage *int64 `json:"maxParallelMetadataFetchFullPercentage,omitempty"`
+
+	// Specifies the percentage value of maximum concurrent metadata to be fetched during incremental backup of the source.
+	MaxParallelMetadataFetchIncrementalPercentage *int64 `json:"maxParallelMetadataFetchIncrementalPercentage,omitempty"`
+
+	// Specifies the percentage value of maximum concurrent IO during full backup of the source.
+	MaxParallelReadWriteFullPercentage *int64 `json:"maxParallelReadWriteFullPercentage,omitempty"`
+
+	// Specifies the percentage value of maximum concurrent IO during incremental backup of the source.
+	MaxParallelReadWriteIncrementalPercentage *int64 `json:"maxParallelReadWriteIncrementalPercentage,omitempty"`
+}
+
+// UnmarshalNasSourceThrottlingParams unmarshals an instance of NasSourceThrottlingParams from the specified map of raw messages.
+func UnmarshalNasSourceThrottlingParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(NasSourceThrottlingParams)
+	err = core.UnmarshalPrimitive(m, "maxParallelMetadataFetchFullPercentage", &obj.MaxParallelMetadataFetchFullPercentage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxParallelMetadataFetchFullPercentage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "maxParallelMetadataFetchIncrementalPercentage", &obj.MaxParallelMetadataFetchIncrementalPercentage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxParallelMetadataFetchIncrementalPercentage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "maxParallelReadWriteFullPercentage", &obj.MaxParallelReadWriteFullPercentage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxParallelReadWriteFullPercentage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "maxParallelReadWriteIncrementalPercentage", &obj.MaxParallelReadWriteIncrementalPercentage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxParallelReadWriteIncrementalPercentage-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // NetappObjectParams : Specifies the common parameters for Netapp objects.
 type NetappObjectParams struct {
 	// Specifies a list of NAS mount protocols supported by this object.
@@ -20535,6 +23668,41 @@ func UnmarshalNetappObjectParams(m map[string]json.RawMessage, result interface{
 	return
 }
 
+// NetworkPoolConfig : While caonfiguring the isilon protection source, this is the selected network pool config for the isilon access zone.
+type NetworkPoolConfig struct {
+	// Specifies the name of the Network pool.
+	PoolName *string `json:"poolName,omitempty"`
+
+	// Specifies the name of the subnet the network pool belongs to.
+	Subnet *string `json:"subnet,omitempty"`
+
+	// Specifies whether to use SmartConnect if available. If true, DNS name for the SmartConnect zone will be used to
+	// balance the IPs. Otherwise, pool IPs will be balanced manually.
+	UseSmartConnect *bool `json:"useSmartConnect,omitempty"`
+}
+
+// UnmarshalNetworkPoolConfig unmarshals an instance of NetworkPoolConfig from the specified map of raw messages.
+func UnmarshalNetworkPoolConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(NetworkPoolConfig)
+	err = core.UnmarshalPrimitive(m, "poolName", &obj.PoolName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "poolName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "subnet", &obj.Subnet)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "subnet-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useSmartConnect", &obj.UseSmartConnect)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useSmartConnect-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // NetworkingInformation : Specifies the struct containing information about network addresses configured on the given box. This is needed for
 // dealing with Windows/Oracle Cluster resources that we discover and protect automatically.
 type NetworkingInformation struct {
@@ -20548,6 +23716,32 @@ func UnmarshalNetworkingInformation(m map[string]json.RawMessage, result interfa
 	err = core.UnmarshalModel(m, "resourceVec", &obj.ResourceVec, UnmarshalClusterNetworkResourceInformation)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "resourceVec-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// O365ConnectParams : Specifies an Object containing information about a registered Office 365 source.
+type O365ConnectParams struct {
+	// Specifies the parameters used for discovering the office 365 objects selectively during source registration or
+	// refresh.
+	ObjectsDiscoveryParams *ObjectsDiscoveryParams `json:"ObjectsDiscoveryParams,omitempty"`
+
+	CsmParams *M365CsmParams `json:"csmParams,omitempty"`
+}
+
+// UnmarshalO365ConnectParams unmarshals an instance of O365ConnectParams from the specified map of raw messages.
+func UnmarshalO365ConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(O365ConnectParams)
+	err = core.UnmarshalModel(m, "ObjectsDiscoveryParams", &obj.ObjectsDiscoveryParams, UnmarshalObjectsDiscoveryParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "ObjectsDiscoveryParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "csmParams", &obj.CsmParams, UnmarshalM365CsmParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "csmParams-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -22158,6 +25352,52 @@ func UnmarshalObjectTypeWindowsClusterParams(m map[string]json.RawMessage, resul
 	return
 }
 
+// ObjectsDiscoveryParams : Specifies the parameters used for discovering the office 365 objects selectively during source registration or
+// refresh.
+type ObjectsDiscoveryParams struct {
+	// Specifies the list of object types that will be discovered as part of source registration or refresh.
+	DiscoverableObjectTypeList []string `json:"discoverableObjectTypeList,omitempty"`
+
+	// Specifies discovery params for kSite entities. It should only be populated when the
+	// 'DiscoveryParams.discoverableObjectTypeList' includes 'kSites'.
+	SitesDiscoveryParams *SitesDiscoveryParams `json:"sitesDiscoveryParams,omitempty"`
+
+	// Specifies additional params for Teams entities. It should only be populated if the
+	// 'DiscoveryParams.discoverableObjectTypeList' includes 'kTeams' otherwise this will be ignored.
+	TeamsAdditionalParams *TeamsAdditionalParams `json:"teamsAdditionalParams,omitempty"`
+
+	// Specifies discovery params for kUser entities. It should only be populated when the
+	// 'DiscoveryParams.discoverableObjectTypeList' includes 'kUsers'.
+	UsersDiscoveryParams *UsersDiscoveryParams `json:"usersDiscoveryParams,omitempty"`
+}
+
+// UnmarshalObjectsDiscoveryParams unmarshals an instance of ObjectsDiscoveryParams from the specified map of raw messages.
+func UnmarshalObjectsDiscoveryParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ObjectsDiscoveryParams)
+	err = core.UnmarshalPrimitive(m, "discoverableObjectTypeList", &obj.DiscoverableObjectTypeList)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "discoverableObjectTypeList-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "sitesDiscoveryParams", &obj.SitesDiscoveryParams, UnmarshalSitesDiscoveryParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sitesDiscoveryParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "teamsAdditionalParams", &obj.TeamsAdditionalParams, UnmarshalTeamsAdditionalParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "teamsAdditionalParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "usersDiscoveryParams", &obj.UsersDiscoveryParams, UnmarshalUsersDiscoveryParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "usersDiscoveryParams-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // ObjectsSearchResponseBody : Specifies the Objects search result.
 type ObjectsSearchResponseBody struct {
 	// Specifies the list of Objects.
@@ -22186,6 +25426,59 @@ func UnmarshalObjectsSearchResponseBody(m map[string]json.RawMessage, result int
 	err = core.UnmarshalPrimitive(m, "count", &obj.Count)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "count-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// Office365Credentials : Specifies the credentials to authenticate with Office365 account.
+type Office365Credentials struct {
+	// Specifies the application ID that the registration portal (apps.dev.microsoft.com) assigned.
+	ClientID *string `json:"clientId,omitempty"`
+
+	// Specifies the application secret that was created in app registration portal.
+	ClientSecret *string `json:"clientSecret,omitempty"`
+
+	// Specifies the application grant type. eg: For client credentials flow, set this to "client_credentials"; For
+	// refreshing access-token, set this to "refresh_token".
+	GrantType *string `json:"grantType,omitempty"`
+
+	// Specifies a space separated list of scopes/permissions for the user. eg: Incase of MS Graph APIs for Office365,
+	// scope is set to default: https://graph.microsoft.com/.default.
+	Scope *string `json:"scope,omitempty"`
+
+	// This field is deprecated from here and placed in RegisteredSourceInfo  and ProtectionSourceParameters. deprecated:
+	// true.
+	UseOAuthForExchangeOnline *bool `json:"useOAuthForExchangeOnline,omitempty"`
+}
+
+// UnmarshalOffice365Credentials unmarshals an instance of Office365Credentials from the specified map of raw messages.
+func UnmarshalOffice365Credentials(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(Office365Credentials)
+	err = core.UnmarshalPrimitive(m, "clientId", &obj.ClientID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clientId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "clientSecret", &obj.ClientSecret)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clientSecret-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "grantType", &obj.GrantType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "grantType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "scope", &obj.Scope)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "scope-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useOAuthForExchangeOnline", &obj.UseOAuthForExchangeOnline)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useOAuthForExchangeOnline-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -22472,7 +25765,7 @@ type PatchDataSourceConnectionOptions struct {
 	// New name for the connection being patched.
 	ConnectionName *string `json:"connectionName" validate:"required"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -22521,7 +25814,7 @@ type PatchDataSourceConnectorOptions struct {
 	// Name of the connector.
 	ConnectorName *string `json:"connectorName,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -22570,7 +25863,7 @@ type PatchProtectionSourceRegistrationOptions struct {
 	// kCassandra.
 	Environment *string `json:"environment" validate:"required"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -22578,8 +25871,9 @@ type PatchProtectionSourceRegistrationOptions struct {
 // Specifies the environment type of the Protection Source to be patched. Currently the only environment supported is
 // kCassandra.
 const (
-	PatchProtectionSourceRegistrationOptions_Environment_Kphysical = "kPhysical"
-	PatchProtectionSourceRegistrationOptions_Environment_Ksql      = "kSQL"
+	PatchProtectionSourceRegistrationOptions_Environment_Kkubernetes = "kKubernetes"
+	PatchProtectionSourceRegistrationOptions_Environment_Kphysical   = "kPhysical"
+	PatchProtectionSourceRegistrationOptions_Environment_Ksql        = "kSQL"
 )
 
 // NewPatchProtectionSourceRegistrationOptions : Instantiate PatchProtectionSourceRegistrationOptions
@@ -22692,7 +25986,7 @@ type PerformActionOnProtectionGroupRunOptions struct {
 	// Specifies the cancel action params for a protection run.
 	CancelParams []CancelProtectionGroupRunRequest `json:"cancelParams,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -23205,6 +26499,96 @@ func UnmarshalPhysicalMountVolumesOriginalTargetConfigServerCredentials(m map[st
 	err = core.UnmarshalPrimitive(m, "password", &obj.Password)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "password-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// PhysicalParams : Specifies the parameters required to register Application Servers running in a Protection Source specific to a
+// physical adapter.
+type PhysicalParams struct {
+	// Specifies the types of applications such as 'kSQL', 'kExchange', 'kAD' running on the Protection Source.
+	// overrideDescription: true Supported environment types such as 'kView', 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer'
+	// refers to Cohesity's Remote Adapter. 'kVMware' indicates the VMware Protection Source environment. 'kHyperV'
+	// indicates the HyperV Protection Source environment. 'kSQL' indicates the SQL Protection Source environment. 'kView'
+	// indicates the View Protection Source environment. 'kPuppeteer' indicates the Cohesity's Remote Adapter. 'kPhysical'
+	// indicates the physical Protection Source environment. 'kPure' indicates the Pure Storage Protection Source
+	// environment. 'kNimble' indicates the Nimble Storage Protection Source environment. 'kHpe3Par' indicates the Hpe 3Par
+	// Storage Protection Source environment. 'kAzure' indicates the Microsoft's Azure Protection Source environment.
+	// 'kNetapp' indicates the Netapp Protection Source environment. 'kAgent' indicates the Agent Protection Source
+	// environment. 'kGenericNas' indicates the Generic Network Attached Storage Protection Source environment.
+	// 'kAcropolis' indicates the Acropolis Protection Source environment. 'kPhysicalFiles' indicates the Physical Files
+	// Protection Source environment. 'kIbmFlashSystem' indicates the IBM Flash System Protection Source environment.
+	// 'kIsilon' indicates the Dell EMC's Isilon Protection Source environment. 'kGPFS' indicates IBM's GPFS Protection
+	// Source environment. 'kKVM' indicates the KVM Protection Source environment. 'kAWS' indicates the AWS Protection
+	// Source environment. 'kExchange' indicates the Exchange Protection Source environment. 'kHyperVVSS' indicates the
+	// HyperV VSS Protection Source environment. 'kOracle' indicates the Oracle Protection Source environment. 'kGCP'
+	// indicates the Google Cloud Platform Protection Source environment. 'kFlashBlade' indicates the Flash Blade
+	// Protection Source environment. 'kAWSNative' indicates the AWS Native Protection Source environment. 'kO365'
+	// indicates the Office 365 Protection Source environment. 'kO365Outlook' indicates Office 365 outlook Protection
+	// Source environment. 'kHyperFlex' indicates the Hyper Flex Protection Source environment. 'kGCPNative' indicates the
+	// GCP Native Protection Source environment. 'kAzureNative' indicates the Azure Native Protection Source environment.
+	// 'kKubernetes' indicates a Kubernetes Protection Source environment. 'kElastifile' indicates Elastifile Protection
+	// Source environment. 'kAD' indicates Active Directory Protection Source environment. 'kRDSSnapshotManager' indicates
+	// AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra Protection Source environment. 'kMongoDB'
+	// indicates MongoDB Protection Source environment. 'kCouchbase' indicates Couchbase Protection Source environment.
+	// 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates Hive Protection Source environment. 'kHBase'
+	// indicates HBase Protection Source environment. 'kUDA' indicates Universal Data Adapter Protection Source
+	// environment. 'kSAPHANA' indicates SAP HANA protection source environment. 'kO365Teams' indicates the Office365 Teams
+	// Protection Source environment. 'kO365Group' indicates the Office365 Groups Protection Source environment.
+	// 'kO365Exchange' indicates the Office365 Mailbox Protection Source environment. 'kO365OneDrive' indicates the
+	// Office365 OneDrive Protection Source environment. 'kO365Sharepoint' indicates the Office365 SharePoint Protection
+	// Source environment. 'kO365PublicFolders' indicates the Office365 PublicFolders Protection Source environment.
+	// kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas, kAcropolis, kPhysicalFiles, kIsilon, kGPFS, kKVM,
+	// kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade, kAWSNative, kO365, kO365Outlook, kHyperFlex, kGCPNative,
+	// kAzureNative, kKubernetes, kElastifile, kAD, kRDSSnapshotManager, kCassandra, kMongoDB, kCouchbase, kHdfs, kHive,
+	// kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group, kO365Exchange, kO365OneDrive, kO365Sharepoint, kO365PublicFolders.
+	Applications []string `json:"applications,omitempty"`
+
+	// Specifies password of the username to access the target source.
+	Password *string `json:"password,omitempty"`
+
+	// Specifies the source side throttling configuration.
+	ThrottlingConfig *SourceThrottlingConfiguration `json:"throttlingConfig,omitempty"`
+
+	// Specifies username to access the target source.
+	Username *string `json:"username,omitempty"`
+}
+
+// Constants associated with the PhysicalParams.Applications property.
+const (
+	PhysicalParams_Applications_Khyperv    = "kHyperV"
+	PhysicalParams_Applications_Knimble    = "kNimble"
+	PhysicalParams_Applications_Kphysical  = "kPhysical"
+	PhysicalParams_Applications_Kpuppeteer = "kPuppeteer"
+	PhysicalParams_Applications_Kpure      = "kPure"
+	PhysicalParams_Applications_Ksql       = "kSQL"
+	PhysicalParams_Applications_Kview      = "kView"
+	PhysicalParams_Applications_Kvmware    = "kVMware"
+)
+
+// UnmarshalPhysicalParams unmarshals an instance of PhysicalParams from the specified map of raw messages.
+func UnmarshalPhysicalParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(PhysicalParams)
+	err = core.UnmarshalPrimitive(m, "applications", &obj.Applications)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "applications-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "password", &obj.Password)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "password-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "throttlingConfig", &obj.ThrottlingConfig, UnmarshalSourceThrottlingConfiguration)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "throttlingConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "username", &obj.Username)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "username-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -24901,6 +28285,9 @@ type ProtectionGroupResponse struct {
 
 	// Specifies the parameters specific to MSSQL Protection Group.
 	MssqlParams *MSSQLProtectionGroupParams `json:"mssqlParams,omitempty"`
+
+	// Specifies the parameters which are related to Kubernetes Protection Groups.
+	KubernetesParams *KubernetesProtectionGroupParams `json:"kubernetesParams,omitempty"`
 }
 
 // Constants associated with the ProtectionGroupResponse.Priority property.
@@ -24923,8 +28310,9 @@ const (
 // Constants associated with the ProtectionGroupResponse.Environment property.
 // Specifies the environment of the Protection Group.
 const (
-	ProtectionGroupResponse_Environment_Kphysical = "kPhysical"
-	ProtectionGroupResponse_Environment_Ksql      = "kSQL"
+	ProtectionGroupResponse_Environment_Kkubernetes = "kKubernetes"
+	ProtectionGroupResponse_Environment_Kphysical   = "kPhysical"
+	ProtectionGroupResponse_Environment_Ksql        = "kSQL"
 )
 
 // UnmarshalProtectionGroupResponse unmarshals an instance of ProtectionGroupResponse from the specified map of raw messages.
@@ -25068,6 +28456,11 @@ func UnmarshalProtectionGroupResponse(m map[string]json.RawMessage, result inter
 	err = core.UnmarshalModel(m, "mssqlParams", &obj.MssqlParams, UnmarshalMSSQLProtectionGroupParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "mssqlParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "kubernetesParams", &obj.KubernetesParams, UnmarshalKubernetesProtectionGroupParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesParams-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -25530,6 +28923,9 @@ type ProtectionSourceNode struct {
 	// Specifies a Protection Source in a Physical environment.
 	PhysicalProtectionSource *PhysicalProtectionSource `json:"physicalProtectionSource,omitempty"`
 
+	// Specifies a Protection Source in Kubernetes environment.
+	KubernetesProtectionSource *KubernetesProtectionSource `json:"kubernetesProtectionSource,omitempty"`
+
 	// Specifies an Object representing one SQL Server instance or database.
 	SqlProtectionSource *SqlProtectionSource `json:"sqlProtectionSource,omitempty"`
 }
@@ -25585,6 +28981,11 @@ func UnmarshalProtectionSourceNode(m map[string]json.RawMessage, result interfac
 	err = core.UnmarshalModel(m, "physicalProtectionSource", &obj.PhysicalProtectionSource, UnmarshalPhysicalProtectionSource)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "physicalProtectionSource-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "kubernetesProtectionSource", &obj.KubernetesProtectionSource, UnmarshalKubernetesProtectionSource)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesProtectionSource-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalModel(m, "sqlProtectionSource", &obj.SqlProtectionSource, UnmarshalSqlProtectionSource)
@@ -25744,6 +29145,142 @@ func UnmarshalProtectionSourceObjectProtectionInfo(m map[string]json.RawMessage,
 	return
 }
 
+// ProtectionSourceTreeInfo : Specifies the registration and protection information of a registered Protection Source Tree on the Cohesity Cluster.
+// Many different Protection Source trees are supported such as 'kVMware', 'kAcropolis', 'kPhysical' etc.,.
+type ProtectionSourceTreeInfo struct {
+	// Array of applications hierarchy registered on this node. Specifies the application type and the list of instances of
+	// the application objects. For example for SQL Server, this list provides the SQL Server instances running on a VM or
+	// a Physical Server.
+	Applications []ApplicationInfo `json:"applications,omitempty"`
+
+	// Specifies the permission information of entities.
+	EntityPermissionInfo *EntityPermissionInformation `json:"entityPermissionInfo,omitempty"`
+
+	// Specifies the logical size of the Protection Source in bytes.
+	LogicalSizeBytes *int64 `json:"logicalSizeBytes,omitempty"`
+
+	// Specifies the entity metadata for maintenance mode.
+	MaintenanceModeConfig *MaintenanceModeConfig `json:"maintenanceModeConfig,omitempty"`
+
+	// Specifies registration information for a root node in a Protection Sources tree. A root node represents a registered
+	// Source on the Cohesity Cluster, such as a vCenter Server.
+	RegistrationInfo *RegisteredSourceInfo `json:"registrationInfo,omitempty"`
+
+	// Specifies the Protection Source for the root node of the Protection Source tree.
+	RootNode *ProtectionSourceNode `json:"rootNode,omitempty"`
+
+	// Specifies the stats of protection for a Protection Source Tree.
+	Stats *ProtectionSourceTreeInfoStats `json:"stats,omitempty"`
+
+	// Specifies the breakdown of the stats of protection by environment. overrideDescription: true.
+	StatsByEnv []ProtectionSummaryByEnv `json:"statsByEnv,omitempty"`
+
+	// Specifies the total bytes downtiered from the source so far.
+	TotalDowntieredSizeInBytes *int64 `json:"totalDowntieredSizeInBytes,omitempty"`
+
+	// Specifies the total bytes uptiered to the source so far.
+	TotalUptieredSizeInBytes *int64 `json:"totalUptieredSizeInBytes,omitempty"`
+}
+
+// UnmarshalProtectionSourceTreeInfo unmarshals an instance of ProtectionSourceTreeInfo from the specified map of raw messages.
+func UnmarshalProtectionSourceTreeInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProtectionSourceTreeInfo)
+	err = core.UnmarshalModel(m, "applications", &obj.Applications, UnmarshalApplicationInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "applications-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "entityPermissionInfo", &obj.EntityPermissionInfo, UnmarshalEntityPermissionInformation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "entityPermissionInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "logicalSizeBytes", &obj.LogicalSizeBytes)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "logicalSizeBytes-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "maintenanceModeConfig", &obj.MaintenanceModeConfig, UnmarshalMaintenanceModeConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maintenanceModeConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "registrationInfo", &obj.RegistrationInfo, UnmarshalRegisteredSourceInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "registrationInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "rootNode", &obj.RootNode, UnmarshalProtectionSourceNode)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "rootNode-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalProtectionSourceTreeInfoStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "statsByEnv", &obj.StatsByEnv, UnmarshalProtectionSummaryByEnv)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "statsByEnv-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "totalDowntieredSizeInBytes", &obj.TotalDowntieredSizeInBytes)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "totalDowntieredSizeInBytes-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "totalUptieredSizeInBytes", &obj.TotalUptieredSizeInBytes)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "totalUptieredSizeInBytes-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ProtectionSourceTreeInfoStats : Specifies the stats of protection for a Protection Source Tree.
+type ProtectionSourceTreeInfoStats struct {
+	// Specifies the number of objects that are protected under the given entity.
+	ProtectedCount *int64 `json:"protectedCount,omitempty"`
+
+	// Specifies the total size of the protected objects under the given entity.
+	ProtectedSize *int64 `json:"protectedSize,omitempty"`
+
+	// Specifies the number of objects that are not protected under the given entity.
+	UnprotectedCount *int64 `json:"unprotectedCount,omitempty"`
+
+	// Specifies the total size of the unprotected objects under the given entity.
+	UnprotectedSize *int64 `json:"unprotectedSize,omitempty"`
+}
+
+// UnmarshalProtectionSourceTreeInfoStats unmarshals an instance of ProtectionSourceTreeInfoStats from the specified map of raw messages.
+func UnmarshalProtectionSourceTreeInfoStats(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProtectionSourceTreeInfoStats)
+	err = core.UnmarshalPrimitive(m, "protectedCount", &obj.ProtectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectedSize", &obj.ProtectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedSize-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedCount", &obj.UnprotectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedSize", &obj.UnprotectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedSize-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // ProtectionSummary : Specifies a summary of an object protection.
 type ProtectionSummary struct {
 	// Specifies the policy name for this group.
@@ -25850,6 +29387,216 @@ func UnmarshalProtectionSummary(m map[string]json.RawMessage, result interface{}
 	err = core.UnmarshalPrimitive(m, "lastRunSlaViolated", &obj.LastRunSlaViolated)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "lastRunSlaViolated-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ProtectionSummaryByEnv : ProtectionSummaryByEnv specifies the number of protected and unprotected objects that is break down by environment.
+type ProtectionSummaryByEnv struct {
+	// Specifies the type of environment of the source object like kSQL etc.  Supported environment types such as 'kView',
+	// 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer' refers to Cohesity's Remote Adapter. 'kVMware' indicates the VMware
+	// Protection Source environment. 'kHyperV' indicates the HyperV Protection Source environment. 'kSQL' indicates the
+	// SQL Protection Source environment. 'kView' indicates the View Protection Source environment. 'kPuppeteer' indicates
+	// the Cohesity's Remote Adapter. 'kPhysical' indicates the physical Protection Source environment. 'kPure' indicates
+	// the Pure Storage Protection Source environment. 'kNimble' indicates the Nimble Storage Protection Source
+	// environment. 'kHpe3Par' indicates the Hpe 3Par Storage Protection Source environment. 'kAzure' indicates the
+	// Microsoft's Azure Protection Source environment. 'kNetapp' indicates the Netapp Protection Source environment.
+	// 'kAgent' indicates the Agent Protection Source environment. 'kGenericNas' indicates the Generic Network Attached
+	// Storage Protection Source environment. 'kAcropolis' indicates the Acropolis Protection Source environment.
+	// 'kPhysicalFiles' indicates the Physical Files Protection Source environment. 'kIbmFlashSystem' indicates the IBM
+	// Flash System Protection Source environment. 'kIsilon' indicates the Dell EMC's Isilon Protection Source environment.
+	// 'kGPFS' indicates IBM's GPFS Protection Source environment. 'kKVM' indicates the KVM Protection Source environment.
+	// 'kAWS' indicates the AWS Protection Source environment. 'kExchange' indicates the Exchange Protection Source
+	// environment. 'kHyperVVSS' indicates the HyperV VSS Protection Source environment. 'kOracle' indicates the Oracle
+	// Protection Source environment. 'kGCP' indicates the Google Cloud Platform Protection Source environment.
+	// 'kFlashBlade' indicates the Flash Blade Protection Source environment. 'kAWSNative' indicates the AWS Native
+	// Protection Source environment. 'kO365' indicates the Office 365 Protection Source environment. 'kO365Outlook'
+	// indicates Office 365 outlook Protection Source environment. 'kHyperFlex' indicates the Hyper Flex Protection Source
+	// environment. 'kGCPNative' indicates the GCP Native Protection Source environment. 'kAzureNative' indicates the Azure
+	// Native Protection Source environment. 'kKubernetes' indicates a Kubernetes Protection Source environment.
+	// 'kElastifile' indicates Elastifile Protection Source environment. 'kAD' indicates Active Directory Protection Source
+	// environment. 'kRDSSnapshotManager' indicates AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra
+	// Protection Source environment. 'kMongoDB' indicates MongoDB Protection Source environment. 'kCouchbase' indicates
+	// Couchbase Protection Source environment. 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates
+	// Hive Protection Source environment. 'kHBase' indicates HBase Protection Source environment. 'kUDA' indicates
+	// Universal Data Adapter Protection Source environment. 'kSAPHANA' indicates SAP HANA protection source environment.
+	// 'kO365Teams' indicates the Office365 Teams Protection Source environment. 'kO365Group' indicates the Office365
+	// Groups Protection Source environment. 'kO365Exchange' indicates the Office365 Mailbox Protection Source environment.
+	// 'kO365OneDrive' indicates the Office365 OneDrive Protection Source environment. 'kO365Sharepoint' indicates the
+	// Office365 SharePoint Protection Source environment. 'kO365PublicFolders' indicates the Office365 PublicFolders
+	// ProtectionSource environment. kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas, kAcropolis,
+	// kPhysicalFiles, kIsilon, kGPFS, kKVM, kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade, kAWSNative, kO365,
+	// kO365Outlook, kHyperFlex, kGCPNative, kAzureNative, kKubernetes, kElastifile, kAD, kRDSSnapshotManager, kCassandra,
+	// kMongoDB, kCouchbase, kHdfs, kHive, kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group, kO365Exchange, kO365OneDrive,
+	// kO365Sharepoint, kO365PublicFolders.
+	Environment *string `json:"environment,omitempty"`
+
+	// Specifies the breakdown of the kubernetes clusters by distribution type.
+	KubernetesDistributionStats []ProtectionSummaryForK8sDistributions `json:"kubernetesDistributionStats,omitempty"`
+
+	// Specifies the number of objects that are protected under the given entity.
+	ProtectedCount *int64 `json:"protectedCount,omitempty"`
+
+	// Specifies the total size of the protected objects under the given entity.
+	ProtectedSize *int64 `json:"protectedSize,omitempty"`
+
+	// Specifies the number of objects that are not protected under the given entity.
+	UnprotectedCount *int64 `json:"unprotectedCount,omitempty"`
+
+	// Specifies the total size of the unprotected objects under the given entity.
+	UnprotectedSize *int64 `json:"unprotectedSize,omitempty"`
+}
+
+// Constants associated with the ProtectionSummaryByEnv.Environment property.
+// Specifies the type of environment of the source object like kSQL etc.  Supported environment types such as 'kView',
+// 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer' refers to Cohesity's Remote Adapter. 'kVMware' indicates the VMware
+// Protection Source environment. 'kHyperV' indicates the HyperV Protection Source environment. 'kSQL' indicates the SQL
+// Protection Source environment. 'kView' indicates the View Protection Source environment. 'kPuppeteer' indicates the
+// Cohesity's Remote Adapter. 'kPhysical' indicates the physical Protection Source environment. 'kPure' indicates the
+// Pure Storage Protection Source environment. 'kNimble' indicates the Nimble Storage Protection Source environment.
+// 'kHpe3Par' indicates the Hpe 3Par Storage Protection Source environment. 'kAzure' indicates the Microsoft's Azure
+// Protection Source environment. 'kNetapp' indicates the Netapp Protection Source environment. 'kAgent' indicates the
+// Agent Protection Source environment. 'kGenericNas' indicates the Generic Network Attached Storage Protection Source
+// environment. 'kAcropolis' indicates the Acropolis Protection Source environment. 'kPhysicalFiles' indicates the
+// Physical Files Protection Source environment. 'kIbmFlashSystem' indicates the IBM Flash System Protection Source
+// environment. 'kIsilon' indicates the Dell EMC's Isilon Protection Source environment. 'kGPFS' indicates IBM's GPFS
+// Protection Source environment. 'kKVM' indicates the KVM Protection Source environment. 'kAWS' indicates the AWS
+// Protection Source environment. 'kExchange' indicates the Exchange Protection Source environment. 'kHyperVVSS'
+// indicates the HyperV VSS Protection Source environment. 'kOracle' indicates the Oracle Protection Source environment.
+// 'kGCP' indicates the Google Cloud Platform Protection Source environment. 'kFlashBlade' indicates the Flash Blade
+// Protection Source environment. 'kAWSNative' indicates the AWS Native Protection Source environment. 'kO365' indicates
+// the Office 365 Protection Source environment. 'kO365Outlook' indicates Office 365 outlook Protection Source
+// environment. 'kHyperFlex' indicates the Hyper Flex Protection Source environment. 'kGCPNative' indicates the GCP
+// Native Protection Source environment. 'kAzureNative' indicates the Azure Native Protection Source environment.
+// 'kKubernetes' indicates a Kubernetes Protection Source environment. 'kElastifile' indicates Elastifile Protection
+// Source environment. 'kAD' indicates Active Directory Protection Source environment. 'kRDSSnapshotManager' indicates
+// AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra Protection Source environment. 'kMongoDB'
+// indicates MongoDB Protection Source environment. 'kCouchbase' indicates Couchbase Protection Source environment.
+// 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates Hive Protection Source environment. 'kHBase'
+// indicates HBase Protection Source environment. 'kUDA' indicates Universal Data Adapter Protection Source environment.
+// 'kSAPHANA' indicates SAP HANA protection source environment. 'kO365Teams' indicates the Office365 Teams Protection
+// Source environment. 'kO365Group' indicates the Office365 Groups Protection Source environment. 'kO365Exchange'
+// indicates the Office365 Mailbox Protection Source environment. 'kO365OneDrive' indicates the Office365 OneDrive
+// Protection Source environment. 'kO365Sharepoint' indicates the Office365 SharePoint Protection Source environment.
+// 'kO365PublicFolders' indicates the Office365 PublicFolders ProtectionSource environment. kHpe3Par, kIbmFlashSystem,
+// kAzure, kNetapp, kAgent, kGenericNas, kAcropolis, kPhysicalFiles, kIsilon, kGPFS, kKVM, kAWS, kExchange, kHyperVVSS,
+// kOracle, kGCP, kFlashBlade, kAWSNative, kO365, kO365Outlook, kHyperFlex, kGCPNative, kAzureNative, kKubernetes,
+// kElastifile, kAD, kRDSSnapshotManager, kCassandra, kMongoDB, kCouchbase, kHdfs, kHive, kHBase, kUDA, kSAPHANA,
+// kO365Teams, kO365Group, kO365Exchange, kO365OneDrive, kO365Sharepoint, kO365PublicFolders.
+const (
+	ProtectionSummaryByEnv_Environment_Khyperv    = "kHyperV"
+	ProtectionSummaryByEnv_Environment_Knimble    = "kNimble"
+	ProtectionSummaryByEnv_Environment_Kphysical  = "kPhysical"
+	ProtectionSummaryByEnv_Environment_Kpuppeteer = "kPuppeteer"
+	ProtectionSummaryByEnv_Environment_Kpure      = "kPure"
+	ProtectionSummaryByEnv_Environment_Ksql       = "kSQL"
+	ProtectionSummaryByEnv_Environment_Kview      = "kView"
+	ProtectionSummaryByEnv_Environment_Kvmware    = "kVMware"
+)
+
+// UnmarshalProtectionSummaryByEnv unmarshals an instance of ProtectionSummaryByEnv from the specified map of raw messages.
+func UnmarshalProtectionSummaryByEnv(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProtectionSummaryByEnv)
+	err = core.UnmarshalPrimitive(m, "environment", &obj.Environment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "environment-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "kubernetesDistributionStats", &obj.KubernetesDistributionStats, UnmarshalProtectionSummaryForK8sDistributions)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesDistributionStats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectedCount", &obj.ProtectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectedSize", &obj.ProtectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedSize-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedCount", &obj.UnprotectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedSize", &obj.UnprotectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedSize-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ProtectionSummaryForK8sDistributions : ProtectionSummaryForK8sDistributions struct
+type ProtectionSummaryForK8sDistributions struct {
+	// Specifies the type of Kuberentes distribution Determines the K8s distribution. kIKS, kROKS.
+	Distribution *string `json:"distribution,omitempty"`
+
+	// Specifies the number of objects that are protected for that distribution.
+	ProtectedCount *int64 `json:"protectedCount,omitempty"`
+
+	// Specifies the total size of objects that are protected for that distribution.
+	ProtectedSize *int64 `json:"protectedSize,omitempty"`
+
+	// Specifies the number of registered clusters for that distribution.
+	TotalRegisteredClusters *int64 `json:"totalRegisteredClusters,omitempty"`
+
+	// Specifies the number of objects that are not protected for that distribution.
+	UnprotectedCount *int64 `json:"unprotectedCount,omitempty"`
+
+	// Specifies the total size of objects that are not protected for that distribution.
+	UnprotectedSize *int64 `json:"unprotectedSize,omitempty"`
+}
+
+// Constants associated with the ProtectionSummaryForK8sDistributions.Distribution property.
+// Specifies the type of Kuberentes distribution Determines the K8s distribution. kIKS, kROKS.
+const (
+	ProtectionSummaryForK8sDistributions_Distribution_Kaks         = "kAKS"
+	ProtectionSummaryForK8sDistributions_Distribution_Keks         = "kEKS"
+	ProtectionSummaryForK8sDistributions_Distribution_Kgke         = "kGKE"
+	ProtectionSummaryForK8sDistributions_Distribution_Kmainline    = "kMainline"
+	ProtectionSummaryForK8sDistributions_Distribution_Kopenshift   = "kOpenshift"
+	ProtectionSummaryForK8sDistributions_Distribution_Krancher     = "kRancher"
+	ProtectionSummaryForK8sDistributions_Distribution_Kvmwaretanzu = "kVMwareTanzu"
+)
+
+// UnmarshalProtectionSummaryForK8sDistributions unmarshals an instance of ProtectionSummaryForK8sDistributions from the specified map of raw messages.
+func UnmarshalProtectionSummaryForK8sDistributions(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProtectionSummaryForK8sDistributions)
+	err = core.UnmarshalPrimitive(m, "distribution", &obj.Distribution)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "distribution-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectedCount", &obj.ProtectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectedSize", &obj.ProtectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectedSize-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "totalRegisteredClusters", &obj.TotalRegisteredClusters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "totalRegisteredClusters-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedCount", &obj.UnprotectedCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unprotectedSize", &obj.UnprotectedSize)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unprotectedSize-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -26004,6 +29751,475 @@ func UnmarshalPublicFolderItem(m map[string]json.RawMessage, result interface{})
 	err = core.UnmarshalPrimitive(m, "parentFolderId", &obj.ParentFolderID)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "parentFolderId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// QuiesceGroup : Specifies the quiesce group for kubernetes.
+type QuiesceGroup struct {
+	// Specifies quiesce mode for applying quiesce rules.
+	QuiesceMode *string `json:"quiesceMode" validate:"required"`
+
+	// Specifies a list of quiesce rules.
+	QuiesceRules []QuiesceRule `json:"quiesceRules" validate:"required"`
+}
+
+// Constants associated with the QuiesceGroup.QuiesceMode property.
+// Specifies quiesce mode for applying quiesce rules.
+const (
+	QuiesceGroup_QuiesceMode_Kquiesceindependently = "kQuiesceIndependently"
+	QuiesceGroup_QuiesceMode_Kquiescetogether      = "kQuiesceTogether"
+)
+
+// NewQuiesceGroup : Instantiate QuiesceGroup (Generic Model Constructor)
+func (*BackupRecoveryV1) NewQuiesceGroup(quiesceMode string, quiesceRules []QuiesceRule) (_model *QuiesceGroup, err error) {
+	_model = &QuiesceGroup{
+		QuiesceMode:  core.StringPtr(quiesceMode),
+		QuiesceRules: quiesceRules,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalQuiesceGroup unmarshals an instance of QuiesceGroup from the specified map of raw messages.
+func UnmarshalQuiesceGroup(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(QuiesceGroup)
+	err = core.UnmarshalPrimitive(m, "quiesceMode", &obj.QuiesceMode)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "quiesceMode-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "quiesceRules", &obj.QuiesceRules, UnmarshalQuiesceRule)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "quiesceRules-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// QuiesceRule : Specifies the Kubernetes Quiesce rule.
+type QuiesceRule struct {
+	// Specifies the labels to select a pod.
+	PodSelectorLabels []KubernetesLabel `json:"podSelectorLabels,omitempty"`
+
+	// Specifies the hooks to be applied after taking snapshot.
+	PostSnapshotHooks []KubernetesHook `json:"postSnapshotHooks" validate:"required"`
+
+	// Specifies the hooks to be applied before taking snapshot.
+	PreSnapshotHooks []KubernetesHook `json:"preSnapshotHooks" validate:"required"`
+}
+
+// NewQuiesceRule : Instantiate QuiesceRule (Generic Model Constructor)
+func (*BackupRecoveryV1) NewQuiesceRule(postSnapshotHooks []KubernetesHook, preSnapshotHooks []KubernetesHook) (_model *QuiesceRule, err error) {
+	_model = &QuiesceRule{
+		PostSnapshotHooks: postSnapshotHooks,
+		PreSnapshotHooks:  preSnapshotHooks,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalQuiesceRule unmarshals an instance of QuiesceRule from the specified map of raw messages.
+func UnmarshalQuiesceRule(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(QuiesceRule)
+	err = core.UnmarshalModel(m, "podSelectorLabels", &obj.PodSelectorLabels, UnmarshalKubernetesLabel)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "podSelectorLabels-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "postSnapshotHooks", &obj.PostSnapshotHooks, UnmarshalKubernetesHook)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "postSnapshotHooks-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "preSnapshotHooks", &obj.PreSnapshotHooks, UnmarshalKubernetesHook)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "preSnapshotHooks-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverKubernetesFileAndFolderParamsKubernetesTargetParams : Specifies the parameters to recover to a Kubernetes target.
+type RecoverKubernetesFileAndFolderParamsKubernetesTargetParams struct {
+	// Specifies whether to continue recovering other files if one of files or folders failed to recover. Default value is
+	// false.
+	ContinueOnError *bool `json:"continueOnError,omitempty"`
+
+	// Specifies the configuration for recovering to a new target.
+	NewTargetConfig *KubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig `json:"newTargetConfig,omitempty"`
+
+	// Specifies the configuration for recovering to the original target.
+	OriginalTargetConfig *KubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig `json:"originalTargetConfig,omitempty"`
+
+	// Specifies whether to overwrite the existing files. Default is true.
+	OverwriteExisting *bool `json:"overwriteExisting,omitempty"`
+
+	// Specifies whether to preserve original attributes. Default is true.
+	PreserveAttributes *bool `json:"preserveAttributes,omitempty"`
+
+	// Specifies whether to recover to the original target. If true, originalTargetConfig must be specified. If false,
+	// newTargetConfig must be specified.
+	RecoverToOriginalTarget *bool `json:"recoverToOriginalTarget" validate:"required"`
+
+	// Specifies VLAN Params associated with the recovered files and folders. If this is not specified, then the VLAN
+	// settings will be automatically selected from one of the below options: a. If VLANs are configured on Cohesity, then
+	// the VLAN host/VIP will be automatically based on the client's (e.g. ESXI host) IP address. b. If VLANs are not
+	// configured on Cohesity, then the partition hostname or VIPs will be used for Recovery.
+	VlanConfig *KubernetesTargetParamsForRecoverFileAndFolderVlanConfig `json:"vlanConfig,omitempty"`
+}
+
+// NewRecoverKubernetesFileAndFolderParamsKubernetesTargetParams : Instantiate RecoverKubernetesFileAndFolderParamsKubernetesTargetParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoverKubernetesFileAndFolderParamsKubernetesTargetParams(recoverToOriginalTarget bool) (_model *RecoverKubernetesFileAndFolderParamsKubernetesTargetParams, err error) {
+	_model = &RecoverKubernetesFileAndFolderParamsKubernetesTargetParams{
+		RecoverToOriginalTarget: core.BoolPtr(recoverToOriginalTarget),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoverKubernetesFileAndFolderParamsKubernetesTargetParams unmarshals an instance of RecoverKubernetesFileAndFolderParamsKubernetesTargetParams from the specified map of raw messages.
+func UnmarshalRecoverKubernetesFileAndFolderParamsKubernetesTargetParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverKubernetesFileAndFolderParamsKubernetesTargetParams)
+	err = core.UnmarshalPrimitive(m, "continueOnError", &obj.ContinueOnError)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "continueOnError-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "newTargetConfig", &obj.NewTargetConfig, UnmarshalKubernetesTargetParamsForRecoverFileAndFolderNewTargetConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "newTargetConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "originalTargetConfig", &obj.OriginalTargetConfig, UnmarshalKubernetesTargetParamsForRecoverFileAndFolderOriginalTargetConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "originalTargetConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "overwriteExisting", &obj.OverwriteExisting)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "overwriteExisting-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "preserveAttributes", &obj.PreserveAttributes)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "preserveAttributes-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoverToOriginalTarget", &obj.RecoverToOriginalTarget)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverToOriginalTarget-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanConfig", &obj.VlanConfig, UnmarshalKubernetesTargetParamsForRecoverFileAndFolderVlanConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanConfig-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverKubernetesNamespaceParamsKubernetesTargetParams : Specifies the params for recovering to a Kubernetes host.
+type RecoverKubernetesNamespaceParamsKubernetesTargetParams struct {
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	ExcludeParams *KubernetesFilterParams `json:"excludeParams,omitempty"`
+
+	// Specifies the list of pvc to be excluded from recovery.
+	ExcludedPvcs []KubernetesPvcInfo `json:"excludedPvcs,omitempty"`
+
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	IncludeParams *KubernetesFilterParams `json:"includeParams,omitempty"`
+
+	// Specifies the objects to be recovered.
+	Objects []CommonRecoverObjectSnapshotParams `json:"objects,omitempty"`
+
+	// Specifies the Protection Group Runs params to recover. All the VM's that are successfully backed up by specified
+	// Runs will be recovered. This can be specified along with individual snapshots of VMs. User has to make sure that
+	// specified Object snapshots and Protection Group Runs should not have any intersection. For example, user cannot
+	// specify multiple Runs which has same Object or an Object snapshot and a Run which has same Object's snapshot.
+	RecoverProtectionGroupRunsParams []RecoverProtectionGroupRunParams `json:"recoverProtectionGroupRunsParams,omitempty"`
+
+	// Specifies whether to recover PVCs only during recovery.
+	RecoverPvcsOnly *bool `json:"recoverPvcsOnly,omitempty"`
+
+	// Specifies the recovery target configuration of the Namespace recovery.
+	RecoveryTargetConfig *KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig `json:"recoveryTargetConfig" validate:"required"`
+
+	// Specifies params to rename the Namespaces that are recovered. If not specified, the original names of the Namespaces
+	// are preserved. If a name collision occurs then the Namespace being recovered will overwrite the Namespace already
+	// present on the source.
+	RenameRecoveredNamespacesParams *KubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams `json:"renameRecoveredNamespacesParams,omitempty"`
+
+	// Specifies whether to skip checking if the target cluster, to restore to, is compatible or not. By default restore
+	// allowed to compatible cluster only.
+	SkipClusterCompatibilityCheck *bool `json:"skipClusterCompatibilityCheck,omitempty"`
+
+	// Specifies the storage class parameters for recovery of namespace.
+	StorageClass *KubernetesStorageClassParams `json:"storageClass,omitempty"`
+}
+
+// NewRecoverKubernetesNamespaceParamsKubernetesTargetParams : Instantiate RecoverKubernetesNamespaceParamsKubernetesTargetParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoverKubernetesNamespaceParamsKubernetesTargetParams(recoveryTargetConfig *KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig) (_model *RecoverKubernetesNamespaceParamsKubernetesTargetParams, err error) {
+	_model = &RecoverKubernetesNamespaceParamsKubernetesTargetParams{
+		RecoveryTargetConfig: recoveryTargetConfig,
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoverKubernetesNamespaceParamsKubernetesTargetParams unmarshals an instance of RecoverKubernetesNamespaceParamsKubernetesTargetParams from the specified map of raw messages.
+func UnmarshalRecoverKubernetesNamespaceParamsKubernetesTargetParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverKubernetesNamespaceParamsKubernetesTargetParams)
+	err = core.UnmarshalModel(m, "excludeParams", &obj.ExcludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludeParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "excludedPvcs", &obj.ExcludedPvcs, UnmarshalKubernetesPvcInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludedPvcs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "includeParams", &obj.IncludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includeParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalCommonRecoverObjectSnapshotParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoverProtectionGroupRunsParams", &obj.RecoverProtectionGroupRunsParams, UnmarshalRecoverProtectionGroupRunParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverProtectionGroupRunsParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoverPvcsOnly", &obj.RecoverPvcsOnly)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverPvcsOnly-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoveryTargetConfig", &obj.RecoveryTargetConfig, UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryTargetConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "renameRecoveredNamespacesParams", &obj.RenameRecoveredNamespacesParams, UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "renameRecoveredNamespacesParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "skipClusterCompatibilityCheck", &obj.SkipClusterCompatibilityCheck)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "skipClusterCompatibilityCheck-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "storageClass", &obj.StorageClass, UnmarshalKubernetesStorageClassParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageClass-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverKubernetesNamespaceParamsVlanConfig : Specifies VLAN Params associated with the recovered. If this is not specified, then the VLAN settings will be
+// automatically selected from one of the below options: a. If VLANs are configured on Cohesity, then the VLAN host/VIP
+// will be automatically based on the client's (e.g. ESXI host) IP address. b. If VLANs are not configured on Cohesity,
+// then the partition hostname or VIPs will be used for Recovery.
+type RecoverKubernetesNamespaceParamsVlanConfig struct {
+	// If this is set, then the Cohesity host name or the IP address associated with this vlan is used for mounting
+	// Cohesity's view on the remote host.
+	ID *int64 `json:"id,omitempty"`
+
+	// If this is set to true, then even if VLANs are configured on the system, the partition VIPs will be used for the
+	// Recovery.
+	DisableVlan *bool `json:"disableVlan,omitempty"`
+
+	// Interface group to use for Recovery.
+	InterfaceName *string `json:"interfaceName,omitempty"`
+}
+
+// UnmarshalRecoverKubernetesNamespaceParamsVlanConfig unmarshals an instance of RecoverKubernetesNamespaceParamsVlanConfig from the specified map of raw messages.
+func UnmarshalRecoverKubernetesNamespaceParamsVlanConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverKubernetesNamespaceParamsVlanConfig)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "disableVlan", &obj.DisableVlan)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "disableVlan-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "interfaceName", &obj.InterfaceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "interfaceName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverKubernetesParamsDownloadFileAndFolderParams : Specifies the parameters to download files and folders.
+type RecoverKubernetesParamsDownloadFileAndFolderParams struct {
+	// Specifies the time upto which the download link is available.
+	ExpiryTimeUsecs *int64 `json:"expiryTimeUsecs,omitempty"`
+
+	// Specifies the info about the files and folders to be recovered.
+	FilesAndFolders []CommonRecoverFileAndFolderInfo `json:"filesAndFolders,omitempty"`
+
+	// Specifies the path location to download the files and folders.
+	DownloadFilePath *string `json:"downloadFilePath,omitempty"`
+}
+
+// UnmarshalRecoverKubernetesParamsDownloadFileAndFolderParams unmarshals an instance of RecoverKubernetesParamsDownloadFileAndFolderParams from the specified map of raw messages.
+func UnmarshalRecoverKubernetesParamsDownloadFileAndFolderParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverKubernetesParamsDownloadFileAndFolderParams)
+	err = core.UnmarshalPrimitive(m, "expiryTimeUsecs", &obj.ExpiryTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expiryTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "filesAndFolders", &obj.FilesAndFolders, UnmarshalCommonRecoverFileAndFolderInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "filesAndFolders-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "downloadFilePath", &obj.DownloadFilePath)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "downloadFilePath-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverKubernetesParamsRecoverFileAndFolderParams : Specifies the parameters to perform a file and folder recovery.
+type RecoverKubernetesParamsRecoverFileAndFolderParams struct {
+	// Specifies the information about the files and folders to be recovered.
+	FilesAndFolders []CommonRecoverFileAndFolderInfo `json:"filesAndFolders" validate:"required"`
+
+	// Specifies the parameters to recover to a Kubernetes target.
+	KubernetesTargetParams *RecoverKubernetesFileAndFolderParamsKubernetesTargetParams `json:"kubernetesTargetParams,omitempty"`
+
+	// Specifies the environment of the recovery target. The corresponding params below must be filled out.
+	TargetEnvironment *string `json:"targetEnvironment" validate:"required"`
+}
+
+// Constants associated with the RecoverKubernetesParamsRecoverFileAndFolderParams.TargetEnvironment property.
+// Specifies the environment of the recovery target. The corresponding params below must be filled out.
+const (
+	RecoverKubernetesParamsRecoverFileAndFolderParams_TargetEnvironment_Kkubernetes = "kKubernetes"
+)
+
+// NewRecoverKubernetesParamsRecoverFileAndFolderParams : Instantiate RecoverKubernetesParamsRecoverFileAndFolderParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoverKubernetesParamsRecoverFileAndFolderParams(filesAndFolders []CommonRecoverFileAndFolderInfo, targetEnvironment string) (_model *RecoverKubernetesParamsRecoverFileAndFolderParams, err error) {
+	_model = &RecoverKubernetesParamsRecoverFileAndFolderParams{
+		FilesAndFolders:   filesAndFolders,
+		TargetEnvironment: core.StringPtr(targetEnvironment),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoverKubernetesParamsRecoverFileAndFolderParams unmarshals an instance of RecoverKubernetesParamsRecoverFileAndFolderParams from the specified map of raw messages.
+func UnmarshalRecoverKubernetesParamsRecoverFileAndFolderParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverKubernetesParamsRecoverFileAndFolderParams)
+	err = core.UnmarshalModel(m, "filesAndFolders", &obj.FilesAndFolders, UnmarshalCommonRecoverFileAndFolderInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "filesAndFolders-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "kubernetesTargetParams", &obj.KubernetesTargetParams, UnmarshalRecoverKubernetesFileAndFolderParamsKubernetesTargetParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesTargetParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "targetEnvironment", &obj.TargetEnvironment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetEnvironment-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverKubernetesParamsRecoverNamespaceParams : Specifies the parameters to recover Kubernetes Namespaces.
+type RecoverKubernetesParamsRecoverNamespaceParams struct {
+	// Specifies the params for recovering to a Kubernetes host.
+	KubernetesTargetParams *RecoverKubernetesNamespaceParamsKubernetesTargetParams `json:"kubernetesTargetParams,omitempty"`
+
+	// Specifies the environment of the recovery target. The corresponding params below must be filled out. As of now only
+	// kubernetes target environment is supported.
+	TargetEnvironment *string `json:"targetEnvironment" validate:"required"`
+
+	// Specifies VLAN Params associated with the recovered. If this is not specified, then the VLAN settings will be
+	// automatically selected from one of the below options: a. If VLANs are configured on Cohesity, then the VLAN host/VIP
+	// will be automatically based on the client's (e.g. ESXI host) IP address. b. If VLANs are not configured on Cohesity,
+	// then the partition hostname or VIPs will be used for Recovery.
+	VlanConfig *RecoverKubernetesNamespaceParamsVlanConfig `json:"vlanConfig,omitempty"`
+}
+
+// Constants associated with the RecoverKubernetesParamsRecoverNamespaceParams.TargetEnvironment property.
+// Specifies the environment of the recovery target. The corresponding params below must be filled out. As of now only
+// kubernetes target environment is supported.
+const (
+	RecoverKubernetesParamsRecoverNamespaceParams_TargetEnvironment_Kkubernetes = "kKubernetes"
+)
+
+// NewRecoverKubernetesParamsRecoverNamespaceParams : Instantiate RecoverKubernetesParamsRecoverNamespaceParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoverKubernetesParamsRecoverNamespaceParams(targetEnvironment string) (_model *RecoverKubernetesParamsRecoverNamespaceParams, err error) {
+	_model = &RecoverKubernetesParamsRecoverNamespaceParams{
+		TargetEnvironment: core.StringPtr(targetEnvironment),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoverKubernetesParamsRecoverNamespaceParams unmarshals an instance of RecoverKubernetesParamsRecoverNamespaceParams from the specified map of raw messages.
+func UnmarshalRecoverKubernetesParamsRecoverNamespaceParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverKubernetesParamsRecoverNamespaceParams)
+	err = core.UnmarshalModel(m, "kubernetesTargetParams", &obj.KubernetesTargetParams, UnmarshalRecoverKubernetesNamespaceParamsKubernetesTargetParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesTargetParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "targetEnvironment", &obj.TargetEnvironment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetEnvironment-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanConfig", &obj.VlanConfig, UnmarshalRecoverKubernetesNamespaceParamsVlanConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanConfig-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -26467,6 +30683,65 @@ func UnmarshalRecoverPhysicalVolumeParamsPhysicalTargetParams(m map[string]json.
 	err = core.UnmarshalModel(m, "vlanConfig", &obj.VlanConfig, UnmarshalPhysicalTargetParamsForRecoverVolumeVlanConfig)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "vlanConfig-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoverProtectionGroupRunParams : Specifies the Protection Group Run params to recover. All the VM's that are successfully backed up by specified Runs
+// will be recovered.
+type RecoverProtectionGroupRunParams struct {
+	// Specifies the archival target id. If specified and Protection Group run has an archival snapshot then VMs are
+	// recovered from the specified archival snapshot. If not specified (default), VMs are recovered from local snapshot.
+	ArchivalTargetID *int64 `json:"archivalTargetId,omitempty"`
+
+	// Specifies the local Protection Group id. In case of recovering a replication Run, this field should be provided with
+	// local Protection Group id.
+	ProtectionGroupID *string `json:"protectionGroupId,omitempty"`
+
+	// Specifies the Protection Group Instance id.
+	ProtectionGroupInstanceID *int64 `json:"protectionGroupInstanceId" validate:"required"`
+
+	// Specifies the Protection Group Run id from which to recover VMs. All the VM's that are successfully protected by
+	// this Run will be recovered.
+	ProtectionGroupRunID *string `json:"protectionGroupRunId" validate:"required"`
+}
+
+// NewRecoverProtectionGroupRunParams : Instantiate RecoverProtectionGroupRunParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoverProtectionGroupRunParams(protectionGroupInstanceID int64, protectionGroupRunID string) (_model *RecoverProtectionGroupRunParams, err error) {
+	_model = &RecoverProtectionGroupRunParams{
+		ProtectionGroupInstanceID: core.Int64Ptr(protectionGroupInstanceID),
+		ProtectionGroupRunID:      core.StringPtr(protectionGroupRunID),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoverProtectionGroupRunParams unmarshals an instance of RecoverProtectionGroupRunParams from the specified map of raw messages.
+func UnmarshalRecoverProtectionGroupRunParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverProtectionGroupRunParams)
+	err = core.UnmarshalPrimitive(m, "archivalTargetId", &obj.ArchivalTargetID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "archivalTargetId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectionGroupId", &obj.ProtectionGroupID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectionGroupId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectionGroupInstanceId", &obj.ProtectionGroupInstanceID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectionGroupInstanceId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectionGroupRunId", &obj.ProtectionGroupRunID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectionGroupRunId-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -27233,6 +31508,9 @@ type Recovery struct {
 	// Specifies the recovery options specific to Physical environment.
 	PhysicalParams *RecoverPhysicalParams `json:"physicalParams,omitempty"`
 
+	// Specifies the recovery options specific to Kubernetes environment.
+	KubernetesParams *RecoveryKubernetesParams `json:"kubernetesParams,omitempty"`
+
 	// Specifies the recovery options specific to Sql environment.
 	MssqlParams *RecoverSqlParams `json:"mssqlParams,omitempty"`
 }
@@ -27261,8 +31539,9 @@ const (
 // Constants associated with the Recovery.SnapshotEnvironment property.
 // Specifies the type of snapshot environment for which the Recovery was performed.
 const (
-	Recovery_SnapshotEnvironment_Kphysical = "kPhysical"
-	Recovery_SnapshotEnvironment_Ksql      = "kSQL"
+	Recovery_SnapshotEnvironment_Kkubernetes = "kKubernetes"
+	Recovery_SnapshotEnvironment_Kphysical   = "kPhysical"
+	Recovery_SnapshotEnvironment_Ksql        = "kSQL"
 )
 
 // Constants associated with the Recovery.RecoveryAction property.
@@ -27424,9 +31703,72 @@ func UnmarshalRecovery(m map[string]json.RawMessage, result interface{}) (err er
 		err = core.SDKErrorf(err, "", "physicalParams-error", common.GetComponentInfo())
 		return
 	}
+	err = core.UnmarshalModel(m, "kubernetesParams", &obj.KubernetesParams, UnmarshalRecoveryKubernetesParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesParams-error", common.GetComponentInfo())
+		return
+	}
 	err = core.UnmarshalModel(m, "mssqlParams", &obj.MssqlParams, UnmarshalRecoverSqlParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "mssqlParams-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoveryKubernetesParams : Specifies the recovery options specific to Kubernetes environment.
+type RecoveryKubernetesParams struct {
+	// Specifies the parameters to download files and folders.
+	DownloadFileAndFolderParams *RecoverKubernetesParamsDownloadFileAndFolderParams `json:"downloadFileAndFolderParams,omitempty"`
+
+	// Specifies the list of objects which need to be recovered.
+	Objects []CommonRecoverObjectSnapshotParams `json:"objects,omitempty"`
+
+	// Specifies the parameters to perform a file and folder recovery.
+	RecoverFileAndFolderParams *RecoverKubernetesParamsRecoverFileAndFolderParams `json:"recoverFileAndFolderParams,omitempty"`
+
+	// Specifies the parameters to recover Kubernetes Namespaces.
+	RecoverNamespaceParams *RecoverKubernetesParamsRecoverNamespaceParams `json:"recoverNamespaceParams,omitempty"`
+
+	// Specifies the type of recover action to be performed.
+	RecoveryAction *string `json:"recoveryAction" validate:"required"`
+}
+
+// Constants associated with the RecoveryKubernetesParams.RecoveryAction property.
+// Specifies the type of recover action to be performed.
+const (
+	RecoveryKubernetesParams_RecoveryAction_Downloadfilesandfolders = "DownloadFilesAndFolders"
+	RecoveryKubernetesParams_RecoveryAction_Recoverfiles            = "RecoverFiles"
+	RecoveryKubernetesParams_RecoveryAction_Recovernamespaces       = "RecoverNamespaces"
+)
+
+// UnmarshalRecoveryKubernetesParams unmarshals an instance of RecoveryKubernetesParams from the specified map of raw messages.
+func UnmarshalRecoveryKubernetesParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoveryKubernetesParams)
+	err = core.UnmarshalModel(m, "downloadFileAndFolderParams", &obj.DownloadFileAndFolderParams, UnmarshalRecoverKubernetesParamsDownloadFileAndFolderParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "downloadFileAndFolderParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalCommonRecoverObjectSnapshotParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoverFileAndFolderParams", &obj.RecoverFileAndFolderParams, UnmarshalRecoverKubernetesParamsRecoverFileAndFolderParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverFileAndFolderParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoverNamespaceParams", &obj.RecoverNamespaceParams, UnmarshalRecoverKubernetesParamsRecoverNamespaceParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverNamespaceParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoveryAction", &obj.RecoveryAction)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryAction-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -27467,6 +31809,76 @@ func UnmarshalRecoveryObjectIdentifier(m map[string]json.RawMessage, result inte
 	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoveryRequestParamsKubernetesParams : Specifies the recovery options specific to Kubernetes environment.
+type RecoveryRequestParamsKubernetesParams struct {
+	// Specifies the parameters to download files and folders.
+	DownloadFileAndFolderParams *RecoverKubernetesParamsDownloadFileAndFolderParams `json:"downloadFileAndFolderParams,omitempty"`
+
+	// Specifies the list of objects which need to be recovered.
+	Objects []CommonRecoverObjectSnapshotParams `json:"objects,omitempty"`
+
+	// Specifies the parameters to perform a file and folder recovery.
+	RecoverFileAndFolderParams *RecoverKubernetesParamsRecoverFileAndFolderParams `json:"recoverFileAndFolderParams,omitempty"`
+
+	// Specifies the parameters to recover Kubernetes Namespaces.
+	RecoverNamespaceParams *RecoverKubernetesParamsRecoverNamespaceParams `json:"recoverNamespaceParams,omitempty"`
+
+	// Specifies the type of recover action to be performed.
+	RecoveryAction *string `json:"recoveryAction" validate:"required"`
+}
+
+// Constants associated with the RecoveryRequestParamsKubernetesParams.RecoveryAction property.
+// Specifies the type of recover action to be performed.
+const (
+	RecoveryRequestParamsKubernetesParams_RecoveryAction_Downloadfilesandfolders = "DownloadFilesAndFolders"
+	RecoveryRequestParamsKubernetesParams_RecoveryAction_Recoverfiles            = "RecoverFiles"
+	RecoveryRequestParamsKubernetesParams_RecoveryAction_Recovernamespaces       = "RecoverNamespaces"
+)
+
+// NewRecoveryRequestParamsKubernetesParams : Instantiate RecoveryRequestParamsKubernetesParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoveryRequestParamsKubernetesParams(recoveryAction string) (_model *RecoveryRequestParamsKubernetesParams, err error) {
+	_model = &RecoveryRequestParamsKubernetesParams{
+		RecoveryAction: core.StringPtr(recoveryAction),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoveryRequestParamsKubernetesParams unmarshals an instance of RecoveryRequestParamsKubernetesParams from the specified map of raw messages.
+func UnmarshalRecoveryRequestParamsKubernetesParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoveryRequestParamsKubernetesParams)
+	err = core.UnmarshalModel(m, "downloadFileAndFolderParams", &obj.DownloadFileAndFolderParams, UnmarshalRecoverKubernetesParamsDownloadFileAndFolderParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "downloadFileAndFolderParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalCommonRecoverObjectSnapshotParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoverFileAndFolderParams", &obj.RecoverFileAndFolderParams, UnmarshalRecoverKubernetesParamsRecoverFileAndFolderParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverFileAndFolderParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoverNamespaceParams", &obj.RecoverNamespaceParams, UnmarshalRecoverKubernetesParamsRecoverNamespaceParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverNamespaceParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoveryAction", &obj.RecoveryAction)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryAction-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -27554,7 +31966,7 @@ type RefreshProtectionSourceByIdOptions struct {
 	// must be specified.
 	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -27593,7 +32005,7 @@ type RegisterDataSourceConnectorOptions struct {
 	// different IDs.
 	ConnectorID *int64 `json:"connectorId,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -27658,18 +32070,22 @@ type RegisterProtectionSourceOptions struct {
 	// ID values that exceed 2^53 - 1, which is the max value for which JS maintains precision.
 	DataSourceConnectionID *string `json:"dataSourceConnectionId,omitempty"`
 
+	// Specifies the parameters to register a Kubernetes source.
+	KubernetesParams *KubernetesSourceRegistrationParams `json:"kubernetesParams,omitempty"`
+
 	// Specifies parameters to register physical server.
 	PhysicalParams *PhysicalSourceRegistrationParams `json:"physicalParams,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
 // Constants associated with the RegisterProtectionSourceOptions.Environment property.
 // Specifies the environment type of the Protection Source.
 const (
-	RegisterProtectionSourceOptions_Environment_Kphysical = "kPhysical"
-	RegisterProtectionSourceOptions_Environment_Ksql      = "kSQL"
+	RegisterProtectionSourceOptions_Environment_Kkubernetes = "kKubernetes"
+	RegisterProtectionSourceOptions_Environment_Kphysical   = "kPhysical"
+	RegisterProtectionSourceOptions_Environment_Ksql        = "kSQL"
 )
 
 // NewRegisterProtectionSourceOptions : Instantiate RegisterProtectionSourceOptions
@@ -27740,6 +32156,12 @@ func (_options *RegisterProtectionSourceOptions) SetDataSourceConnectionID(dataS
 	return _options
 }
 
+// SetKubernetesParams : Allow user to set KubernetesParams
+func (_options *RegisterProtectionSourceOptions) SetKubernetesParams(kubernetesParams *KubernetesSourceRegistrationParams) *RegisterProtectionSourceOptions {
+	_options.KubernetesParams = kubernetesParams
+	return _options
+}
+
 // SetPhysicalParams : Allow user to set PhysicalParams
 func (_options *RegisterProtectionSourceOptions) SetPhysicalParams(physicalParams *PhysicalSourceRegistrationParams) *RegisterProtectionSourceOptions {
 	_options.PhysicalParams = physicalParams
@@ -27793,9 +32215,15 @@ const (
 // Specifies the application environment. Supported environment types such as 'kView', 'kSQL', 'kVMware', etc.
 const (
 	RegisteredAppInfo_Environment_Kagent         = "kAgent"
+	RegisteredAppInfo_Environment_Khyperv        = "kHyperV"
+	RegisteredAppInfo_Environment_Knimble        = "kNimble"
 	RegisteredAppInfo_Environment_Kphysical      = "kPhysical"
 	RegisteredAppInfo_Environment_Kphysicalfiles = "kPhysicalFiles"
+	RegisteredAppInfo_Environment_Kpuppeteer     = "kPuppeteer"
+	RegisteredAppInfo_Environment_Kpure          = "kPure"
 	RegisteredAppInfo_Environment_Ksql           = "kSQL"
+	RegisteredAppInfo_Environment_Kview          = "kView"
+	RegisteredAppInfo_Environment_Kvmware        = "kVMware"
 )
 
 // UnmarshalRegisteredAppInfo unmarshals an instance of RegisteredAppInfo from the specified map of raw messages.
@@ -27824,6 +32252,460 @@ func UnmarshalRegisteredAppInfo(m map[string]json.RawMessage, result interface{}
 	err = core.UnmarshalPrimitive(m, "refreshErrorMessage", &obj.RefreshErrorMessage)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "refreshErrorMessage-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RegisteredProtectionSourceIsilonParams : Specifies the Isilon specific Registered Protection Source params. This definition is used to send isilion source
+// params in update protection source params to magneto.
+type RegisteredProtectionSourceIsilonParams struct {
+	// List of access zone info in an Isilion Cluster.
+	ZoneConfigList []ZoneConfig `json:"zoneConfigList,omitempty"`
+}
+
+// UnmarshalRegisteredProtectionSourceIsilonParams unmarshals an instance of RegisteredProtectionSourceIsilonParams from the specified map of raw messages.
+func UnmarshalRegisteredProtectionSourceIsilonParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RegisteredProtectionSourceIsilonParams)
+	err = core.UnmarshalModel(m, "zoneConfigList", &obj.ZoneConfigList, UnmarshalZoneConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "zoneConfigList-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RegisteredSourceInfo : Specifies information about a registered Source.
+type RegisteredSourceInfo struct {
+	// Specifies the parameters required to establish a connection with a particular environment.
+	AccessInfo *ConnectorParameters `json:"accessInfo,omitempty"`
+
+	// Specifies the list of IP Addresses on the registered source to be exclusively allowed for doing any type of IO
+	// operations.
+	AllowedIpAddresses []string `json:"allowedIpAddresses,omitempty"`
+
+	// Specifies an authentication error message. This indicates the given credentials are rejected and the registration of
+	// the source is not successful.
+	AuthenticationErrorMessage *string `json:"authenticationErrorMessage,omitempty"`
+
+	// Specifies the status of the authenticating to the Protection Source when registering it with Cohesity Cluster. If
+	// the status is 'kFinished' and there is no error, registration is successful. Specifies the status of the
+	// authentication during the registration of a Protection Source. 'kPending' indicates the authentication is in
+	// progress. 'kScheduled' indicates the authentication is scheduled. 'kFinished' indicates the authentication is
+	// completed. 'kRefreshInProgress' indicates the refresh is in progress.
+	AuthenticationStatus *string `json:"authenticationStatus,omitempty"`
+
+	// This field is deprecated. Use DeniedIpAddresses instead. deprecated: true.
+	BlacklistedIpAddresses []string `json:"blacklistedIpAddresses,omitempty"`
+
+	// Specifies an Object containing information about a registered cassandra source.
+	CassandraParams *CassandraConnectParams `json:"cassandraParams,omitempty"`
+
+	// Specifies an Object containing information about a registered couchbase source.
+	CouchbaseParams *CouchbaseConnectParams `json:"couchbaseParams,omitempty"`
+
+	// Specifies the list of IP Addresses on the registered source to be denied for doing any type of IO operations.
+	DeniedIpAddresses []string `json:"deniedIpAddresses,omitempty"`
+
+	// Specifies a list of applications environment that are registered with this Protection Source such as 'kSQL'.
+	// Supported environment types such as 'kView', 'kSQL', 'kVMware', etc. NOTE: 'kPuppeteer' refers to Cohesity's Remote
+	// Adapter. 'kVMware' indicates the VMware Protection Source environment. 'kHyperV' indicates the HyperV Protection
+	// Source environment. 'kSQL' indicates the SQL Protection Source environment. 'kView' indicates the View Protection
+	// Source environment. 'kPuppeteer' indicates the Cohesity's Remote Adapter. 'kPhysical' indicates the physical
+	// Protection Source environment. 'kPure' indicates the Pure Storage Protection Source environment. 'kNimble' indicates
+	// the Nimble Storage Protection Source environment. 'kHpe3Par' indicates the Hpe 3Par Storage Protection Source
+	// environment. 'kAzure' indicates the Microsoft's Azure Protection Source environment. 'kNetapp' indicates the Netapp
+	// Protection Source environment. 'kAgent' indicates the Agent Protection Source environment. 'kGenericNas' indicates
+	// the Generic Network Attached Storage Protection Source environment. 'kAcropolis' indicates the Acropolis Protection
+	// Source environment. 'kPhysicalFiles' indicates the Physical Files Protection Source environment. 'kIbmFlashSystem'
+	// indicates the IBM Flash System Protection Source environment. 'kIsilon' indicates the Dell EMC's Isilon Protection
+	// Source environment. 'kGPFS' indicates IBM's GPFS Protection Source environment. 'kKVM' indicates the KVM Protection
+	// Source environment. 'kAWS' indicates the AWS Protection Source environment. 'kExchange' indicates the Exchange
+	// Protection Source environment. 'kHyperVVSS' indicates the HyperV VSS Protection Source environment. 'kOracle'
+	// indicates the Oracle Protection Source environment. 'kGCP' indicates the Google Cloud Platform Protection Source
+	// environment. 'kFlashBlade' indicates the Flash Blade Protection Source environment. 'kAWSNative' indicates the AWS
+	// Native Protection Source environment. 'kO365' indicates the Office 365 Protection Source environment. 'kO365Outlook'
+	// indicates Office 365 outlook Protection Source environment. 'kHyperFlex' indicates the Hyper Flex Protection Source
+	// environment. 'kGCPNative' indicates the GCP Native Protection Source environment. 'kAzureNative' indicates the Azure
+	// Native Protection Source environment. 'kKubernetes' indicates a Kubernetes Protection Source environment.
+	// 'kElastifile' indicates Elastifile Protection Source environment. 'kAD' indicates Active Directory Protection Source
+	// environment. 'kRDSSnapshotManager' indicates AWS RDS Protection Source environment. 'kCassandra' indicates Cassandra
+	// Protection Source environment. 'kMongoDB' indicates MongoDB Protection Source environment. 'kCouchbase' indicates
+	// Couchbase Protection Source environment. 'kHdfs' indicates Hdfs Protection Source environment. 'kHive' indicates
+	// Hive Protection Source environment. 'kHBase' indicates HBase Protection Source environment. 'kUDA' indicates
+	// Universal Data Adapter Protection Source environment. 'kSAPHANA' indicates SAP HANA protection source environment.
+	// 'kO365Teams' indicates the Office365 Teams Protection Source environment. 'kO365Group' indicates the Office365
+	// Groups Protection Source environment. 'kO365Exchange' indicates the Office365 Mailbox Protection Source environment.
+	// 'kO365OneDrive' indicates the Office365 OneDrive Protection Source environment. 'kO365Sharepoint' indicates the
+	// Office365 SharePoint Protection Source environment. 'kO365PublicFolders' indicates the Office365 PublicFolders
+	// Protection Source environment. kHpe3Par, kIbmFlashSystem, kAzure, kNetapp, kAgent, kGenericNas, kAcropolis,
+	// kPhysicalFiles, kIsilon, kGPFS, kKVM, kAWS, kExchange, kHyperVVSS, kOracle, kGCP, kFlashBlade, kAWSNative, kO365,
+	// kO365Outlook, kHyperFlex, kGCPNative, kAzureNative, kKubernetes, kElastifile, kAD, kRDSSnapshotManager, kCassandra,
+	// kMongoDB, kCouchbase, kHdfs, kHive, kHBase, kUDA, kSAPHANA, kO365Teams, kO365Group, kO365Exchange, kO365OneDrive,
+	// kO365Sharepoint, kO365PublicFolders.
+	Environments []string `json:"environments,omitempty"`
+
+	// Specifies an Object containing information about a registered HBase source.
+	HbaseParams *HBaseConnectParams `json:"hbaseParams,omitempty"`
+
+	// Specifies an Object containing information about a registered Hdfs source.
+	HdfsParams *HdfsConnectParams `json:"hdfsParams,omitempty"`
+
+	// Specifies an Object containing information about a registered Hive source.
+	HiveParams *HiveConnectParams `json:"hiveParams,omitempty"`
+
+	// Specifies if application entity dbAuthenticated or not. ex: oracle database.
+	IsDbAuthenticated *bool `json:"isDbAuthenticated,omitempty"`
+
+	// Specifies if this source entity has enabled storage array snapshot or not.
+	IsStorageArraySnapshotEnabled *bool `json:"isStorageArraySnapshotEnabled,omitempty"`
+
+	// Specifies the Isilon specific Registered Protection Source params. This definition is used to send isilion source
+	// params in update protection source params to magneto.
+	IsilonParams *RegisteredProtectionSourceIsilonParams `json:"isilonParams,omitempty"`
+
+	// Specifies if the VM linking feature is enabled for this VCenter This means that VMs present in this VCenter which
+	// earlier belonged to some other VCenter(also registerd on same cluster) and were migrated, will be linked during EH
+	// refresh. This will enable preserving snapshot chains for migrated VMs.
+	LinkVmsAcrossVcenter *bool `json:"linkVmsAcrossVcenter,omitempty"`
+
+	// Specifies the minimum free space in GiB of the space expected to be available on the datastore where the virtual
+	// disks of the VM being backed up. If the amount of free space(in GiB) is lower than the value given by this field,
+	// backup will be aborted. Note that this field is applicable only to 'kVMware' type of environments.
+	MinimumFreeSpaceGB *int64 `json:"minimumFreeSpaceGB,omitempty"`
+
+	// Specifies the minimum free space in percentage of the space expected to be available on the datastore where the
+	// virtual disks of the VM being backed up. If the amount of free space(in percentage) is lower than the value given by
+	// this field, backup will be aborted. Note that this field is applicable only to 'kVMware' type of environments.
+	MinimumFreeSpacePercent *int64 `json:"minimumFreeSpacePercent,omitempty"`
+
+	// Specifies an Object containing information about a registered mongodb source.
+	MongodbParams *MongoDBConnectParams `json:"mongodbParams,omitempty"`
+
+	// Specifies the credentials required to mount directories on the NetApp server if given.
+	NasMountCredentials *NASServerCredentials `json:"nasMountCredentials,omitempty"`
+
+	// Specifies an Object containing information about a registered Office 365 source.
+	O365Params *O365ConnectParams `json:"o365Params,omitempty"`
+
+	// Office365 Source Credentials. Specifies credentials needed to authenticate & authorize user for Office365.
+	Office365CredentialsList []Office365Credentials `json:"office365CredentialsList,omitempty"`
+
+	// Specifies the region for Office365. Inorder to truly categorize M365 region, clients should not depend upon the
+	// endpoint, instead look at this attribute for the same.
+	Office365Region *string `json:"office365Region,omitempty"`
+
+	// Office365 Service Account Credentials. Specifies credentials for improving mailbox backup performance for O365.
+	Office365ServiceAccountCredentialsList []Credentials `json:"office365ServiceAccountCredentialsList,omitempty"`
+
+	// Specifies password of the username to access the target source.
+	Password *string `json:"password,omitempty"`
+
+	// Specifies the parameters required to register Application Servers running in a Protection Source specific to a
+	// physical adapter.
+	PhysicalParams *PhysicalParams `json:"physicalParams,omitempty"`
+
+	// Captures the current progress and pulse details w.r.t to either the registration or refresh.
+	ProgressMonitorPath *string `json:"progressMonitorPath,omitempty"`
+
+	// Specifies a message if there was any error encountered during the last rebuild of the Protection Source tree. If
+	// there was no error during the last rebuild, this field is reset.
+	RefreshErrorMessage *string `json:"refreshErrorMessage,omitempty"`
+
+	// Specifies the Unix epoch time (in microseconds) when the Protection Source tree was most recently fetched and built.
+	RefreshTimeUsecs *int64 `json:"refreshTimeUsecs,omitempty"`
+
+	// Specifies information of the applications registered on this protection source.
+	RegisteredAppsInfo []RegisteredAppInfo `json:"registeredAppsInfo,omitempty"`
+
+	// Specifies the Unix epoch time (in microseconds) when the Protection Source was registered.
+	RegistrationTimeUsecs *int64 `json:"registrationTimeUsecs,omitempty"`
+
+	// Specifies an Object containing information about a registered Salesforce source.
+	SfdcParams *SfdcParams `json:"sfdcParams,omitempty"`
+
+	// Specifies the list of subnets added during creation or updation of vmare source. Currently, this field will only be
+	// populated in case of VMware registration.
+	Subnets []Subnet `json:"subnets,omitempty"`
+
+	// Specifies the throttling policy for a registered Protection Source.
+	ThrottlingPolicy *ThrottlingPolicyParameters `json:"throttlingPolicy,omitempty"`
+
+	// Array of Throttling Policy Overrides for Datastores. Specifies a list of Throttling Policy for datastores that
+	// override the common throttling policy specified for the registered Protection Source. For datastores not in this
+	// list, common policy will still apply.
+	ThrottlingPolicyOverrides []ThrottlingPolicyOverride `json:"throttlingPolicyOverrides,omitempty"`
+
+	// Specifies an Object containing information about a registered Universal Data Adapter source.
+	UdaParams *UdaConnectParams `json:"udaParams,omitempty"`
+
+	// Specifies if the last backup time and status should be updated for the VMs protected from the vCenter.
+	UpdateLastBackupDetails *bool `json:"updateLastBackupDetails,omitempty"`
+
+	// Specifies whether OAuth should be used for authentication in case of  Exchange Online.
+	UseOAuthForExchangeOnline *bool `json:"useOAuthForExchangeOnline,omitempty"`
+
+	// Specifies if registered vCenter is using BIOS UUID to track virtual  machines.
+	UseVmBiosUUID *bool `json:"useVmBiosUuid,omitempty"`
+
+	// Specifies the additional details encountered during registration. Though the registration may succeed, user messages
+	// imply the host environment requires some cleanup or fixing.
+	UserMessages []string `json:"userMessages,omitempty"`
+
+	// Specifies username to access the target source.
+	Username *string `json:"username,omitempty"`
+
+	// Specifies VLAN parameters for the restore operation.
+	VlanParams *VlanParameters `json:"vlanParams,omitempty"`
+
+	// Specifies a list of warnings encountered during registration. Though the registration may succeed, warning messages
+	// imply the host environment requires some cleanup or fixing.
+	WarningMessages []string `json:"warningMessages,omitempty"`
+}
+
+// Constants associated with the RegisteredSourceInfo.AuthenticationStatus property.
+// Specifies the status of the authenticating to the Protection Source when registering it with Cohesity Cluster. If the
+// status is 'kFinished' and there is no error, registration is successful. Specifies the status of the authentication
+// during the registration of a Protection Source. 'kPending' indicates the authentication is in progress. 'kScheduled'
+// indicates the authentication is scheduled. 'kFinished' indicates the authentication is completed.
+// 'kRefreshInProgress' indicates the refresh is in progress.
+const (
+	RegisteredSourceInfo_AuthenticationStatus_Kfinished          = "kFinished"
+	RegisteredSourceInfo_AuthenticationStatus_Kpending           = "kPending"
+	RegisteredSourceInfo_AuthenticationStatus_Krefreshinprogress = "kRefreshInProgress"
+	RegisteredSourceInfo_AuthenticationStatus_Kscheduled         = "kScheduled"
+)
+
+// Constants associated with the RegisteredSourceInfo.Environments property.
+const (
+	RegisteredSourceInfo_Environments_Khyperv    = "kHyperV"
+	RegisteredSourceInfo_Environments_Knimble    = "kNimble"
+	RegisteredSourceInfo_Environments_Kphysical  = "kPhysical"
+	RegisteredSourceInfo_Environments_Kpuppeteer = "kPuppeteer"
+	RegisteredSourceInfo_Environments_Kpure      = "kPure"
+	RegisteredSourceInfo_Environments_Ksql       = "kSQL"
+	RegisteredSourceInfo_Environments_Kview      = "kView"
+	RegisteredSourceInfo_Environments_Kvmware    = "kVMware"
+)
+
+// UnmarshalRegisteredSourceInfo unmarshals an instance of RegisteredSourceInfo from the specified map of raw messages.
+func UnmarshalRegisteredSourceInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RegisteredSourceInfo)
+	err = core.UnmarshalModel(m, "accessInfo", &obj.AccessInfo, UnmarshalConnectorParameters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "accessInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "allowedIpAddresses", &obj.AllowedIpAddresses)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "allowedIpAddresses-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "authenticationErrorMessage", &obj.AuthenticationErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "authenticationErrorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "authenticationStatus", &obj.AuthenticationStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "authenticationStatus-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "blacklistedIpAddresses", &obj.BlacklistedIpAddresses)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "blacklistedIpAddresses-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "cassandraParams", &obj.CassandraParams, UnmarshalCassandraConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cassandraParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "couchbaseParams", &obj.CouchbaseParams, UnmarshalCouchbaseConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "couchbaseParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "deniedIpAddresses", &obj.DeniedIpAddresses)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "deniedIpAddresses-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "environments", &obj.Environments)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "environments-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "hbaseParams", &obj.HbaseParams, UnmarshalHBaseConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hbaseParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "hdfsParams", &obj.HdfsParams, UnmarshalHdfsConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hdfsParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "hiveParams", &obj.HiveParams, UnmarshalHiveConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hiveParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isDbAuthenticated", &obj.IsDbAuthenticated)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isDbAuthenticated-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isStorageArraySnapshotEnabled", &obj.IsStorageArraySnapshotEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isStorageArraySnapshotEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "isilonParams", &obj.IsilonParams, UnmarshalRegisteredProtectionSourceIsilonParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isilonParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "linkVmsAcrossVcenter", &obj.LinkVmsAcrossVcenter)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "linkVmsAcrossVcenter-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "minimumFreeSpaceGB", &obj.MinimumFreeSpaceGB)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "minimumFreeSpaceGB-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "minimumFreeSpacePercent", &obj.MinimumFreeSpacePercent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "minimumFreeSpacePercent-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "mongodbParams", &obj.MongodbParams, UnmarshalMongoDBConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "mongodbParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "nasMountCredentials", &obj.NasMountCredentials, UnmarshalNASServerCredentials)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "nasMountCredentials-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "o365Params", &obj.O365Params, UnmarshalO365ConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "o365Params-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "office365CredentialsList", &obj.Office365CredentialsList, UnmarshalOffice365Credentials)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "office365CredentialsList-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "office365Region", &obj.Office365Region)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "office365Region-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "office365ServiceAccountCredentialsList", &obj.Office365ServiceAccountCredentialsList, UnmarshalCredentials)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "office365ServiceAccountCredentialsList-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "password", &obj.Password)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "password-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "physicalParams", &obj.PhysicalParams, UnmarshalPhysicalParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "physicalParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "progressMonitorPath", &obj.ProgressMonitorPath)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "progressMonitorPath-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "refreshErrorMessage", &obj.RefreshErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "refreshErrorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "refreshTimeUsecs", &obj.RefreshTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "refreshTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "registeredAppsInfo", &obj.RegisteredAppsInfo, UnmarshalRegisteredAppInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "registeredAppsInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "registrationTimeUsecs", &obj.RegistrationTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "registrationTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "sfdcParams", &obj.SfdcParams, UnmarshalSfdcParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sfdcParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "subnets", &obj.Subnets, UnmarshalSubnet)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "subnets-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "throttlingPolicy", &obj.ThrottlingPolicy, UnmarshalThrottlingPolicyParameters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "throttlingPolicy-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "throttlingPolicyOverrides", &obj.ThrottlingPolicyOverrides, UnmarshalThrottlingPolicyOverride)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "throttlingPolicyOverrides-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "udaParams", &obj.UdaParams, UnmarshalUdaConnectParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "udaParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "updateLastBackupDetails", &obj.UpdateLastBackupDetails)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "updateLastBackupDetails-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useOAuthForExchangeOnline", &obj.UseOAuthForExchangeOnline)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useOAuthForExchangeOnline-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useVmBiosUuid", &obj.UseVmBiosUUID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useVmBiosUuid-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "userMessages", &obj.UserMessages)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "userMessages-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "username", &obj.Username)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "username-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "vlanParams", &obj.VlanParams, UnmarshalVlanParameters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "warningMessages", &obj.WarningMessages)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "warningMessages-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -31990,6 +36872,30 @@ func UnmarshalSecondaryID(m map[string]json.RawMessage, result interface{}) (err
 	return
 }
 
+// ServiceAnnotationsEntry : ServiceAnnotationsEntry struct
+type ServiceAnnotationsEntry struct {
+	Key *string `json:"key,omitempty"`
+
+	Value *string `json:"value,omitempty"`
+}
+
+// UnmarshalServiceAnnotationsEntry unmarshals an instance of ServiceAnnotationsEntry from the specified map of raw messages.
+func UnmarshalServiceAnnotationsEntry(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ServiceAnnotationsEntry)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "value", &obj.Value)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // SfdcObjectParams : Specifies the Salesforce objects mutation parameters.
 type SfdcObjectParams struct {
 	// Specifies the number of records added for the Object.
@@ -32018,6 +36924,131 @@ func UnmarshalSfdcObjectParams(m map[string]json.RawMessage, result interface{})
 	err = core.UnmarshalPrimitive(m, "recordsRemoved", &obj.RecordsRemoved)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "recordsRemoved-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// SfdcParams : Specifies an Object containing information about a registered Salesforce source.
+type SfdcParams struct {
+	// Token that will be used in subsequent api requests.
+	AccessToken *string `json:"accessToken,omitempty"`
+
+	// Specifies the maximum number of concurrent API requests allowed for salesforce.
+	ConcurrentApiRequestsLimit *int64 `json:"concurrentApiRequestsLimit,omitempty"`
+
+	// Consumer key from the connected app in Sfdc.
+	ConsumerKey *string `json:"consumerKey,omitempty"`
+
+	// Consumer secret from the connected app in Sfdc.
+	ConsumerSecret *string `json:"consumerSecret,omitempty"`
+
+	// Maximum daily api limit.
+	DailyApiLimit *int64 `json:"dailyApiLimit,omitempty"`
+
+	// Sfdc Endpoint URL.
+	Endpoint *string `json:"endpoint,omitempty"`
+
+	// Specifies the Environment type for salesforce. 'PROD' 'SANDBOX' 'OTHER'.
+	EndpointType *string `json:"endpointType,omitempty"`
+
+	// Metadata endpoint url. All metadata requests must be made to this url.
+	MetadataEndpointURL *string `json:"metadataEndpointUrl,omitempty"`
+
+	// Token that will be used to refresh the access token.
+	RefreshToken *string `json:"refreshToken,omitempty"`
+
+	// Soap endpoint url. All soap requests must be made to this url.
+	SoapEndpointURL *string `json:"soapEndpointUrl,omitempty"`
+
+	// use bulk api if set to true.
+	UseBulkApi *bool `json:"useBulkApi,omitempty"`
+}
+
+// Constants associated with the SfdcParams.EndpointType property.
+// Specifies the Environment type for salesforce. 'PROD' 'SANDBOX' 'OTHER'.
+const (
+	SfdcParams_EndpointType_Other   = "OTHER"
+	SfdcParams_EndpointType_Prod    = "PROD"
+	SfdcParams_EndpointType_Sandbox = "SANDBOX"
+)
+
+// UnmarshalSfdcParams unmarshals an instance of SfdcParams from the specified map of raw messages.
+func UnmarshalSfdcParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(SfdcParams)
+	err = core.UnmarshalPrimitive(m, "accessToken", &obj.AccessToken)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "accessToken-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "concurrentApiRequestsLimit", &obj.ConcurrentApiRequestsLimit)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "concurrentApiRequestsLimit-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "consumerKey", &obj.ConsumerKey)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "consumerKey-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "consumerSecret", &obj.ConsumerSecret)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "consumerSecret-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dailyApiLimit", &obj.DailyApiLimit)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dailyApiLimit-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endpoint", &obj.Endpoint)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endpoint-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endpointType", &obj.EndpointType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endpointType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "metadataEndpointUrl", &obj.MetadataEndpointURL)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "metadataEndpointUrl-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "refreshToken", &obj.RefreshToken)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "refreshToken-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "soapEndpointUrl", &obj.SoapEndpointURL)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "soapEndpointUrl-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "useBulkApi", &obj.UseBulkApi)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useBulkApi-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// SitesDiscoveryParams : Specifies discovery params for kSite entities. It should only be populated when the
+// 'DiscoveryParams.discoverableObjectTypeList' includes 'kSites'.
+type SitesDiscoveryParams struct {
+	// Specifies whether the SharePoint Sites will be tagged whether they belong to a group site or teams site.
+	EnableSiteTagging *bool `json:"enableSiteTagging,omitempty"`
+}
+
+// UnmarshalSitesDiscoveryParams unmarshals an instance of SitesDiscoveryParams from the specified map of raw messages.
+func UnmarshalSitesDiscoveryParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(SitesDiscoveryParams)
+	err = core.UnmarshalPrimitive(m, "enableSiteTagging", &obj.EnableSiteTagging)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "enableSiteTagging-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -32389,6 +37420,9 @@ type SourceRegistrationResponseParams struct {
 
 	// Specifies parameters to register physical server.
 	PhysicalParams *PhysicalSourceRegistrationParams `json:"physicalParams,omitempty"`
+
+	// Specifies the parameters to register a Kubernetes source.
+	KubernetesParams *KubernetesSourceRegistrationParams `json:"kubernetesParams,omitempty"`
 }
 
 // Constants associated with the SourceRegistrationResponseParams.Environment property.
@@ -32488,6 +37522,11 @@ func UnmarshalSourceRegistrationResponseParams(m map[string]json.RawMessage, res
 		err = core.SDKErrorf(err, "", "physicalParams-error", common.GetComponentInfo())
 		return
 	}
+	err = core.UnmarshalModel(m, "kubernetesParams", &obj.KubernetesParams, UnmarshalKubernetesSourceRegistrationParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesParams-error", common.GetComponentInfo())
+		return
+	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
 	return
 }
@@ -32504,6 +37543,30 @@ func UnmarshalSourceRegistrations(m map[string]json.RawMessage, result interface
 	err = core.UnmarshalModel(m, "registrations", &obj.Registrations, UnmarshalSourceRegistrationResponseParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "registrations-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// SourceThrottlingConfiguration : Specifies the source side throttling configuration.
+type SourceThrottlingConfiguration struct {
+	CpuThrottlingConfig *ThrottlingConfiguration `json:"cpuThrottlingConfig,omitempty"`
+
+	NetworkThrottlingConfig *ThrottlingConfiguration `json:"networkThrottlingConfig,omitempty"`
+}
+
+// UnmarshalSourceThrottlingConfiguration unmarshals an instance of SourceThrottlingConfiguration from the specified map of raw messages.
+func UnmarshalSourceThrottlingConfiguration(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(SourceThrottlingConfiguration)
+	err = core.UnmarshalModel(m, "cpuThrottlingConfig", &obj.CpuThrottlingConfig, UnmarshalThrottlingConfiguration)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cpuThrottlingConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "networkThrottlingConfig", &obj.NetworkThrottlingConfig, UnmarshalThrottlingConfiguration)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "networkThrottlingConfig-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -32903,6 +37966,65 @@ func UnmarshalStorageArraySnapshotConfig(m map[string]json.RawMessage, result in
 	return
 }
 
+// StorageArraySnapshotConfigParams : StorageArraySnapshotConfigParams struct
+type StorageArraySnapshotConfigParams struct {
+	// Specifies if the storage array snapshot max snapshots config is enabled or not.
+	IsMaxSnapshotsConfigEnabled *bool `json:"isMaxSnapshotsConfigEnabled,omitempty"`
+
+	// Specifies if the storage array snapshot max space config is enabled or not.
+	IsMaxSpaceConfigEnabled *bool `json:"isMaxSpaceConfigEnabled,omitempty"`
+
+	StorageArraySnapshotMaxSpaceConfig *StorageArraySnapshotMaxSpaceConfigParams `json:"storageArraySnapshotMaxSpaceConfig,omitempty"`
+
+	// Specifies throttling policies configured for individual volume/lun.
+	StorageArraySnapshotThrottlingPolicies []StorageArraySnapshotThrottlingPolicy `json:"storageArraySnapshotThrottlingPolicies,omitempty"`
+}
+
+// UnmarshalStorageArraySnapshotConfigParams unmarshals an instance of StorageArraySnapshotConfigParams from the specified map of raw messages.
+func UnmarshalStorageArraySnapshotConfigParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(StorageArraySnapshotConfigParams)
+	err = core.UnmarshalPrimitive(m, "isMaxSnapshotsConfigEnabled", &obj.IsMaxSnapshotsConfigEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isMaxSnapshotsConfigEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isMaxSpaceConfigEnabled", &obj.IsMaxSpaceConfigEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isMaxSpaceConfigEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "storageArraySnapshotMaxSpaceConfig", &obj.StorageArraySnapshotMaxSpaceConfig, UnmarshalStorageArraySnapshotMaxSpaceConfigParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageArraySnapshotMaxSpaceConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "storageArraySnapshotThrottlingPolicies", &obj.StorageArraySnapshotThrottlingPolicies, UnmarshalStorageArraySnapshotThrottlingPolicy)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageArraySnapshotThrottlingPolicies-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// StorageArraySnapshotMaxSnapshotConfigParams : StorageArraySnapshotMaxSnapshotConfigParams struct
+type StorageArraySnapshotMaxSnapshotConfigParams struct {
+	// Max number of storage snapshots allowed per volume/lun.
+	MaxSnapshots *int64 `json:"maxSnapshots,omitempty"`
+}
+
+// UnmarshalStorageArraySnapshotMaxSnapshotConfigParams unmarshals an instance of StorageArraySnapshotMaxSnapshotConfigParams from the specified map of raw messages.
+func UnmarshalStorageArraySnapshotMaxSnapshotConfigParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(StorageArraySnapshotMaxSnapshotConfigParams)
+	err = core.UnmarshalPrimitive(m, "maxSnapshots", &obj.MaxSnapshots)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxSnapshots-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // StorageArraySnapshotMaxSpaceConfig : Specifies Storage Array Snapshot Max Space Config.
 type StorageArraySnapshotMaxSpaceConfig struct {
 	// Max number of storage snapshots allowed per volume/lun.
@@ -32912,6 +38034,24 @@ type StorageArraySnapshotMaxSpaceConfig struct {
 // UnmarshalStorageArraySnapshotMaxSpaceConfig unmarshals an instance of StorageArraySnapshotMaxSpaceConfig from the specified map of raw messages.
 func UnmarshalStorageArraySnapshotMaxSpaceConfig(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(StorageArraySnapshotMaxSpaceConfig)
+	err = core.UnmarshalPrimitive(m, "maxSnapshotSpacePercentage", &obj.MaxSnapshotSpacePercentage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxSnapshotSpacePercentage-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// StorageArraySnapshotMaxSpaceConfigParams : StorageArraySnapshotMaxSpaceConfigParams struct
+type StorageArraySnapshotMaxSpaceConfigParams struct {
+	// Max number of storage snapshots allowed per volume/lun.
+	MaxSnapshotSpacePercentage *int64 `json:"maxSnapshotSpacePercentage,omitempty"`
+}
+
+// UnmarshalStorageArraySnapshotMaxSpaceConfigParams unmarshals an instance of StorageArraySnapshotMaxSpaceConfigParams from the specified map of raw messages.
+func UnmarshalStorageArraySnapshotMaxSpaceConfigParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(StorageArraySnapshotMaxSpaceConfigParams)
 	err = core.UnmarshalPrimitive(m, "maxSnapshotSpacePercentage", &obj.MaxSnapshotSpacePercentage)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "maxSnapshotSpacePercentage-error", common.GetComponentInfo())
@@ -33060,6 +38200,54 @@ func UnmarshalStorageArraySnapshotThrottlingPolicies(m map[string]json.RawMessag
 		return
 	}
 	err = core.UnmarshalModel(m, "maxSpaceConfig", &obj.MaxSpaceConfig, UnmarshalMaxSpaceConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxSpaceConfig-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// StorageArraySnapshotThrottlingPolicy : StorageArraySnapshotThrottlingPolicy struct
+type StorageArraySnapshotThrottlingPolicy struct {
+	// Specifies the volume id of the storage array snapshot config.
+	ID *int64 `json:"id,omitempty"`
+
+	// Specifies if the storage array snapshot max snapshots config is enabled or not.
+	IsMaxSnapshotsConfigEnabled *bool `json:"isMaxSnapshotsConfigEnabled,omitempty"`
+
+	// Specifies if the storage array snapshot max space config is enabled or not.
+	IsMaxSpaceConfigEnabled *bool `json:"isMaxSpaceConfigEnabled,omitempty"`
+
+	MaxSnapshotConfig *StorageArraySnapshotMaxSnapshotConfigParams `json:"maxSnapshotConfig,omitempty"`
+
+	MaxSpaceConfig *StorageArraySnapshotMaxSpaceConfigParams `json:"maxSpaceConfig,omitempty"`
+}
+
+// UnmarshalStorageArraySnapshotThrottlingPolicy unmarshals an instance of StorageArraySnapshotThrottlingPolicy from the specified map of raw messages.
+func UnmarshalStorageArraySnapshotThrottlingPolicy(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(StorageArraySnapshotThrottlingPolicy)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isMaxSnapshotsConfigEnabled", &obj.IsMaxSnapshotsConfigEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isMaxSnapshotsConfigEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isMaxSpaceConfigEnabled", &obj.IsMaxSpaceConfigEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isMaxSpaceConfigEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "maxSnapshotConfig", &obj.MaxSnapshotConfig, UnmarshalStorageArraySnapshotMaxSnapshotConfigParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxSnapshotConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "maxSpaceConfig", &obj.MaxSpaceConfig, UnmarshalStorageArraySnapshotMaxSpaceConfigParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "maxSpaceConfig-error", common.GetComponentInfo())
 		return
@@ -33617,6 +38805,26 @@ func UnmarshalTargetsConfiguration(m map[string]json.RawMessage, result interfac
 	err = core.UnmarshalModel(m, "rpaasTargets", &obj.RpaasTargets, UnmarshalRpaasTargetConfiguration)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "rpaasTargets-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// TeamsAdditionalParams : Specifies additional params for Teams entities. It should only be populated if the
+// 'DiscoveryParams.discoverableObjectTypeList' includes 'kTeams' otherwise this will be ignored.
+type TeamsAdditionalParams struct {
+	// Specifies whether the Teams posts/conversations will be backed up or not. If this is false or not specified teams'
+	// posts backup will not be done.
+	AllowPostsBackup *bool `json:"allowPostsBackup,omitempty"`
+}
+
+// UnmarshalTeamsAdditionalParams unmarshals an instance of TeamsAdditionalParams from the specified map of raw messages.
+func UnmarshalTeamsAdditionalParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(TeamsAdditionalParams)
+	err = core.UnmarshalPrimitive(m, "allowPostsBackup", &obj.AllowPostsBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "allowPostsBackup-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -34245,6 +39453,48 @@ func UnmarshalTenantConfig(m map[string]json.RawMessage, result interface{}) (er
 	return
 }
 
+// TenantInfo : Specifies struct with basic tenant details.
+type TenantInfo struct {
+	// Specifies if this tenant is bifrost enabled or not.
+	BifrostEnabled *bool `json:"bifrostEnabled,omitempty"`
+
+	// Specifies whether this tenant is manged on helios.
+	IsManagedOnHelios *bool `json:"isManagedOnHelios,omitempty"`
+
+	// Specifies name of the tenant.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies the unique id of the tenant.
+	TenantID *string `json:"tenantId,omitempty"`
+}
+
+// UnmarshalTenantInfo unmarshals an instance of TenantInfo from the specified map of raw messages.
+func UnmarshalTenantInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(TenantInfo)
+	err = core.UnmarshalPrimitive(m, "bifrostEnabled", &obj.BifrostEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "bifrostEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isManagedOnHelios", &obj.IsManagedOnHelios)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isManagedOnHelios-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "tenantId", &obj.TenantID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "tenantId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // TenantNetwork : Networking information about a Tenant on a Cluster.
 type TenantNetwork struct {
 	// Whether connector (hybrid extender) is enabled.
@@ -34302,6 +39552,50 @@ func UnmarshalThrottlingConfig(m map[string]json.RawMessage, result interface{})
 	err = core.UnmarshalModel(m, "networkThrottlingConfig", &obj.NetworkThrottlingConfig, UnmarshalThrottlingConfigurationParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "networkThrottlingConfig-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ThrottlingConfiguration : ThrottlingConfiguration struct
+type ThrottlingConfiguration struct {
+	// Fixed baseline threshold for throttling. This is mandatory for any other throttling type than kNoThrottling.
+	FixedThreshold *int64 `json:"fixedThreshold,omitempty"`
+
+	// Type of the throttling pattern. 'kNoThrottling' indicates that throttling is not in force. 'kBaseThrottling'
+	// indicates indicates a constant base level throttling. 'kFixed' indicates a constant base level throttling.
+	PatternType *string `json:"patternType,omitempty"`
+
+	// Throttling windows which will be applicable in case of pattern_typec = kScheduleBased.
+	ThrottlingWindows []ThrottlingWindow `json:"throttlingWindows,omitempty"`
+}
+
+// Constants associated with the ThrottlingConfiguration.PatternType property.
+// Type of the throttling pattern. 'kNoThrottling' indicates that throttling is not in force. 'kBaseThrottling'
+// indicates indicates a constant base level throttling. 'kFixed' indicates a constant base level throttling.
+const (
+	ThrottlingConfiguration_PatternType_Kbasethrottling = "kBaseThrottling"
+	ThrottlingConfiguration_PatternType_Kfixed          = "kFixed"
+	ThrottlingConfiguration_PatternType_Knothrottling   = "kNoThrottling"
+)
+
+// UnmarshalThrottlingConfiguration unmarshals an instance of ThrottlingConfiguration from the specified map of raw messages.
+func UnmarshalThrottlingConfiguration(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ThrottlingConfiguration)
+	err = core.UnmarshalPrimitive(m, "fixedThreshold", &obj.FixedThreshold)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "fixedThreshold-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "patternType", &obj.PatternType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "patternType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "throttlingWindows", &obj.ThrottlingWindows, UnmarshalThrottlingWindow)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "throttlingWindows-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -34386,6 +39680,18 @@ type ThrottlingPolicy struct {
 	StorageArraySnapshotConfig *StorageArraySnapshotConfig `json:"storageArraySnapshotConfig,omitempty"`
 }
 
+// ThrottlingPolicyOverride : Specifies throttling policy override for a Datastore in a registered entity.
+type ThrottlingPolicyOverride struct {
+	// Specifies the Protection Source id of the Datastore.
+	DatastoreID *int64 `json:"datastoreId,omitempty"`
+
+	// Specifies the display name of the Datastore.
+	DatastoreName *string `json:"datastoreName,omitempty"`
+
+	// Specifies the throttling policy for a registered Protection Source.
+	ThrottlingPolicy *ThrottlingPolicyParameters `json:"throttlingPolicy,omitempty"`
+}
+
 // UnmarshalThrottlingPolicy unmarshals an instance of ThrottlingPolicy from the specified map of raw messages.
 func UnmarshalThrottlingPolicy(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(ThrottlingPolicy)
@@ -34433,6 +39739,28 @@ func UnmarshalThrottlingPolicy(m map[string]json.RawMessage, result interface{})
 	return
 }
 
+// UnmarshalThrottlingPolicyOverride unmarshals an instance of ThrottlingPolicyOverride from the specified map of raw messages.
+func UnmarshalThrottlingPolicyOverride(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ThrottlingPolicyOverride)
+	err = core.UnmarshalPrimitive(m, "datastoreId", &obj.DatastoreID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datastoreId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "datastoreName", &obj.DatastoreName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datastoreName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "throttlingPolicy", &obj.ThrottlingPolicy, UnmarshalThrottlingPolicyParameters)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "throttlingPolicy-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // ThrottlingPolicyOverrides : Specifies throttling policy override for a Datastore in a registered entity.
 type ThrottlingPolicyOverrides struct {
 	// Specifies the Protection Source id of the Datastore.
@@ -34467,6 +39795,87 @@ func UnmarshalThrottlingPolicyOverrides(m map[string]json.RawMessage, result int
 	return
 }
 
+// ThrottlingPolicyParameters : Specifies the throttling policy for a registered Protection Source.
+type ThrottlingPolicyParameters struct {
+	// Specifies whether datastore streams are configured for all datastores that are part of the registered entity. If set
+	// to true, number of streams from Cohesity cluster to the registered entity will be limited to the value set for
+	// maxConcurrentStreams. If not set or set to false, there is no max limit for the number of concurrent streams.
+	EnforceMaxStreams *bool `json:"enforceMaxStreams,omitempty"`
+
+	// Specifies whether no. of backups are configured for the registered entity. If set to true, number of backups made by
+	// Cohesity cluster in the registered entity will be limited to the value set for RegisteredSourceMaxConcurrentBackups.
+	// If not set or set to false, there is no max limit for the number of concurrent backups.
+	EnforceRegisteredSourceMaxBackups *bool `json:"enforceRegisteredSourceMaxBackups,omitempty"`
+
+	// Indicates whether read operations to the datastores, which are part of the registered Protection Source, are
+	// throttled.
+	IsEnabled *bool `json:"isEnabled,omitempty"`
+
+	// Specifies latency thresholds that trigger throttling for all datastores found in the registered Protection Source or
+	// specific to one datastore.
+	LatencyThresholds *LatencyThresholds `json:"latencyThresholds,omitempty"`
+
+	// Specifies the limit on the number of streams Cohesity cluster will make concurrently to the datastores of the
+	// registered entity. This limit is enforced only when the flag enforceMaxStreams is set to true.
+	MaxConcurrentStreams *int64 `json:"maxConcurrentStreams,omitempty"`
+
+	// Specifies the NAS specific source throttling parameters during source registration or during backup of the source.
+	NasSourceParams *NasSourceThrottlingParams `json:"nasSourceParams,omitempty"`
+
+	// Specifies the limit on the number of backups Cohesity cluster will make concurrently to the registered entity. This
+	// limit is enforced only when the flag enforceRegisteredSourceMaxBackups is set to true.
+	RegisteredSourceMaxConcurrentBackups *int64 `json:"registeredSourceMaxConcurrentBackups,omitempty"`
+
+	StorageArraySnapshotConfig *StorageArraySnapshotConfigParams `json:"storageArraySnapshotConfig,omitempty"`
+}
+
+// UnmarshalThrottlingPolicyParameters unmarshals an instance of ThrottlingPolicyParameters from the specified map of raw messages.
+func UnmarshalThrottlingPolicyParameters(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ThrottlingPolicyParameters)
+	err = core.UnmarshalPrimitive(m, "enforceMaxStreams", &obj.EnforceMaxStreams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "enforceMaxStreams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "enforceRegisteredSourceMaxBackups", &obj.EnforceRegisteredSourceMaxBackups)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "enforceRegisteredSourceMaxBackups-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isEnabled", &obj.IsEnabled)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isEnabled-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "latencyThresholds", &obj.LatencyThresholds, UnmarshalLatencyThresholds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "latencyThresholds-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "maxConcurrentStreams", &obj.MaxConcurrentStreams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "maxConcurrentStreams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "nasSourceParams", &obj.NasSourceParams, UnmarshalNasSourceThrottlingParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "nasSourceParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "registeredSourceMaxConcurrentBackups", &obj.RegisteredSourceMaxConcurrentBackups)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "registeredSourceMaxConcurrentBackups-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "storageArraySnapshotConfig", &obj.StorageArraySnapshotConfig, UnmarshalStorageArraySnapshotConfigParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageArraySnapshotConfig-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // ThrottlingWindow : Specifies the Throttling Window Parameters Definition.
 type ThrottlingWindow struct {
 	// Specifies the Day Time Window Parameters.
@@ -34487,6 +39896,145 @@ func UnmarshalThrottlingWindow(m map[string]json.RawMessage, result interface{})
 	err = core.UnmarshalPrimitive(m, "threshold", &obj.Threshold)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "threshold-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// UdaConnectParams : Specifies an Object containing information about a registered Universal Data Adapter source.
+type UdaConnectParams struct {
+	Capabilities *UdaSourceCapabilities `json:"capabilities,omitempty"`
+
+	// Specifies the object to hold username and password.
+	Credentials *Credentials `json:"credentials,omitempty"`
+
+	// Specifies whether to enable cohesity policy triggered log backups along with externally triggered backups. Only
+	// applicable if etLogBackup capability is true.
+	EtEnableLogBackupPolicy *bool `json:"etEnableLogBackupPolicy,omitempty"`
+
+	// Specifies if the user triggered runs are allowed along with externally triggered backups. Only applicable if
+	// etLogBackup is true.
+	EtEnableRunNow *bool `json:"etEnableRunNow,omitempty"`
+
+	// Specifies the environment type for the host.
+	HostType *string `json:"hostType,omitempty"`
+
+	// List of hosts forming the Universal Data Adapter cluster.
+	Hosts []string `json:"hosts,omitempty"`
+
+	// Whether to use a live view for data backups.
+	LiveDataView *bool `json:"liveDataView,omitempty"`
+
+	// Whether to use a live view for log backups.
+	LiveLogView *bool `json:"liveLogView,omitempty"`
+
+	// This field is deprecated and its value will be ignored. It was used to specify the absolute path on the host where
+	// the view would be mounted. This is now controlled by the agent configuration and is common for all the Universal
+	// Data Adapter sources. deprecated: true.
+	MountDir *string `json:"mountDir,omitempty"`
+
+	// Whether to mount a view during the source backup.
+	MountView *bool `json:"mountView,omitempty"`
+
+	// Path where various source scripts will be located.
+	ScriptDir *string `json:"scriptDir,omitempty"`
+
+	// Custom arguments which will be provided to the source registration scripts. This is deprecated. Use
+	// 'sourceRegistrationArguments' instead.
+	SourceArgs *string `json:"sourceArgs,omitempty"`
+
+	// Specifies a map of custom arguments to be supplied to the source registration scripts.
+	SourceRegistrationArguments []KeyValueStrPair `json:"sourceRegistrationArguments,omitempty"`
+
+	// Global app source type.
+	SourceType *string `json:"sourceType,omitempty"`
+}
+
+// Constants associated with the UdaConnectParams.HostType property.
+// Specifies the environment type for the host.
+const (
+	UdaConnectParams_HostType_Kaix     = "kAix"
+	UdaConnectParams_HostType_Khpux    = "kHPUX"
+	UdaConnectParams_HostType_Klinux   = "kLinux"
+	UdaConnectParams_HostType_Kother   = "kOther"
+	UdaConnectParams_HostType_Ksaphana = "kSapHana"
+	UdaConnectParams_HostType_Ksolaris = "kSolaris"
+	UdaConnectParams_HostType_Kvos     = "kVOS"
+	UdaConnectParams_HostType_Kwindows = "kWindows"
+)
+
+// UnmarshalUdaConnectParams unmarshals an instance of UdaConnectParams from the specified map of raw messages.
+func UnmarshalUdaConnectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(UdaConnectParams)
+	err = core.UnmarshalModel(m, "capabilities", &obj.Capabilities, UnmarshalUdaSourceCapabilities)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "capabilities-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "credentials", &obj.Credentials, UnmarshalCredentials)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "credentials-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "etEnableLogBackupPolicy", &obj.EtEnableLogBackupPolicy)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "etEnableLogBackupPolicy-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "etEnableRunNow", &obj.EtEnableRunNow)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "etEnableRunNow-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "hostType", &obj.HostType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hostType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "hosts", &obj.Hosts)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "hosts-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "liveDataView", &obj.LiveDataView)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "liveDataView-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "liveLogView", &obj.LiveLogView)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "liveLogView-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "mountDir", &obj.MountDir)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "mountDir-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "mountView", &obj.MountView)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "mountView-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "scriptDir", &obj.ScriptDir)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "scriptDir-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sourceArgs", &obj.SourceArgs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceArgs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "sourceRegistrationArguments", &obj.SourceRegistrationArguments, UnmarshalKeyValueStrPair)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceRegistrationArguments-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sourceType", &obj.SourceType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceType-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -34964,6 +40512,139 @@ func UnmarshalUdaOnPremSearchParams(m map[string]json.RawMessage, result interfa
 	return
 }
 
+// UdaSourceCapabilities : UdaSourceCapabilities struct
+type UdaSourceCapabilities struct {
+	AutoLogBackup *bool `json:"autoLogBackup,omitempty"`
+
+	// Specifies whether the source supports the 'Dynamic Configuration' capability.
+	DynamicConfig *bool `json:"dynamicConfig,omitempty"`
+
+	// Indicates if source has entity capability.
+	EntitySupport *bool `json:"entitySupport,omitempty"`
+
+	// Specifies whether the source supports externally triggered log backups.
+	EtLogBackup *bool `json:"etLogBackup,omitempty"`
+
+	// Only for sources in the cloud. A temporary external disk is provisoned in the cloud and mounted on the control node
+	// selected during backup / recovery for dump-sweep workflows that need a local disk to dump data. Prereq - non-mount,
+	// AGENT_ON_RIGEL.
+	ExternalDisks *bool `json:"externalDisks,omitempty"`
+
+	FullBackup *bool `json:"fullBackup,omitempty"`
+
+	IncrBackup *bool `json:"incrBackup,omitempty"`
+
+	LogBackup *bool `json:"logBackup,omitempty"`
+
+	// Whether the source supports restore of multiple objects.
+	MultiObjectRestore *bool `json:"multiObjectRestore,omitempty"`
+
+	PauseResumeBackup *bool `json:"pauseResumeBackup,omitempty"`
+
+	// Triggers a post backup script on all nodes.
+	PostBackupJobScript *bool `json:"postBackupJobScript,omitempty"`
+
+	// Triggers a post restore script on all nodes.
+	PostRestoreJobScript *bool `json:"postRestoreJobScript,omitempty"`
+
+	// Make a source call before actual start backup call.
+	PreBackupJobScript *bool `json:"preBackupJobScript,omitempty"`
+
+	// Triggers a pre restore script on all nodes.
+	PreRestoreJobScript *bool `json:"preRestoreJobScript,omitempty"`
+
+	ResourceThrottling *bool `json:"resourceThrottling,omitempty"`
+
+	SnapfsCert *bool `json:"snapfsCert,omitempty"`
+}
+
+// UnmarshalUdaSourceCapabilities unmarshals an instance of UdaSourceCapabilities from the specified map of raw messages.
+func UnmarshalUdaSourceCapabilities(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(UdaSourceCapabilities)
+	err = core.UnmarshalPrimitive(m, "autoLogBackup", &obj.AutoLogBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "autoLogBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dynamicConfig", &obj.DynamicConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dynamicConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "entitySupport", &obj.EntitySupport)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "entitySupport-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "etLogBackup", &obj.EtLogBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "etLogBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "externalDisks", &obj.ExternalDisks)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "externalDisks-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "fullBackup", &obj.FullBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "fullBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "incrBackup", &obj.IncrBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "incrBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "logBackup", &obj.LogBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "logBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "multiObjectRestore", &obj.MultiObjectRestore)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "multiObjectRestore-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "pauseResumeBackup", &obj.PauseResumeBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "pauseResumeBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "postBackupJobScript", &obj.PostBackupJobScript)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "postBackupJobScript-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "postRestoreJobScript", &obj.PostRestoreJobScript)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "postRestoreJobScript-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "preBackupJobScript", &obj.PreBackupJobScript)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "preBackupJobScript-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "preRestoreJobScript", &obj.PreRestoreJobScript)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "preRestoreJobScript-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "resourceThrottling", &obj.ResourceThrottling)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resourceThrottling-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "snapfsCert", &obj.SnapfsCert)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "snapfsCert-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // UniqueGlobalID : Specifies an id for an object that is unique across Cohesity Clusters. The id is composite of all the ids listed
 // below.
 type UniqueGlobalID struct {
@@ -35370,6 +41051,9 @@ type UpdateProtectionGroupOptions struct {
 	// Specifies the parameters specific to MSSQL Protection Group.
 	MssqlParams *MSSQLProtectionGroupParams `json:"mssqlParams,omitempty"`
 
+	// Specifies the parameters which are related to Kubernetes Protection Groups.
+	KubernetesParams *KubernetesProtectionGroupParams `json:"kubernetesParams,omitempty"`
+
 	// Allows users to set headers on API requests
 	Headers map[string]string
 }
@@ -35377,8 +41061,9 @@ type UpdateProtectionGroupOptions struct {
 // Constants associated with the UpdateProtectionGroupOptions.Environment property.
 // Specifies the environment type of the Protection Group.
 const (
-	UpdateProtectionGroupOptions_Environment_Kphysical = "kPhysical"
-	UpdateProtectionGroupOptions_Environment_Ksql      = "kSQL"
+	UpdateProtectionGroupOptions_Environment_Kkubernetes = "kKubernetes"
+	UpdateProtectionGroupOptions_Environment_Kphysical   = "kPhysical"
+	UpdateProtectionGroupOptions_Environment_Ksql        = "kSQL"
 )
 
 // Constants associated with the UpdateProtectionGroupOptions.Priority property.
@@ -35520,6 +41205,12 @@ func (_options *UpdateProtectionGroupOptions) SetPhysicalParams(physicalParams *
 // SetMssqlParams : Allow user to set MssqlParams
 func (_options *UpdateProtectionGroupOptions) SetMssqlParams(mssqlParams *MSSQLProtectionGroupParams) *UpdateProtectionGroupOptions {
 	_options.MssqlParams = mssqlParams
+	return _options
+}
+
+// SetKubernetesParams : Allow user to set KubernetesParams
+func (_options *UpdateProtectionGroupOptions) SetKubernetesParams(kubernetesParams *KubernetesProtectionGroupParams) *UpdateProtectionGroupOptions {
+	_options.KubernetesParams = kubernetesParams
 	return _options
 }
 
@@ -35876,15 +41567,19 @@ type UpdateProtectionSourceRegistrationOptions struct {
 	// Specifies parameters to register physical server.
 	PhysicalParams *PhysicalSourceRegistrationParams `json:"physicalParams,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Specifies the parameters to register a Kubernetes source.
+	KubernetesParams *KubernetesSourceRegistrationParams `json:"kubernetesParams,omitempty"`
+
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
 // Constants associated with the UpdateProtectionSourceRegistrationOptions.Environment property.
 // Specifies the environment type of the Protection Source.
 const (
-	UpdateProtectionSourceRegistrationOptions_Environment_Kphysical = "kPhysical"
-	UpdateProtectionSourceRegistrationOptions_Environment_Ksql      = "kSQL"
+	UpdateProtectionSourceRegistrationOptions_Environment_Kkubernetes = "kKubernetes"
+	UpdateProtectionSourceRegistrationOptions_Environment_Kphysical   = "kPhysical"
+	UpdateProtectionSourceRegistrationOptions_Environment_Ksql        = "kSQL"
 )
 
 // NewUpdateProtectionSourceRegistrationOptions : Instantiate UpdateProtectionSourceRegistrationOptions
@@ -35974,6 +41669,12 @@ func (_options *UpdateProtectionSourceRegistrationOptions) SetPhysicalParams(phy
 	return _options
 }
 
+// SetKubernetesParams : Allow user to set KubernetesParams
+func (_options *UpdateProtectionSourceRegistrationOptions) SetKubernetesParams(kubernetesParams *KubernetesSourceRegistrationParams) *UpdateProtectionSourceRegistrationOptions {
+	_options.KubernetesParams = kubernetesParams
+	return _options
+}
+
 // SetHeaders : Allow user to set Headers
 func (options *UpdateProtectionSourceRegistrationOptions) SetHeaders(param map[string]string) *UpdateProtectionSourceRegistrationOptions {
 	options.Headers = param
@@ -36060,7 +41761,7 @@ type UpdateUserOptions struct {
 	// Specifies whether to force user to change password.
 	ForcePasswordChange *bool `json:"forcePasswordChange,omitempty"`
 
-	// Google Account Information of a Helios BaaS user.
+	// Google Account Information of a Helios BRS user.
 	GoogleAccount *GoogleAccountInfo `json:"googleAccount,omitempty"`
 
 	// Specifies an IdP User's information logged in using an IdP. This information is not stored on the Cluster.
@@ -36622,7 +42323,7 @@ type UserDetails struct {
 	// Specifies whether to force user to change password.
 	ForcePasswordChange *bool `json:"forcePasswordChange,omitempty"`
 
-	// Google Account Information of a Helios BaaS user.
+	// Google Account Information of a Helios BRS user.
 	GoogleAccount *GoogleAccountInfo `json:"googleAccount,omitempty"`
 
 	// Specifies the Cohesity roles to associate with the user' group. These roles can only be edited from group.
@@ -37039,6 +42740,48 @@ func UnmarshalUserDetails(m map[string]json.RawMessage, result interface{}) (err
 	return
 }
 
+// UserInfo : Specifies struct with basic user details.
+type UserInfo struct {
+	// Specifies domain name of the user.
+	Domain *string `json:"domain,omitempty"`
+
+	// Specifies unique Security ID (SID) of the user.
+	Sid *string `json:"sid,omitempty"`
+
+	// Specifies the tenant to which the user belongs to.
+	TenantID *string `json:"tenantId,omitempty"`
+
+	// Specifies user name of the user.
+	UserName *string `json:"userName,omitempty"`
+}
+
+// UnmarshalUserInfo unmarshals an instance of UserInfo from the specified map of raw messages.
+func UnmarshalUserInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(UserInfo)
+	err = core.UnmarshalPrimitive(m, "domain", &obj.Domain)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "domain-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sid", &obj.Sid)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sid-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "tenantId", &obj.TenantID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "tenantId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "userName", &obj.UserName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "userName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // UserProfile : Specfies the User Profile for MCM User.
 type UserProfile struct {
 	// Specifies the list of clusters. This is only valid if tenant type is OnPrem.
@@ -37112,6 +42855,106 @@ func UnmarshalUserProfile(m map[string]json.RawMessage, result interface{}) (err
 	return
 }
 
+// UsersDiscoveryParams : Specifies discovery params for kUser entities. It should only be populated when the
+// 'DiscoveryParams.discoverableObjectTypeList' includes 'kUsers'.
+type UsersDiscoveryParams struct {
+	// Specifies whether users' chats should be backed up or not. If this is false or not specified users' chats backup
+	// will not be done.
+	AllowChatsBackup *bool `json:"allowChatsBackup,omitempty"`
+
+	// Specifies if office 365 users with valid mailboxes should be discovered or not.
+	DiscoverUsersWithMailbox *bool `json:"discoverUsersWithMailbox,omitempty"`
+
+	// Specifies if office 365 users with valid Onedrives should be discovered or not.
+	DiscoverUsersWithOnedrive *bool `json:"discoverUsersWithOnedrive,omitempty"`
+
+	// Specifies whether users' mailbox info including the provisioning status, mailbox type & in-place archival support
+	// will be fetched and processed.
+	FetchMailboxInfo *bool `json:"fetchMailboxInfo,omitempty"`
+
+	// Specifies whether users' onedrive info including the provisioning status & storage quota will be fetched and
+	// processed.
+	FetchOneDriveInfo *bool `json:"fetchOneDriveInfo,omitempty"`
+
+	// Specifies whether to skip processing user who have uninitialized OneDrive or are without MySite.
+	SkipUsersWithoutMySite *bool `json:"skipUsersWithoutMySite,omitempty"`
+}
+
+// UnmarshalUsersDiscoveryParams unmarshals an instance of UsersDiscoveryParams from the specified map of raw messages.
+func UnmarshalUsersDiscoveryParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(UsersDiscoveryParams)
+	err = core.UnmarshalPrimitive(m, "allowChatsBackup", &obj.AllowChatsBackup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "allowChatsBackup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "discoverUsersWithMailbox", &obj.DiscoverUsersWithMailbox)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "discoverUsersWithMailbox-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "discoverUsersWithOnedrive", &obj.DiscoverUsersWithOnedrive)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "discoverUsersWithOnedrive-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "fetchMailboxInfo", &obj.FetchMailboxInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "fetchMailboxInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "fetchOneDriveInfo", &obj.FetchOneDriveInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "fetchOneDriveInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "skipUsersWithoutMySite", &obj.SkipUsersWithoutMySite)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "skipUsersWithoutMySite-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// VlanParameters : Specifies VLAN parameters for the restore operation.
+type VlanParameters struct {
+	// Specifies whether to use the VIPs even when VLANs are configured on the Cluster. If configured, VLAN IP addresses
+	// are used by default. If VLANs are not configured, this flag is ignored. Set this flag to true to force using the
+	// partition VIPs when VLANs are configured on the Cluster.
+	DisableVlan *bool `json:"disableVlan,omitempty"`
+
+	// Specifies the physical interface group name to use for mounting Cohesity's view on the remote host. If specified,
+	// Cohesity hostname or the IP address on this VLAN is used.
+	InterfaceName *string `json:"interfaceName,omitempty"`
+
+	// Specifies the VLAN to use for mounting Cohesity's view on the remote host. If specified, Cohesity hostname or the IP
+	// address on this VLAN is used.
+	Vlan *int64 `json:"vlan,omitempty"`
+}
+
+// UnmarshalVlanParameters unmarshals an instance of VlanParameters from the specified map of raw messages.
+func UnmarshalVlanParameters(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(VlanParameters)
+	err = core.UnmarshalPrimitive(m, "disableVlan", &obj.DisableVlan)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "disableVlan-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "interfaceName", &obj.InterfaceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "interfaceName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "vlan", &obj.Vlan)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlan-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // UsersPreferences : Specifies the preferences of this user.
 type UsersPreferences struct {
 	// Locale reflects the language settings of the user. Populate using the user preferences stored in Scribe for the user
@@ -37125,6 +42968,43 @@ func UnmarshalUsersPreferences(m map[string]json.RawMessage, result interface{})
 	err = core.UnmarshalPrimitive(m, "locale", &obj.Locale)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "locale-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// VlanParams : Specifies VLAN params associated with the backup/restore operation.
+type VlanParams struct {
+	// If this is set to true, then even if VLANs are configured on the system, the partition VIPs will be used for the
+	// restore.
+	DisableVlan *bool `json:"disableVlan,omitempty"`
+
+	// Interface group to use for backup/restore. If this is not specified, primary interface group for the cluster will be
+	// used.
+	InterfaceName *string `json:"interfaceName,omitempty"`
+
+	// If this is set, then the Cohesity host name or the IP address associated with this VLAN is used for mounting
+	// Cohesity's view on the remote host.
+	VlanID *int64 `json:"vlanId,omitempty"`
+}
+
+// UnmarshalVlanParams unmarshals an instance of VlanParams from the specified map of raw messages.
+func UnmarshalVlanParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(VlanParams)
+	err = core.UnmarshalPrimitive(m, "disableVlan", &obj.DisableVlan)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "disableVlan-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "interfaceName", &obj.InterfaceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "interfaceName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "vlanId", &obj.VlanID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vlanId-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -37311,6 +43191,25 @@ func UnmarshalYearSchedule(m map[string]json.RawMessage, result interface{}) (er
 	err = core.UnmarshalPrimitive(m, "dayOfYear", &obj.DayOfYear)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "dayOfYear-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ZoneConfig : ZoneConfig struct
+type ZoneConfig struct {
+	// While caonfiguring the isilon protection source, this is the selected network pool config for the isilon access
+	// zone.
+	DynamicNetworkPoolConfig *NetworkPoolConfig `json:"dynamicNetworkPoolConfig,omitempty"`
+}
+
+// UnmarshalZoneConfig unmarshals an instance of ZoneConfig from the specified map of raw messages.
+func UnmarshalZoneConfig(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ZoneConfig)
+	err = core.UnmarshalModel(m, "dynamicNetworkPoolConfig", &obj.DynamicNetworkPoolConfig, UnmarshalNetworkPoolConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dynamicNetworkPoolConfig-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))

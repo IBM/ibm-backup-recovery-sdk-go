@@ -1,8 +1,8 @@
 module github.com/IBM/ibm-backup-recovery-sdk-go
 
-go 1.23.0
+go 1.23.10
 
-toolchain go1.23.7
+toolchain go1.23.11
 
 require (
 	github.com/IBM/go-sdk-core/v5 v5.21.0
