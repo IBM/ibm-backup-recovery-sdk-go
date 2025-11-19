@@ -177,8 +177,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke CreateAccessToken with error: Operation response processing error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -245,8 +245,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke CreateAccessToken successfully with retries`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -317,8 +317,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke CreateAccessToken successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -345,8 +345,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			})
 			It(`Invoke CreateAccessToken with error: Operation request error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -359,7 +359,7 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				createAccessTokenOptionsModel.Domain = core.StringPtr("testString")
 				createAccessTokenOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
 				// Invoke operation with empty URL (negative test)
-				err := backupRecoveryService.SetServiceURL("")
+				err := backupRecoveryService.SetConnectorURL("")
 				Expect(err).To(BeNil())
 				result, response, operationErr := backupRecoveryService.CreateAccessToken(createAccessTokenOptionsModel)
 				Expect(operationErr).ToNot(BeNil())
@@ -381,8 +381,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke CreateAccessToken successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3382,8 +3382,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorLogs with error: Operation response processing error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3431,8 +3431,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorLogs successfully with retries`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3484,8 +3484,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorLogs successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3509,8 +3509,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			})
 			It(`Invoke GetDataSourceConnectorLogs with error: Operation request error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3520,7 +3520,7 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				getDataSourceConnectorLogsOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorLogsOptions)
 				getDataSourceConnectorLogsOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
 				// Invoke operation with empty URL (negative test)
-				err := backupRecoveryService.SetServiceURL("")
+				err := backupRecoveryService.SetConnectorURL("")
 				Expect(err).To(BeNil())
 				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorLogs(getDataSourceConnectorLogsOptionsModel)
 				Expect(operationErr).ToNot(BeNil())
@@ -3542,8 +3542,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorLogs successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3597,8 +3597,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke RegisterDataSourceConnector successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3621,8 +3621,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(response).ToNot(BeNil())
 			})
 			It(`Invoke RegisterDataSourceConnector with error: Operation validation and request error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3634,7 +3634,7 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				registerDataSourceConnectorOptionsModel.ConnectorID = core.Int64Ptr(int64(26))
 				registerDataSourceConnectorOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
 				// Invoke operation with empty URL (negative test)
-				err := backupRecoveryService.SetServiceURL("")
+				err := backupRecoveryService.SetConnectorURL("")
 				Expect(err).To(BeNil())
 				response, operationErr := backupRecoveryService.RegisterDataSourceConnector(registerDataSourceConnectorOptionsModel)
 				Expect(operationErr).ToNot(BeNil())
@@ -3668,8 +3668,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorStatus with error: Operation response processing error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3717,8 +3717,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorStatus successfully with retries`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3770,8 +3770,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorStatus successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3795,8 +3795,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			})
 			It(`Invoke GetDataSourceConnectorStatus with error: Operation request error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -3806,7 +3806,7 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				getDataSourceConnectorStatusOptionsModel := new(backuprecoveryv1.GetDataSourceConnectorStatusOptions)
 				getDataSourceConnectorStatusOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
 				// Invoke operation with empty URL (negative test)
-				err := backupRecoveryService.SetServiceURL("")
+				err := backupRecoveryService.SetConnectorURL("")
 				Expect(err).To(BeNil())
 				result, response, operationErr := backupRecoveryService.GetDataSourceConnectorStatus(getDataSourceConnectorStatusOptionsModel)
 				Expect(operationErr).ToNot(BeNil())
@@ -3828,8 +3828,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetDataSourceConnectorStatus successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -20822,8 +20822,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetUsers with error: Operation response processing error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -20883,8 +20883,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetUsers successfully with retries`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -20948,8 +20948,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetUsers successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -20980,8 +20980,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			})
 			It(`Invoke GetUsers with error: Operation validation and request error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -20998,7 +20998,7 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				getUsersOptionsModel.PartialMatch = core.BoolPtr(true)
 				getUsersOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
 				// Invoke operation with empty URL (negative test)
-				err := backupRecoveryService.SetServiceURL("")
+				err := backupRecoveryService.SetConnectorURL("")
 				Expect(err).To(BeNil())
 				result, response, operationErr := backupRecoveryService.GetUsers(getUsersOptionsModel)
 				Expect(operationErr).ToNot(BeNil())
@@ -21027,8 +21027,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke GetUsers successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -21076,8 +21076,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke UpdateUser with error: Operation response processing error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -21330,8 +21330,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke UpdateUser successfully with retries`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -21588,8 +21588,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke UpdateUser successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -21800,8 +21800,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 
 			})
 			It(`Invoke UpdateUser with error: Operation validation and request error`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -21998,7 +21998,7 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				updateUserOptionsModel.Username = core.StringPtr("testString")
 				updateUserOptionsModel.Headers = map[string]string{"x-custom-header": "x-custom-value"}
 				// Invoke operation with empty URL (negative test)
-				err := backupRecoveryService.SetServiceURL("")
+				err := backupRecoveryService.SetConnectorURL("")
 				Expect(err).To(BeNil())
 				result, response, operationErr := backupRecoveryService.UpdateUser(updateUserOptionsModel)
 				Expect(operationErr).ToNot(BeNil())
@@ -22027,8 +22027,8 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				}))
 			})
 			It(`Invoke UpdateUser successfully`, func() {
-				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1(&backuprecoveryv1.BackupRecoveryV1Options{
-					URL:           testServer.URL,
+				backupRecoveryService, serviceErr := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
 					Authenticator: &core.NoAuthAuthenticator{},
 				})
 				Expect(serviceErr).To(BeNil())
@@ -22389,6 +22389,10 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			})
 			It(`Invoke NewCreateAccessTokenOptions successfully`, func() {
 				// Construct an instance of the CreateAccessTokenOptions model
+				backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
 				createAccessTokenOptionsModel := backupRecoveryService.NewCreateAccessTokenOptions()
 				createAccessTokenOptionsModel.SetUsername("testString")
 				createAccessTokenOptionsModel.SetPassword("testString")
@@ -24310,12 +24314,20 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			})
 			It(`Invoke NewGetDataSourceConnectorLogsOptions successfully`, func() {
 				// Construct an instance of the GetDataSourceConnectorLogsOptions model
+				backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
 				getDataSourceConnectorLogsOptionsModel := backupRecoveryService.NewGetDataSourceConnectorLogsOptions()
 				getDataSourceConnectorLogsOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
 				Expect(getDataSourceConnectorLogsOptionsModel).ToNot(BeNil())
 				Expect(getDataSourceConnectorLogsOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
 			It(`Invoke NewGetDataSourceConnectorStatusOptions successfully`, func() {
+				backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
 				// Construct an instance of the GetDataSourceConnectorStatusOptions model
 				getDataSourceConnectorStatusOptionsModel := backupRecoveryService.NewGetDataSourceConnectorStatusOptions()
 				getDataSourceConnectorStatusOptionsModel.SetHeaders(map[string]string{"foo": "bar"})
@@ -24645,6 +24657,10 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(getUpgradeTasksOptionsModel.Headers).To(Equal(map[string]string{"foo": "bar"}))
 			})
 			It(`Invoke NewGetUsersOptions successfully`, func() {
+				backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
 				// Construct an instance of the GetUsersOptions model
 				sessionName := "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo"
 				getUsersOptionsModel := backupRecoveryService.NewGetUsersOptions(sessionName)
@@ -25197,6 +25213,10 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 			})
 			It(`Invoke NewRegisterDataSourceConnectorOptions successfully`, func() {
 				// Construct an instance of the RegisterDataSourceConnectorOptions model
+				backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
 				registerDataSourceConnectorOptionsRegistrationToken := "testString"
 				registerDataSourceConnectorOptionsModel := backupRecoveryService.NewRegisterDataSourceConnectorOptions(registerDataSourceConnectorOptionsRegistrationToken)
 				registerDataSourceConnectorOptionsModel.SetRegistrationToken("testString")
@@ -27440,6 +27460,10 @@ var _ = Describe(`BackupRecoveryV1`, func() {
 				Expect(tenantAccessesModel.TenantType).To(Equal(core.StringPtr("Dmaas")))
 
 				// Construct an instance of the UpdateUserOptions model
+				backupRecoveryService, _ := backuprecoveryv1.NewBackupRecoveryV1Connector(&backuprecoveryv1.BackupRecoveryV1ConnectorOptions{
+					ConnectorURL:  testServer.URL,
+					Authenticator: &core.NoAuthAuthenticator{},
+				})
 				sessionName := "MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo"
 				updateUserOptionsModel := backupRecoveryService.NewUpdateUserOptions(sessionName)
 				updateUserOptionsModel.SetSessionName("MTczNjc0NzY1OHxEWDhFQVFMX2dBQUJFQUVRQUFELUFZWF9nQUFKQm5OMGNtbHVad3dLQUFoMWMyVnlibUZ0WlFaemRISnBibWNNQndBRllXUnRhVzRHYzNSeWFXNW5EQWNBQlhKdmJHVnpCbk4wY21sdVp3d1FBQTVEVDBoRlUwbFVXVjlCUkUxSlRnWnpkSEpwYm1jTUN3QUpjMmxrY3kxb1lYTm9Cbk4wY21sdVp3d3RBQ3RTYVV4ZmFqQmZOVGxxZFZJeWVIVlZhREJ2UVZGNlUxcEhTVWc1TlZVdFlVWTBjV1JNUjNaTk9VUTBCbk4wY21sdVp3d01BQXBwYmkxamJIVnpkR1Z5QkdKdmIyd0NBZ0FCQm5OMGNtbHVad3dMQUFsaGRYUm9MWFI1Y0dVR2MzUnlhVzVuREFNQUFURUdjM1J5YVc1bkRCRUFEMlY0Y0dseVlYUnBiMjR0ZEdsdFpRWnpkSEpwYm1jTURBQUtNVGN6Tmpnek5EQTFPQVp6ZEhKcGJtY01DZ0FJZFhObGNpMXphV1FHYzNSeWFXNW5EQ0FBSGxNdE1TMHhNREF0TWpFdE16YzRNVFkyTXpVdE1qUXhPRFk1TXpVdE1RWnpkSEpwYm1jTUNBQUdaRzl0WVdsdUJuTjBjbWx1Wnd3SEFBVk1UME5CVEFaemRISnBibWNNQ0FBR2JHOWpZV3hsQm5OMGNtbHVad3dIQUFWbGJpMTFjdz09fGXFZlPU_3Nl46_gPKAw619qs6Pl7PX453Y_lf5BvBBo")

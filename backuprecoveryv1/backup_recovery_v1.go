@@ -11576,7 +11576,7 @@ type CreateAccessTokenOptions struct {
 }
 
 // NewCreateAccessTokenOptions : Instantiate CreateAccessTokenOptions
-func (*BackupRecoveryV1) NewCreateAccessTokenOptions() *CreateAccessTokenOptions {
+func (*BackupRecoveryV1Connector) NewCreateAccessTokenOptions() *CreateAccessTokenOptions {
 	return &CreateAccessTokenOptions{}
 }
 
@@ -15767,7 +15767,7 @@ type GetDataSourceConnectorLogsOptions struct {
 }
 
 // NewGetDataSourceConnectorLogsOptions : Instantiate GetDataSourceConnectorLogsOptions
-func (*BackupRecoveryV1) NewGetDataSourceConnectorLogsOptions() *GetDataSourceConnectorLogsOptions {
+func (*BackupRecoveryV1Connector) NewGetDataSourceConnectorLogsOptions() *GetDataSourceConnectorLogsOptions {
 	return &GetDataSourceConnectorLogsOptions{}
 }
 
@@ -15785,7 +15785,7 @@ type GetDataSourceConnectorStatusOptions struct {
 }
 
 // NewGetDataSourceConnectorStatusOptions : Instantiate GetDataSourceConnectorStatusOptions
-func (*BackupRecoveryV1) NewGetDataSourceConnectorStatusOptions() *GetDataSourceConnectorStatusOptions {
+func (*BackupRecoveryV1Connector) NewGetDataSourceConnectorStatusOptions() *GetDataSourceConnectorStatusOptions {
 	return &GetDataSourceConnectorStatusOptions{}
 }
 
@@ -17717,7 +17717,7 @@ type GetUsersOptions struct {
 }
 
 // NewGetUsersOptions : Instantiate GetUsersOptions
-func (*BackupRecoveryV1) NewGetUsersOptions(sessionName string) *GetUsersOptions {
+func (*BackupRecoveryV1Connector) NewGetUsersOptions(sessionName string) *GetUsersOptions {
 	return &GetUsersOptions{
 		SessionName: core.StringPtr(sessionName),
 	}
@@ -32010,7 +32010,7 @@ type RegisterDataSourceConnectorOptions struct {
 }
 
 // NewRegisterDataSourceConnectorOptions : Instantiate RegisterDataSourceConnectorOptions
-func (*BackupRecoveryV1) NewRegisterDataSourceConnectorOptions(registrationToken string) *RegisterDataSourceConnectorOptions {
+func (*BackupRecoveryV1Connector) NewRegisterDataSourceConnectorOptions(registrationToken string) *RegisterDataSourceConnectorOptions {
 	return &RegisterDataSourceConnectorOptions{
 		RegistrationToken: core.StringPtr(registrationToken),
 	}
@@ -41936,7 +41936,7 @@ const (
 )
 
 // NewUpdateUserOptions : Instantiate UpdateUserOptions
-func (*BackupRecoveryV1) NewUpdateUserOptions(sessionName string) *UpdateUserOptions {
+func (*BackupRecoveryV1Connector) NewUpdateUserOptions(sessionName string) *UpdateUserOptions {
 	return &UpdateUserOptions{
 		SessionName: core.StringPtr(sessionName),
 	}
