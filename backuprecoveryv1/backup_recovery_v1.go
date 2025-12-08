@@ -3174,6 +3174,11 @@ func (backupRecovery *BackupRecoveryV1) ListProtectionSourcesRegistrationInfo(li
 
 // ListProtectionSourcesRegistrationInfoWithContext is an alternate form of the ListProtectionSourcesRegistrationInfo method which supports a Context parameter
 func (backupRecovery *BackupRecoveryV1) ListProtectionSourcesRegistrationInfoWithContext(ctx context.Context, listProtectionSourcesRegistrationInfoOptions *ListProtectionSourcesRegistrationInfoOptions) (result *GetRegistrationInfoResponse, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(listProtectionSourcesRegistrationInfoOptions, "listProtectionSourcesRegistrationInfoOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
 	err = core.ValidateStruct(listProtectionSourcesRegistrationInfoOptions, "listProtectionSourcesRegistrationInfoOptions")
 	if err != nil {
 		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
@@ -6749,13 +6754,9 @@ type ArchivalTargetConfiguration struct {
 	TargetID *int64 `json:"targetId" validate:"required"`
 
 	// Specifies the Archival target name where Snapshots are copied.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	TargetName *string `json:"targetName,omitempty"`
 
 	// Specifies the Archival target type where Snapshots are copied.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	TargetType *string `json:"targetType,omitempty"`
 
 	// Specifies the settings tier levels configured with each archival target. The tier settings need to be applied in
@@ -7637,49 +7638,33 @@ func UnmarshalAzureSnapshotParams(m map[string]json.RawMessage, result interface
 // AzureTargetConfig : Specifies the configuration for adding Azure as replication target.
 type AzureTargetConfig struct {
 	// Specifies the name of the Azure Replication target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies id of the Azure resource group used to filter regions in UI.
 	ResourceGroup *int64 `json:"resourceGroup,omitempty"`
 
 	// Specifies name of the Azure resource group used to filter regions in UI.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ResourceGroupName *string `json:"resourceGroupName,omitempty"`
 
 	// Specifies the source id of the Azure protection source registered on IBM cluster.
 	SourceID *int64 `json:"sourceId" validate:"required"`
 
 	// Specifies id of the storage account of Azure replication target which will contain storage container.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StorageAccount *int64 `json:"storageAccount,omitempty"`
 
 	// Specifies name of the storage account of Azure replication target which will contain storage container.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StorageAccountName *string `json:"storageAccountName,omitempty"`
 
 	// Specifies id of the storage container of Azure Replication target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StorageContainer *int64 `json:"storageContainer,omitempty"`
 
 	// Specifies name of the storage container of Azure Replication target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StorageContainerName *string `json:"storageContainerName,omitempty"`
 
 	// Specifies id of the storage resource group of Azure Replication target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StorageResourceGroup *int64 `json:"storageResourceGroup,omitempty"`
 
 	// Specifies name of the storage resource group of Azure Replication target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StorageResourceGroupName *string `json:"storageResourceGroupName,omitempty"`
 }
 
@@ -9307,8 +9292,6 @@ type CdpObjectInfo struct {
 	LastRunInfo *CdpObjectLastRunInfo `json:"lastRunInfo,omitempty"`
 
 	// Specifies the protection group id to which this CDP object belongs.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ProtectionGroupID *string `json:"protectionGroupId,omitempty"`
 }
 
@@ -9586,8 +9569,6 @@ type CloudSpinTarget struct {
 	ID *int64 `json:"id,omitempty"`
 
 	// Specifies the name of the already added cloud spin target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 }
 
@@ -9894,8 +9875,6 @@ type ClusterIdentifier struct {
 	ClusterIncarnationID *int64 `json:"clusterIncarnationId,omitempty"`
 
 	// Specifies the name of the cluster.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ClusterName *string `json:"clusterName,omitempty"`
 }
 
@@ -10306,21 +10285,15 @@ type CommonRecoverFileAndFolderInfo struct {
 	AbsolutePath *string `json:"absolutePath" validate:"required"`
 
 	// Specifies the destination directory where the file/directory was copied.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	DestinationDir *string `json:"destinationDir,omitempty"`
 
 	// Specifies whether this is a directory or not.
 	IsDirectory *bool `json:"isDirectory,omitempty"`
 
 	// Specifies the recovery status for this file or folder.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Status *string `json:"status,omitempty"`
 
 	// Specify error messages about the file during recovery.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Messages []string `json:"messages,omitempty"`
 
 	// Specify if the recovery is of type view file/folder.
@@ -10401,28 +10374,18 @@ type CommonRecoverObjectSnapshotParams struct {
 	ProtectionGroupName *string `json:"protectionGroupName,omitempty"`
 
 	// Specifies the time when the snapshot is created in Unix timestamp epoch in microseconds.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SnapshotCreationTimeUsecs *int64 `json:"snapshotCreationTimeUsecs,omitempty"`
 
 	// Specifies the information about the object for which the snapshot is taken.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ObjectInfo *CommonRecoverObjectSnapshotParamsObjectInfo `json:"objectInfo,omitempty"`
 
 	// Specifies the snapshot target type.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SnapshotTargetType *string `json:"snapshotTargetType,omitempty"`
 
 	// Specifies the archival target information if the snapshot is an archival snapshot.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ArchivalTargetInfo *CommonRecoverObjectSnapshotParamsArchivalTargetInfo `json:"archivalTargetInfo,omitempty"`
 
 	// Progress monitor task id for Recovery of VM.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ProgressTaskID *string `json:"progressTaskId,omitempty"`
 
 	// Specifies that user wants to perform standby restore if it is enabled for this object.
@@ -10433,29 +10396,19 @@ type CommonRecoverObjectSnapshotParams struct {
 	// indicates that the Recovery has failed. 'Succeeded' indicates that the Recovery has finished successfully.
 	// 'SucceededWithWarning' indicates that the Recovery finished successfully, but there were some warning messages.
 	// 'Skipped' indicates that the Recovery task was skipped.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Status *string `json:"status,omitempty"`
 
 	// Specifies the start time of the Recovery in Unix timestamp epoch in microseconds.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
 
 	// Specifies the end time of the Recovery in Unix timestamp epoch in microseconds. This field will be populated only
 	// after Recovery is finished.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
 
 	// Specify error messages about the object.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Messages []string `json:"messages,omitempty"`
 
 	// Specify the total bytes restored.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	BytesRestored *int64 `json:"bytesRestored,omitempty"`
 }
 
@@ -12770,8 +12723,6 @@ func UnmarshalDataProtectInfo(m map[string]json.RawMessage, result interface{}) 
 // connection at max at a given time.
 type DataSourceConnection struct {
 	// Specifies the unique ID of the connection.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ConnectionID *string `json:"connectionId,omitempty"`
 
 	// Specifies the name of the connection. For a given tenant, different connections can't have the same name. However,
@@ -12779,23 +12730,15 @@ type DataSourceConnection struct {
 	ConnectionName *string `json:"connectionName" validate:"required"`
 
 	// Specifies the IDs of the connectors in this connection.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ConnectorIds []string `json:"connectorIds,omitempty"`
 
 	// Specifies a token that can be used to register a connector against this connection.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	RegistrationToken *string `json:"registrationToken,omitempty"`
 
 	// Specifies the tenant ID of the connection.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	TenantID *string `json:"tenantId,omitempty"`
 
 	// Specifies the connector ID that is currently in upgrade.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	UpgradingConnectorID *string `json:"upgradingConnectorId,omitempty"`
 }
 
@@ -12862,18 +12805,12 @@ func UnmarshalDataSourceConnectionList(m map[string]json.RawMessage, result inte
 // optionally have two actively used NICs (dual-homed connectors).
 type DataSourceConnector struct {
 	// Specifies the IP of the connector's NIC facing the cluster.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ClusterSideIp *string `json:"clusterSideIp,omitempty"`
 
 	// Specifies the ID of the connection to which this connector belongs.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ConnectionID *string `json:"connectionId,omitempty"`
 
 	// Specifies the unique ID of the connector.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ConnectorID *string `json:"connectorId,omitempty"`
 
 	// Specifies the name of the connector. The name of a connector need not be unique within a tenant or across tenants.
@@ -12882,24 +12819,16 @@ type DataSourceConnector struct {
 
 	// Specifies status information for the data-source connector. For example if it's currently connected to the cluster,
 	// when it last connected to the cluster successfully, etc.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ConnectivityStatus *DataSourceConnectorConnectivityStatus `json:"connectivityStatus,omitempty"`
 
 	// Specifies the connector's software version.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SoftwareVersion *string `json:"softwareVersion,omitempty"`
 
 	// Specifies the IP of the connector's NIC facing the sources of the tenant to which the connector belongs.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	TenantSideIp *string `json:"tenantSideIp,omitempty"`
 
 	// Specifies upgrade status for the data-source connector. For example when the upgrade started, current status of the
 	// upgrade, errors for upgrade failure etc.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	UpgradeStatus *DataSourceConnectorUpgradeStatus `json:"upgradeStatus,omitempty"`
 }
 
@@ -19638,6 +19567,10 @@ type KubernetesFilterParams struct {
 
 	// Array of objects that are to be included.
 	Objects []int64 `json:"objects,omitempty"`
+
+	// Array of Object which has group, version, kind, etc. as its fields to identify a resource type and a resource list
+	// which is essentially the list of instances of that resource type.
+	SelectedResources []ResourceInfo `json:"selectedResources,omitempty"`
 }
 
 // Constants associated with the KubernetesFilterParams.LabelCombinationMethod property.
@@ -19663,6 +19596,11 @@ func UnmarshalKubernetesFilterParams(m map[string]json.RawMessage, result interf
 	err = core.UnmarshalPrimitive(m, "objects", &obj.Objects)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "selectedResources", &obj.SelectedResources, UnmarshalResourceInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "selectedResources-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -19896,14 +19834,25 @@ type KubernetesProtectionGroupObjectParams struct {
 	// Specifies whether to backup pvc and related resources only.
 	BackupOnlyPvc *bool `json:"backupOnlyPvc,omitempty"`
 
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	ExcludeParams *KubernetesFilterParams `json:"excludeParams,omitempty"`
+
 	// Specifies a list of pvcs to exclude from being protected. This is only applicable to kubernetes.
 	ExcludePvcs []KubernetesPvcInfo `json:"excludePvcs,omitempty"`
 
 	// Specifies the resources to exclude during backup.
 	ExcludedResources []string `json:"excludedResources,omitempty"`
 
+	// If true, fail backups when quiesce hook executions fail.
+	FailBackupOnHookFailure *bool `json:"failBackupOnHookFailure,omitempty"`
+
 	// Specifies the id of the object.
 	ID *int64 `json:"id" validate:"required"`
+
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	IncludeParams *KubernetesFilterParams `json:"includeParams,omitempty"`
 
 	// Specifies a list of Pvcs to include in the protection. This is only applicable to kubernetes.
 	IncludePvcs []KubernetesPvcInfo `json:"includePvcs,omitempty"`
@@ -19938,6 +19887,11 @@ func UnmarshalKubernetesProtectionGroupObjectParams(m map[string]json.RawMessage
 		err = core.SDKErrorf(err, "", "backupOnlyPvc-error", common.GetComponentInfo())
 		return
 	}
+	err = core.UnmarshalModel(m, "excludeParams", &obj.ExcludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludeParams-error", common.GetComponentInfo())
+		return
+	}
 	err = core.UnmarshalModel(m, "excludePvcs", &obj.ExcludePvcs, UnmarshalKubernetesPvcInfo)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "excludePvcs-error", common.GetComponentInfo())
@@ -19948,9 +19902,19 @@ func UnmarshalKubernetesProtectionGroupObjectParams(m map[string]json.RawMessage
 		err = core.SDKErrorf(err, "", "excludedResources-error", common.GetComponentInfo())
 		return
 	}
+	err = core.UnmarshalPrimitive(m, "failBackupOnHookFailure", &obj.FailBackupOnHookFailure)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "failBackupOnHookFailure-error", common.GetComponentInfo())
+		return
+	}
 	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "includeParams", &obj.IncludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includeParams-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalModel(m, "includePvcs", &obj.IncludePvcs, UnmarshalKubernetesPvcInfo)
@@ -20499,6 +20463,266 @@ func UnmarshalKubernetesRecoverFilesNewTargetConfigTargetSource(m map[string]jso
 	return
 }
 
+// KubernetesRecoveryMigrationParams : Specifies an individual migration rule for mapping a region/zone to another for cross region recovery.
+type KubernetesRecoveryMigrationParams struct {
+	// Specifies the current value for the mapping that needs to be mutated.
+	CurrentValue *string `json:"currentValue" validate:"required"`
+
+	// Specifies the new value for the mapping with which the fields need to be updated with.
+	NewValue *string `json:"newValue" validate:"required"`
+}
+
+// NewKubernetesRecoveryMigrationParams : Instantiate KubernetesRecoveryMigrationParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesRecoveryMigrationParams(currentValue string, newValue string) (_model *KubernetesRecoveryMigrationParams, err error) {
+	_model = &KubernetesRecoveryMigrationParams{
+		CurrentValue: core.StringPtr(currentValue),
+		NewValue:     core.StringPtr(newValue),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesRecoveryMigrationParams unmarshals an instance of KubernetesRecoveryMigrationParams from the specified map of raw messages.
+func UnmarshalKubernetesRecoveryMigrationParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesRecoveryMigrationParams)
+	err = core.UnmarshalPrimitive(m, "currentValue", &obj.CurrentValue)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "currentValue-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "newValue", &obj.NewValue)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "newValue-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesRecoveryObjectParams : Specifies the recovery object params.
+type KubernetesRecoveryObjectParams struct {
+	// Specifies the snapshot id.
+	SnapshotID *string `json:"snapshotId" validate:"required"`
+
+	// Specifies the timestamp (in microseconds. from epoch) for recovering to a point-in-time in the past.
+	PointInTimeUsecs *int64 `json:"pointInTimeUsecs,omitempty"`
+
+	// Specifies the protection group id of the object snapshot.
+	ProtectionGroupID *string `json:"protectionGroupId,omitempty"`
+
+	// Specifies the protection group name of the object snapshot.
+	ProtectionGroupName *string `json:"protectionGroupName,omitempty"`
+
+	// Specifies the time when the snapshot is created in Unix timestamp epoch in microseconds.
+	SnapshotCreationTimeUsecs *int64 `json:"snapshotCreationTimeUsecs,omitempty"`
+
+	// Specifies the information about the object for which the snapshot is taken.
+	ObjectInfo *CommonRecoverObjectSnapshotParamsObjectInfo `json:"objectInfo,omitempty"`
+
+	// Specifies the snapshot target type.
+	SnapshotTargetType *string `json:"snapshotTargetType,omitempty"`
+
+	// Specifies the archival target information if the snapshot is an archival snapshot.
+	ArchivalTargetInfo *CommonRecoverObjectSnapshotParamsArchivalTargetInfo `json:"archivalTargetInfo,omitempty"`
+
+	// Progress monitor task id for Recovery of VM.
+	ProgressTaskID *string `json:"progressTaskId,omitempty"`
+
+	// Specifies that user wants to perform standby restore if it is enabled for this object.
+	RecoverFromStandby *bool `json:"recoverFromStandby,omitempty"`
+
+	// Status of the Recovery. 'Running' indicates that the Recovery is still running. 'Canceled' indicates that the
+	// Recovery has been cancelled. 'Canceling' indicates that the Recovery is in the process of being cancelled. 'Failed'
+	// indicates that the Recovery has failed. 'Succeeded' indicates that the Recovery has finished successfully.
+	// 'SucceededWithWarning' indicates that the Recovery finished successfully, but there were some warning messages.
+	// 'Skipped' indicates that the Recovery task was skipped.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies the start time of the Recovery in Unix timestamp epoch in microseconds.
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the end time of the Recovery in Unix timestamp epoch in microseconds. This field will be populated only
+	// after Recovery is finished.
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specify error messages about the object.
+	Messages []string `json:"messages,omitempty"`
+
+	// Specify the total bytes restored.
+	BytesRestored *int64 `json:"bytesRestored,omitempty"`
+
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	ExcludeParams *KubernetesFilterParams `json:"excludeParams,omitempty"`
+
+	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
+	// included by this filter.
+	IncludeParams *KubernetesFilterParams `json:"includeParams,omitempty"`
+
+	// Specifies whether to recover PVCs only during recovery. Default: false.
+	RecoverPvcsOnly *bool `json:"recoverPvcsOnly,omitempty"`
+
+	// Specifies the storage class parameters for recovery of namespace.
+	StorageClass *KubernetesStorageClassParams `json:"storageClass,omitempty"`
+
+	// Specifies whether the volume bindings will be removed from all restored PVCs. This will effectively unbind the PVCs
+	// from their original PVs. Default: false.
+	UnbindPvcs *bool `json:"unbindPvcs,omitempty"`
+}
+
+// Constants associated with the KubernetesRecoveryObjectParams.SnapshotTargetType property.
+// Specifies the snapshot target type.
+const (
+	KubernetesRecoveryObjectParams_SnapshotTargetType_Archival             = "Archival"
+	KubernetesRecoveryObjectParams_SnapshotTargetType_Local                = "Local"
+	KubernetesRecoveryObjectParams_SnapshotTargetType_Remote               = "Remote"
+	KubernetesRecoveryObjectParams_SnapshotTargetType_Rpaasarchival        = "RpaasArchival"
+	KubernetesRecoveryObjectParams_SnapshotTargetType_Storagearraysnapshot = "StorageArraySnapshot"
+)
+
+// Constants associated with the KubernetesRecoveryObjectParams.Status property.
+// Status of the Recovery. 'Running' indicates that the Recovery is still running. 'Canceled' indicates that the
+// Recovery has been cancelled. 'Canceling' indicates that the Recovery is in the process of being cancelled. 'Failed'
+// indicates that the Recovery has failed. 'Succeeded' indicates that the Recovery has finished successfully.
+// 'SucceededWithWarning' indicates that the Recovery finished successfully, but there were some warning messages.
+// 'Skipped' indicates that the Recovery task was skipped.
+const (
+	KubernetesRecoveryObjectParams_Status_Accepted             = "Accepted"
+	KubernetesRecoveryObjectParams_Status_Canceled             = "Canceled"
+	KubernetesRecoveryObjectParams_Status_Canceling            = "Canceling"
+	KubernetesRecoveryObjectParams_Status_Failed               = "Failed"
+	KubernetesRecoveryObjectParams_Status_Finalizing           = "Finalizing"
+	KubernetesRecoveryObjectParams_Status_Legalhold            = "LegalHold"
+	KubernetesRecoveryObjectParams_Status_Missed               = "Missed"
+	KubernetesRecoveryObjectParams_Status_Onhold               = "OnHold"
+	KubernetesRecoveryObjectParams_Status_Running              = "Running"
+	KubernetesRecoveryObjectParams_Status_Skipped              = "Skipped"
+	KubernetesRecoveryObjectParams_Status_Succeeded            = "Succeeded"
+	KubernetesRecoveryObjectParams_Status_Succeededwithwarning = "SucceededWithWarning"
+)
+
+// NewKubernetesRecoveryObjectParams : Instantiate KubernetesRecoveryObjectParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewKubernetesRecoveryObjectParams(snapshotID string) (_model *KubernetesRecoveryObjectParams, err error) {
+	_model = &KubernetesRecoveryObjectParams{
+		SnapshotID: core.StringPtr(snapshotID),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalKubernetesRecoveryObjectParams unmarshals an instance of KubernetesRecoveryObjectParams from the specified map of raw messages.
+func UnmarshalKubernetesRecoveryObjectParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesRecoveryObjectParams)
+	err = core.UnmarshalPrimitive(m, "snapshotId", &obj.SnapshotID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "snapshotId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "pointInTimeUsecs", &obj.PointInTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "pointInTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectionGroupId", &obj.ProtectionGroupID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectionGroupId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "protectionGroupName", &obj.ProtectionGroupName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "protectionGroupName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "snapshotCreationTimeUsecs", &obj.SnapshotCreationTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "snapshotCreationTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objectInfo", &obj.ObjectInfo, UnmarshalCommonRecoverObjectSnapshotParamsObjectInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objectInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "snapshotTargetType", &obj.SnapshotTargetType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "snapshotTargetType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "archivalTargetInfo", &obj.ArchivalTargetInfo, UnmarshalCommonRecoverObjectSnapshotParamsArchivalTargetInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "archivalTargetInfo-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "progressTaskId", &obj.ProgressTaskID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "progressTaskId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoverFromStandby", &obj.RecoverFromStandby)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverFromStandby-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "messages", &obj.Messages)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "messages-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "bytesRestored", &obj.BytesRestored)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "bytesRestored-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "excludeParams", &obj.ExcludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludeParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "includeParams", &obj.IncludeParams, UnmarshalKubernetesFilterParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includeParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "recoverPvcsOnly", &obj.RecoverPvcsOnly)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverPvcsOnly-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "storageClass", &obj.StorageClass, UnmarshalKubernetesStorageClassParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "storageClass-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "unbindPvcs", &obj.UnbindPvcs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unbindPvcs-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // KubernetesServiceAnnotationObject : Specifies the service annotation key value pair while registering kubernetes source.
 type KubernetesServiceAnnotationObject struct {
 	// Specifies the service annotation key value.
@@ -20532,6 +20756,9 @@ type KubernetesSourceRegistrationParams struct {
 
 	// Specifies the bearer token or private key of Kubernetes source.
 	ClientPrivateKey *string `json:"clientPrivateKey" validate:"required"`
+
+	// Specifies the custom Cohesity Dataprotect plugin image location of the Kubernetes source.
+	CohesityDataprotectPluginImageLocation *string `json:"cohesityDataprotectPluginImageLocation,omitempty"`
 
 	// Specifies the datamover image location of Kubernetes source.
 	DataMoverImageLocation *string `json:"dataMoverImageLocation" validate:"required"`
@@ -20642,6 +20869,11 @@ func UnmarshalKubernetesSourceRegistrationParams(m map[string]json.RawMessage, r
 	err = core.UnmarshalPrimitive(m, "clientPrivateKey", &obj.ClientPrivateKey)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "clientPrivateKey-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "cohesityDataprotectPluginImageLocation", &obj.CohesityDataprotectPluginImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cohesityDataprotectPluginImageLocation-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalPrimitive(m, "dataMoverImageLocation", &obj.DataMoverImageLocation)
@@ -21913,8 +22145,6 @@ type MSSQLFileProtectionGroupHostParams struct {
 	HostID *int64 `json:"hostId" validate:"required"`
 
 	// Specifies the name of the host container on which databases are hosted.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	HostName *string `json:"hostName,omitempty"`
 }
 
@@ -21959,13 +22189,9 @@ type MSSQLFileProtectionGroupObjectParams struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object being protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies the type of source being protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SourceType *string `json:"sourceType,omitempty"`
 }
 
@@ -22160,13 +22386,9 @@ type MSSQLNativeProtectionGroupObjectParams struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object being protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies the type of source being protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SourceType *string `json:"sourceType,omitempty"`
 }
 
@@ -22427,8 +22649,6 @@ type MSSQLVolumeProtectionGroupHostParams struct {
 	HostID *int64 `json:"hostId" validate:"required"`
 
 	// Specifies the name of the host container on which databases are hosted.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	HostName *string `json:"hostName,omitempty"`
 
 	// Specifies the list of volume GUIDs to be protected. If not specified, all the volumes of the host will be protected.
@@ -22482,13 +22702,9 @@ type MSSQLVolumeProtectionGroupObjectParams struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object being protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies the type of source being protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SourceType *string `json:"sourceType,omitempty"`
 }
 
@@ -22848,18 +23064,12 @@ type MissingEntityParams struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies the id of the parent source of the object.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ParentSourceID *int64 `json:"parentSourceId,omitempty"`
 
 	// Specifies the name of the parent source of the object.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ParentSourceName *string `json:"parentSourceName,omitempty"`
 }
 
@@ -23230,8 +23440,6 @@ type MountPhysicalVolumeParamsPhysicalTargetParams struct {
 	VolumeNames []string `json:"volumeNames,omitempty"`
 
 	// Specifies the mapping of original volumes and mounted volumes.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	MountedVolumeMapping []MountedVolumeMapping `json:"mountedVolumeMapping,omitempty"`
 
 	// Specifies VLAN Params associated with the recovered. If this is not specified, then the VLAN settings will be
@@ -26198,8 +26406,6 @@ type PhysicalFileProtectionGroupObjectParams struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies a list of file paths to be protected by this Protection Group.
@@ -27312,8 +27518,6 @@ type PhysicalVolumeProtectionGroupObjectParams struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object protected.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 
 	// Specifies the list of GUIDs of volumes protected. If empty, then all volumes will be protected by default.
@@ -27506,8 +27710,6 @@ type PrimaryArchivalTarget struct {
 	TargetID *int64 `json:"targetId" validate:"required"`
 
 	// Specifies the Archival target name where Snapshots are copied.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	TargetName *string `json:"targetName,omitempty"`
 
 	// Specifies the settings tier levels configured with each archival target. The tier settings need to be applied in
@@ -29850,6 +30052,24 @@ func UnmarshalQuiesceRule(m map[string]json.RawMessage, result interface{}) (err
 	return
 }
 
+// RecoverClusterScopedResourcesParams : Specifies the parameters from where the cluster scoped resources would be recovered.
+type RecoverClusterScopedResourcesParams struct {
+	// Specifies the snapshot id of the namespace from where the cluster scoped resources are to be recovered.
+	SnapshotID *string `json:"snapshotId,omitempty"`
+}
+
+// UnmarshalRecoverClusterScopedResourcesParams unmarshals an instance of RecoverClusterScopedResourcesParams from the specified map of raw messages.
+func UnmarshalRecoverClusterScopedResourcesParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoverClusterScopedResourcesParams)
+	err = core.UnmarshalPrimitive(m, "snapshotId", &obj.SnapshotID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "snapshotId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // RecoverKubernetesFileAndFolderParamsKubernetesTargetParams : Specifies the parameters to recover to a Kubernetes target.
 type RecoverKubernetesFileAndFolderParamsKubernetesTargetParams struct {
 	// Specifies whether to continue recovering other files if one of files or folders failed to recover. Default value is
@@ -29939,7 +30159,8 @@ type RecoverKubernetesNamespaceParamsKubernetesTargetParams struct {
 	// included by this filter.
 	ExcludeParams *KubernetesFilterParams `json:"excludeParams,omitempty"`
 
-	// Specifies the list of pvc to be excluded from recovery.
+	// Specifies the list of pvc to be excluded from recovery. This will be deprecated in the future. This is overridden by
+	// the object level param.
 	ExcludedPvcs []KubernetesPvcInfo `json:"excludedPvcs,omitempty"`
 
 	// Specifies the parameters to in/exclude objects (e.g.: volumes). An object satisfying any of these criteria will be
@@ -29947,7 +30168,10 @@ type RecoverKubernetesNamespaceParamsKubernetesTargetParams struct {
 	IncludeParams *KubernetesFilterParams `json:"includeParams,omitempty"`
 
 	// Specifies the objects to be recovered.
-	Objects []CommonRecoverObjectSnapshotParams `json:"objects,omitempty"`
+	Objects []KubernetesRecoveryObjectParams `json:"objects,omitempty"`
+
+	// Specifies the parameters from where the cluster scoped resources would be recovered.
+	RecoverClusterScopedResources *RecoverClusterScopedResourcesParams `json:"recoverClusterScopedResources,omitempty"`
 
 	// Specifies the Protection Group Runs params to recover. All the VM's that are successfully backed up by specified
 	// Runs will be recovered. This can be specified along with individual snapshots of VMs. User has to make sure that
@@ -29955,11 +30179,19 @@ type RecoverKubernetesNamespaceParamsKubernetesTargetParams struct {
 	// specify multiple Runs which has same Object or an Object snapshot and a Run which has same Object's snapshot.
 	RecoverProtectionGroupRunsParams []RecoverProtectionGroupRunParams `json:"recoverProtectionGroupRunsParams,omitempty"`
 
-	// Specifies whether to recover PVCs only during recovery.
+	// Specifies whether to recover PVCs only during recovery.. This is overridden with the object level settings and will
+	// be deprecated in the future.
 	RecoverPvcsOnly *bool `json:"recoverPvcsOnly,omitempty"`
+
+	// Specifies an individual migration rule for mapping a region/zone to another for cross region recovery.
+	RecoveryRegionMigrationParams *KubernetesRecoveryMigrationParams `json:"recoveryRegionMigrationParams,omitempty"`
 
 	// Specifies the recovery target configuration of the Namespace recovery.
 	RecoveryTargetConfig *KubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig `json:"recoveryTargetConfig" validate:"required"`
+
+	// Specifies rules for performing zone migrations during recovery. Used in case of recovery to new location and the
+	// namespace being recovered is in a different zone.
+	RecoveryZoneMigrationParams []KubernetesRecoveryMigrationParams `json:"recoveryZoneMigrationParams,omitempty"`
 
 	// Specifies params to rename the Namespaces that are recovered. If not specified, the original names of the Namespaces
 	// are preserved. If a name collision occurs then the Namespace being recovered will overwrite the Namespace already
@@ -30004,9 +30236,14 @@ func UnmarshalRecoverKubernetesNamespaceParamsKubernetesTargetParams(m map[strin
 		err = core.SDKErrorf(err, "", "includeParams-error", common.GetComponentInfo())
 		return
 	}
-	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalCommonRecoverObjectSnapshotParams)
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalKubernetesRecoveryObjectParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoverClusterScopedResources", &obj.RecoverClusterScopedResources, UnmarshalRecoverClusterScopedResourcesParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoverClusterScopedResources-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalModel(m, "recoverProtectionGroupRunsParams", &obj.RecoverProtectionGroupRunsParams, UnmarshalRecoverProtectionGroupRunParams)
@@ -30019,9 +30256,19 @@ func UnmarshalRecoverKubernetesNamespaceParamsKubernetesTargetParams(m map[strin
 		err = core.SDKErrorf(err, "", "recoverPvcsOnly-error", common.GetComponentInfo())
 		return
 	}
+	err = core.UnmarshalModel(m, "recoveryRegionMigrationParams", &obj.RecoveryRegionMigrationParams, UnmarshalKubernetesRecoveryMigrationParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryRegionMigrationParams-error", common.GetComponentInfo())
+		return
+	}
 	err = core.UnmarshalModel(m, "recoveryTargetConfig", &obj.RecoveryTargetConfig, UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRecoveryTargetConfig)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "recoveryTargetConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoveryZoneMigrationParams", &obj.RecoveryZoneMigrationParams, UnmarshalKubernetesRecoveryMigrationParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryZoneMigrationParams-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalModel(m, "renameRecoveredNamespacesParams", &obj.RenameRecoveredNamespacesParams, UnmarshalKubernetesTargetParamsForRecoverKubernetesNamespaceRenameRecoveredNamespacesParams)
@@ -31332,13 +31579,9 @@ type RecoverTarget struct {
 	Name *string `json:"name,omitempty"`
 
 	// Specifies the id of the parent source of the target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ParentSourceID *int64 `json:"parentSourceId,omitempty"`
 
 	// Specifies the name of the parent source of the target.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ParentSourceName *string `json:"parentSourceName,omitempty"`
 }
 
@@ -31781,8 +32024,6 @@ type RecoveryObjectIdentifier struct {
 	ID *int64 `json:"id" validate:"required"`
 
 	// Specifies the name of the object.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	Name *string `json:"name,omitempty"`
 }
 
@@ -31930,8 +32171,6 @@ type RecoveryVlanConfig struct {
 	DisableVlan *bool `json:"disableVlan,omitempty"`
 
 	// Interface group to use for Recovery.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	InterfaceName *string `json:"interfaceName,omitempty"`
 }
 
@@ -32811,8 +33050,6 @@ type RemoteTargetConfig struct {
 	ClusterID *int64 `json:"clusterId" validate:"required"`
 
 	// Specifies the cluster name of the target replication cluster.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ClusterName *string `json:"clusterName,omitempty"`
 }
 
@@ -33257,6 +33494,93 @@ func UnmarshalReplicationTargetResult(m map[string]json.RawMessage, result inter
 	return
 }
 
+// ResourceInfo : This object represents information about a resource type present in the kubernetes cluster as well as a list
+// containing the instances of that resource type present/selected.
+type ResourceInfo struct {
+	// API group name of the resource (excluding the version). (Eg. apps, kubevirt.io).
+	ApiGroup *string `json:"apiGroup,omitempty"`
+
+	// Boolean indicating whether the resource is cluster scoped or not. This field is ignored for resource selection
+	// during recovery.
+	IsClusterScoped *bool `json:"isClusterScoped,omitempty"`
+
+	// The kind of the resource type. (Eg. VirtualMachine).
+	Kind *string `json:"kind,omitempty"`
+
+	// The name of the resource. This field is ignored for resource selection during recovery.
+	Name *string `json:"name,omitempty"`
+
+	// Array of the instances of the resource with group, version and kind mentioned above.
+	ResourceList []ResourceInstance `json:"resourceList,omitempty"`
+
+	// The version under the API group for the resource. This field is ignored for resource selection during recovery.
+	Version *string `json:"version,omitempty"`
+}
+
+// UnmarshalResourceInfo unmarshals an instance of ResourceInfo from the specified map of raw messages.
+func UnmarshalResourceInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ResourceInfo)
+	err = core.UnmarshalPrimitive(m, "apiGroup", &obj.ApiGroup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "apiGroup-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isClusterScoped", &obj.IsClusterScoped)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isClusterScoped-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "kind", &obj.Kind)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kind-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "resourceList", &obj.ResourceList, UnmarshalResourceInstance)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resourceList-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "version", &obj.Version)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "version-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ResourceInstance : This object represents information about a specific resource instance belonging to a specific group, version and
+// kind.
+type ResourceInstance struct {
+	// The id of the specific entity to be backed up or restored.
+	EntityID *int64 `json:"entityId,omitempty"`
+
+	// The name of the specific entity/resource to be backed up or restored.
+	Name *string `json:"name,omitempty"`
+}
+
+// UnmarshalResourceInstance unmarshals an instance of ResourceInstance from the specified map of raw messages.
+func UnmarshalResourceInstance(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ResourceInstance)
+	err = core.UnmarshalPrimitive(m, "entityId", &obj.EntityID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "entityId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // RestoreInfo : Specifies the info regarding a snapshot.
 type RestoreInfo struct {
 	// Specifies archival target summary information.
@@ -33565,8 +33889,6 @@ type RpaasTargetConfiguration struct {
 	TargetID *int64 `json:"targetId" validate:"required"`
 
 	// Specifies the RPaaS target name where Snapshots are copied.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	TargetName *string `json:"targetName,omitempty"`
 
 	// Specifies the RPaaS target type where Snapshots are copied.
@@ -36187,7 +36509,7 @@ type SearchObjectsOptions struct {
 	// bucketName - azureId.
 	ExternalFilters []string `json:"externalFilters,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -36507,7 +36829,7 @@ type SearchProtectedObjectsOptions struct {
 	// the read replica and primary data source.
 	UseCachedData *bool `json:"useCachedData,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -37362,13 +37684,9 @@ func UnmarshalSnapshotTagInfo(m map[string]json.RawMessage, result interface{}) 
 // SourceRegistrationResponseParams : Specifies the parameters which are common between all Protection Source registrations.
 type SourceRegistrationResponseParams struct {
 	// Source Registration ID. This can be used to retrieve, edit or delete the source registration.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	ID *int64 `json:"id,omitempty"`
 
 	// ID of top level source object discovered after the registration.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	SourceID *int64 `json:"sourceId,omitempty"`
 
 	// Specifies information about an object.
@@ -37401,18 +37719,12 @@ type SourceRegistrationResponseParams struct {
 	// Specifies the status of the authentication during the registration of a Protection Source. 'Pending' indicates the
 	// authentication is in progress. 'Scheduled' indicates the authentication is scheduled. 'Finished' indicates the
 	// authentication is completed. 'RefreshInProgress' indicates the refresh is in progress.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	AuthenticationStatus *string `json:"authenticationStatus,omitempty"`
 
 	// Specifies the time when the source was registered in milliseconds.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	RegistrationTimeMsecs *int64 `json:"registrationTimeMsecs,omitempty"`
 
 	// Specifies the time when the source was last refreshed in milliseconds.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	LastRefreshedTimeMsecs *int64 `json:"lastRefreshedTimeMsecs,omitempty"`
 
 	// Specifies the External metadata of an entity.
@@ -37435,8 +37747,7 @@ const (
 // Constants associated with the SourceRegistrationResponseParams.AuthenticationStatus property.
 // Specifies the status of the authentication during the registration of a Protection Source. 'Pending' indicates the
 // authentication is in progress. 'Scheduled' indicates the authentication is scheduled. 'Finished' indicates the
-// authentication is completed. 'RefreshInProgress' indicates the refresh is in progress. This parameter is read-only
-// and is included only in the response. It should not be included in any requests, as doing so will result in an error.
+// authentication is completed. 'RefreshInProgress' indicates the refresh is in progress.
 const (
 	SourceRegistrationResponseParams_AuthenticationStatus_Finished          = "Finished"
 	SourceRegistrationResponseParams_AuthenticationStatus_Pending           = "Pending"
@@ -39175,13 +39486,9 @@ func UnmarshalTeamsItemSourceInfo(m map[string]json.RawMessage, result interface
 // Tenant : Specifies a tenant object.
 type Tenant struct {
 	// Epoch time when tenant was created.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	CreatedAtTimeMsecs *int64 `json:"createdAtTimeMsecs,omitempty"`
 
 	// Epoch time when tenant was last updated.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	DeletedAtTimeMsecs *int64 `json:"deletedAtTimeMsecs,omitempty"`
 
 	// Description about the tenant.
@@ -39199,8 +39506,6 @@ type Tenant struct {
 	IsManagedOnHelios *bool `json:"isManagedOnHelios,omitempty"`
 
 	// Epoch time when tenant was last updated.
-	// This parameter is read-only and is included only in the response. It should
-	// not be included in any requests, as doing so will result in an error.
 	LastUpdatedAtTimeMsecs *int64 `json:"lastUpdatedAtTimeMsecs,omitempty"`
 
 	// Name of the Tenant.
@@ -41054,7 +41359,7 @@ type UpdateProtectionGroupOptions struct {
 	// Specifies the parameters which are related to Kubernetes Protection Groups.
 	KubernetesParams *KubernetesProtectionGroupParams `json:"kubernetesParams,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -41231,7 +41536,7 @@ type UpdateProtectionGroupRunOptions struct {
 
 	UpdateProtectionGroupRunParams []UpdateProtectionGroupRunParams `json:"updateProtectionGroupRunParams" validate:"required"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -41405,7 +41710,7 @@ type UpdateProtectionPolicyOptions struct {
 	// Specifies the parent policy template id to which the policy is linked to.
 	TemplateID *string `json:"templateId,omitempty"`
 
-	// Allows users to set headers on API requests
+	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
 
@@ -41761,7 +42066,7 @@ type UpdateUserOptions struct {
 	// Specifies whether to force user to change password.
 	ForcePasswordChange *bool `json:"forcePasswordChange,omitempty"`
 
-	// Google Account Information of a Helios BRS user.
+	// Google Account Information of a BRS user.
 	GoogleAccount *GoogleAccountInfo `json:"googleAccount,omitempty"`
 
 	// Specifies an IdP User's information logged in using an IdP. This information is not stored on the Cluster.
