@@ -897,6 +897,9 @@ func (backupRecovery *BackupRecoveryV1) CreateDataSourceConnectionWithContext(ct
 	if createDataSourceConnectionOptions.ConnectionName != nil {
 		body["connectionName"] = createDataSourceConnectionOptions.ConnectionName
 	}
+	if createDataSourceConnectionOptions.ConnectionEnvType != nil {
+		body["connectionEnvType"] = createDataSourceConnectionOptions.ConnectionEnvType
+	}
 	_, err = builder.SetBodyContentJSON(body)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "set-json-body-error", common.GetComponentInfo())
@@ -10155,6 +10158,80 @@ func UnmarshalCommonNasObjectParams(m map[string]json.RawMessage, result interfa
 	return
 }
 
+// K8sConnectorInfo : Top-level message for Kubernetes connector Helm chart deployment information. Specifies the platform type and Helm
+// chart location for each supported Kubernetes environment.
+type K8sConnectorInfo struct {
+	// Represents the structured components of an OCI (Open Container Initiative) artifact reference. A full reference
+	// string can be constructed from these parts. See Also:
+	// https://github.com/opencontainers/distribution-spec/blob/main/spec.md.
+	HelmChartOciRef *OciArtifactReference `json:"helmChartOciRef,omitempty"`
+
+	// Specifies the Helm install command for this type of k8s connector.
+	HelmInstallCmd *string `json:"helmInstallCmd,omitempty"`
+
+	// Enum representing the different supported Kubernetes platform types.
+	K8sPlatformType *string `json:"k8sPlatformType" validate:"required"`
+
+	// URL for upgrade documentation for this type of k8s connector.
+	UgradeDocURL *string `json:"ugradeDocUrl,omitempty"`
+}
+
+// OciArtifactReference : Represents the structured components of an OCI (Open Container Initiative) artifact reference. A full reference
+// string can be constructed from these parts. See Also:
+// https://github.com/opencontainers/distribution-spec/blob/main/spec.md.
+type OciArtifactReference struct {
+	// The immutable, content-addressable digest of the artifact's manifest. If only digest is set, the artifact is fetched
+	// by its immutable reference. If both tag and digest are set, the application should verify that the tag resolves to
+	// the given digest before proceeding. This should include the algorithm prefix.
+	Digest *string `json:"digest" validate:"required"`
+
+	// The namespace or organization within the registry. For public registries like Docker Hub, this can be 'library' for
+	// official images or a user's account name. May be optional for certain registry configurations.
+	Namespace *string `json:"namespace,omitempty"`
+
+	// The address of the OCI-compliant container registry. This can be a hostname or an IP address, and may optionally
+	// include a port number.
+	RegistryHost *string `json:"registryHost" validate:"required"`
+
+	// The name of the repository that holds the artifact.
+	Repository *string `json:"repository" validate:"required"`
+
+	// The mutable tag for the artifact.
+	Tag *string `json:"tag" validate:"required"`
+}
+
+// UnmarshalOciArtifactReference unmarshals an instance of OciArtifactReference from the specified map of raw messages.
+func UnmarshalOciArtifactReference(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(OciArtifactReference)
+	err = core.UnmarshalPrimitive(m, "digest", &obj.Digest)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "digest-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "namespace", &obj.Namespace)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "namespace-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "registryHost", &obj.RegistryHost)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "registryHost-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "repository", &obj.Repository)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "repository-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "tag", &obj.Tag)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "tag-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // CommonPostBackupScriptParams : Specifies the common params for PostBackup scripts.
 type CommonPostBackupScriptParams struct {
 	// Specifies the absolute path to the script on the remote host.
@@ -10927,6 +11004,11 @@ func UnmarshalConnectorImageMetadata(m map[string]json.RawMessage, result interf
 type ConnectorMetadata struct {
 	// Specifies information about the connector images for various platforms.
 	ConnectorImageMetadata *ConnectorImageMetadata `json:"connectorImageMetadata,omitempty"`
+
+	// k8sConnectorInfoList specifies information about supported kubernetes environments where Data-Source Connectors can
+	// be deployed. Also, specifies the helm chart location (OCI URL) for each supported Kubernetes environment and
+	// instructions for installing it.
+	K8sConnectorInfoList []K8sConnectorInfo `json:"k8sConnectorInfoList,omitempty"`
 }
 
 // UnmarshalConnectorMetadata unmarshals an instance of ConnectorMetadata from the specified map of raw messages.
@@ -10935,6 +11017,38 @@ func UnmarshalConnectorMetadata(m map[string]json.RawMessage, result interface{}
 	err = core.UnmarshalModel(m, "connectorImageMetadata", &obj.ConnectorImageMetadata, UnmarshalConnectorImageMetadata)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "connectorImageMetadata-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "k8sConnectorInfoList", &obj.K8sConnectorInfoList, UnmarshalK8sConnectorInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "k8sConnectorInfoList-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// UnmarshalK8sConnectorInfo unmarshals an instance of K8sConnectorInfo from the specified map of raw messages.
+func UnmarshalK8sConnectorInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(K8sConnectorInfo)
+	err = core.UnmarshalModel(m, "helmChartOciRef", &obj.HelmChartOciRef, UnmarshalOciArtifactReference)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "helmChartOciRef-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "helmInstallCmd", &obj.HelmInstallCmd)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "helmInstallCmd-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "k8sPlatformType", &obj.K8sPlatformType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "k8sPlatformType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "ugradeDocUrl", &obj.UgradeDocURL)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "ugradeDocUrl-error", common.GetComponentInfo())
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
@@ -11563,12 +11677,26 @@ type CreateDataSourceConnectionOptions struct {
 	// name. However, two (or more) different tenants can each have a connection with the same name.
 	ConnectionName *string `json:"connectionName" validate:"required"`
 
+	// Specifies the environment type of the connection being created. Once specified, the connection environment type
+	// cannot be changed, and it will only allow the same environment type for connectors in the connection.
+	ConnectionEnvType *string `json:"connectionEnvType,omitempty"`
+
 	// Id of the tenant accessing the cluster.
 	XIBMTenantID *string `json:"X-IBM-Tenant-Id,omitempty"`
 
 	// Allows users to set headers on API requests.
 	Headers map[string]string
 }
+
+// Constants associated with the CreateDataSourceConnectionOptions.ConnectionEnvType property.
+// Specifies the environment type of the connection being created. Once specified, the connection environment type
+// cannot be changed, and it will only allow the same environment type for connectors in the connection.
+const (
+	CreateDataSourceConnectionOptions_ConnectionEnvType_Kiksclassic  = "kIksClassic"
+	CreateDataSourceConnectionOptions_ConnectionEnvType_Kiksvpc      = "kIksVpc"
+	CreateDataSourceConnectionOptions_ConnectionEnvType_Kroksclassic = "kRoksClassic"
+	CreateDataSourceConnectionOptions_ConnectionEnvType_Kroksvpc     = "kRoksVpc"
+)
 
 // NewCreateDataSourceConnectionOptions : Instantiate CreateDataSourceConnectionOptions
 func (*BackupRecoveryV1) NewCreateDataSourceConnectionOptions(connectionName string) *CreateDataSourceConnectionOptions {
@@ -11580,6 +11708,12 @@ func (*BackupRecoveryV1) NewCreateDataSourceConnectionOptions(connectionName str
 // SetConnectionName : Allow user to set ConnectionName
 func (_options *CreateDataSourceConnectionOptions) SetConnectionName(connectionName string) *CreateDataSourceConnectionOptions {
 	_options.ConnectionName = core.StringPtr(connectionName)
+	return _options
+}
+
+// SetConnectionEnvType : Allow user to set ConnectionEnvType
+func (_options *CreateDataSourceConnectionOptions) SetConnectionEnvType(connectionEnvType string) *CreateDataSourceConnectionOptions {
+	_options.ConnectionEnvType = core.StringPtr(connectionEnvType)
 	return _options
 }
 
@@ -12722,6 +12856,9 @@ func UnmarshalDataProtectInfo(m map[string]json.RawMessage, result interface{}) 
 // tenant's connectors and can contain 0 or more connectors within it. A connector can only be associated with one
 // connection at max at a given time.
 type DataSourceConnection struct {
+	// Specifies the environment type of the connection.
+	ConnectionEnvType *string `json:"connectionEnvType,omitempty"`
+
 	// Specifies the unique ID of the connection.
 	ConnectionID *string `json:"connectionId,omitempty"`
 
@@ -12742,9 +12879,23 @@ type DataSourceConnection struct {
 	UpgradingConnectorID *string `json:"upgradingConnectorId,omitempty"`
 }
 
+// Constants associated with the DataSourceConnection.ConnectionEnvType property.
+// Specifies the environment type of the connection.
+const (
+	DataSourceConnection_ConnectionEnvType_Kiksclassic  = "kIksClassic"
+	DataSourceConnection_ConnectionEnvType_Kiksvpc      = "kIksVpc"
+	DataSourceConnection_ConnectionEnvType_Kroksclassic = "kRoksClassic"
+	DataSourceConnection_ConnectionEnvType_Kroksvpc     = "kRoksVpc"
+)
+
 // UnmarshalDataSourceConnection unmarshals an instance of DataSourceConnection from the specified map of raw messages.
 func UnmarshalDataSourceConnection(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(DataSourceConnection)
+	err = core.UnmarshalPrimitive(m, "connectionEnvType", &obj.ConnectionEnvType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "connectionEnvType-error", common.GetComponentInfo())
+		return
+	}
 	err = core.UnmarshalPrimitive(m, "connectionId", &obj.ConnectionID)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "connectionId-error", common.GetComponentInfo())
@@ -12819,7 +12970,13 @@ type DataSourceConnector struct {
 
 	// Specifies status information for the data-source connector. For example if it's currently connected to the cluster,
 	// when it last connected to the cluster successfully, etc.
-	ConnectivityStatus *DataSourceConnectorConnectivityStatus `json:"connectivityStatus,omitempty"`
+	ConnectivityStatus *ConnectorConnectivityStatus `json:"connectivityStatus,omitempty"`
+
+	// Specifies the product model/type of the connector (e.g., RigelContainer, RigelVE, etc.).
+	ConnectorType *string `json:"connectorType,omitempty"`
+
+	// Specifies the connector's patch software version.
+	PatchSoftwareVersion *string `json:"patchSoftwareVersion,omitempty"`
 
 	// Specifies the connector's software version.
 	SoftwareVersion *string `json:"softwareVersion,omitempty"`
@@ -12831,6 +12988,18 @@ type DataSourceConnector struct {
 	// upgrade, errors for upgrade failure etc.
 	UpgradeStatus *DataSourceConnectorUpgradeStatus `json:"upgradeStatus,omitempty"`
 }
+
+// Constants associated with the DataSourceConnector.ConnectorType property.
+// Specifies the product model/type of the connector (e.g., RigelContainer, RigelVE, etc.).
+const (
+	DataSourceConnector_ConnectorType_Kibmrigelve     = "kIBMRigelVE"
+	DataSourceConnector_ConnectorType_Kibmrigelvsi    = "kIBMRigelVSI"
+	DataSourceConnector_ConnectorType_Krigelaws       = "kRigelAWS"
+	DataSourceConnector_ConnectorType_Krigelazure     = "kRigelAzure"
+	DataSourceConnector_ConnectorType_Krigelcontainer = "kRigelContainer"
+	DataSourceConnector_ConnectorType_Krigelhyperv    = "kRigelHyperv"
+	DataSourceConnector_ConnectorType_Krigelve        = "kRigelVE"
+)
 
 // UnmarshalDataSourceConnector unmarshals an instance of DataSourceConnector from the specified map of raw messages.
 func UnmarshalDataSourceConnector(m map[string]json.RawMessage, result interface{}) (err error) {
@@ -12855,9 +13024,19 @@ func UnmarshalDataSourceConnector(m map[string]json.RawMessage, result interface
 		err = core.SDKErrorf(err, "", "connectorName-error", common.GetComponentInfo())
 		return
 	}
-	err = core.UnmarshalModel(m, "connectivityStatus", &obj.ConnectivityStatus, UnmarshalDataSourceConnectorConnectivityStatus)
+	err = core.UnmarshalModel(m, "connectivityStatus", &obj.ConnectivityStatus, UnmarshalConnectorConnectivityStatus)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "connectivityStatus-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "connectorType", &obj.ConnectorType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "connectorType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "patchSoftwareVersion", &obj.PatchSoftwareVersion)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "patchSoftwareVersion-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalPrimitive(m, "softwareVersion", &obj.SoftwareVersion)
@@ -20156,6 +20335,17 @@ const (
 	KubernetesProtectionSource_Type_Kcluster   = "kCluster"
 	KubernetesProtectionSource_Type_Knamespace = "kNamespace"
 	KubernetesProtectionSource_Type_Kservice   = "kService"
+)
+
+// Constants associated with the KubernetesProtectionSource.VeleroUpgradability property.
+// Specifies if the deployed Velero image needs to be upgraded for this kubernetes entity.
+const (
+	KubernetesProtectionSource_VeleroUpgradability_Kcurrent                     = "kCurrent"
+	KubernetesProtectionSource_VeleroUpgradability_Knonupgradableinvalidversion = "kNonUpgradableInvalidVersion"
+	KubernetesProtectionSource_VeleroUpgradability_Knonupgradableisnewer        = "kNonUpgradableIsNewer"
+	KubernetesProtectionSource_VeleroUpgradability_Knonupgradableisold          = "kNonUpgradableIsOld"
+	KubernetesProtectionSource_VeleroUpgradability_Kunknown                     = "kUnknown"
+	KubernetesProtectionSource_VeleroUpgradability_Kupgradable                  = "kUpgradable"
 )
 
 // UnmarshalKubernetesProtectionSource unmarshals an instance of KubernetesProtectionSource from the specified map of raw messages.
@@ -29078,26 +29268,6 @@ func UnmarshalProtectionPolicyResponse(m map[string]json.RawMessage, result inte
 	return
 }
 
-// ProtectionSourceApplicationNodes : Specifies the child subtree used to store additional application-level Objects. Different environments use the
-// subtree to store application-level information. For example for SQL Server, this subtree stores the SQL Server
-// instances running on a VM.
-type ProtectionSourceApplicationNodes struct {
-	// Specifies children of the current node in the Protection Sources hierarchy.
-	Nodes []ProtectionSourceNodes `json:"nodes,omitempty"`
-}
-
-// UnmarshalProtectionSourceApplicationNodes unmarshals an instance of ProtectionSourceApplicationNodes from the specified map of raw messages.
-func UnmarshalProtectionSourceApplicationNodes(m map[string]json.RawMessage, result interface{}) (err error) {
-	obj := new(ProtectionSourceApplicationNodes)
-	err = core.UnmarshalModel(m, "nodes", &obj.Nodes, UnmarshalProtectionSourceNodes)
-	if err != nil {
-		err = core.SDKErrorf(err, "", "nodes-error", common.GetComponentInfo())
-		return
-	}
-	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
-	return
-}
-
 // ProtectionSourceNode : Specifies details about an Acropolis Protection Source when the environment is set to 'kAcropolis'.
 type ProtectionSourceNode struct {
 	// Specifies the connection id of the tenant.
@@ -29204,7 +29374,7 @@ type ProtectionSourceNodes struct {
 	// Specifies the child subtree used to store additional application-level Objects. Different environments use the
 	// subtree to store application-level information. For example for SQL Server, this subtree stores the SQL Server
 	// instances running on a VM.
-	ApplicationNodes *ProtectionSourceApplicationNodes `json:"applicationNodes,omitempty"`
+	ApplicationNodes []ProtectionSourceNodes `json:"applicationNodes,omitempty"`
 
 	// Specifies the cursor based pagination parameters for Protection Source and its children. Pagination is supported at
 	// a given level within the Protection Source Hierarchy with the help of before or after cursors. A Cursor will always
@@ -29248,7 +29418,7 @@ type ProtectionSourceNodes struct {
 // UnmarshalProtectionSourceNodes unmarshals an instance of ProtectionSourceNodes from the specified map of raw messages.
 func UnmarshalProtectionSourceNodes(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(ProtectionSourceNodes)
-	err = core.UnmarshalModel(m, "applicationNodes", &obj.ApplicationNodes, UnmarshalProtectionSourceApplicationNodes)
+	err = core.UnmarshalModel(m, "applicationNodes", &obj.ApplicationNodes, UnmarshalProtectionSourceNodes)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "applicationNodes-error", common.GetComponentInfo())
 		return
