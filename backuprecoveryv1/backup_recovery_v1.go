@@ -20951,7 +20951,11 @@ type KubernetesSourceRegistrationParams struct {
 	CohesityDataprotectPluginImageLocation *string `json:"cohesityDataprotectPluginImageLocation,omitempty"`
 
 	// Specifies the datamover image location of Kubernetes source.
-	DataMoverImageLocation *string `json:"dataMoverImageLocation" validate:"required"`
+	DataMoverImageLocation *string `json:"dataMoverImageLocation,omitempty"`
+
+	// Specifies the port number to use when using the HostPort model for datamover communication. If user specifies a port
+	// number, that value is set here. If no port number was specified by the user, the gflag controlled value is set here.
+	DatamoverHostportNumber *int64 `json:"datamoverHostportNumber,omitempty"`
 
 	// Specifies the data mover service type of Kubernetes source.
 	DatamoverServiceType *string `json:"datamoverServiceType,omitempty"`
@@ -21002,9 +21006,10 @@ type KubernetesSourceRegistrationParams struct {
 // Constants associated with the KubernetesSourceRegistrationParams.DatamoverServiceType property.
 // Specifies the data mover service type of Kubernetes source.
 const (
-	KubernetesSourceRegistrationParams_DatamoverServiceType_Kclusterip    = "kClusterIp"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Kclusterip = "kClusterIp"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Khostport = "kHostPort"
 	KubernetesSourceRegistrationParams_DatamoverServiceType_Kloadbalancer = "kLoadBalancer"
-	KubernetesSourceRegistrationParams_DatamoverServiceType_Knodeport     = "kNodePort"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Knodeport = "kNodePort"
 )
 
 // Constants associated with the KubernetesSourceRegistrationParams.KubernetesDistribution property.
@@ -21069,6 +21074,11 @@ func UnmarshalKubernetesSourceRegistrationParams(m map[string]json.RawMessage, r
 	err = core.UnmarshalPrimitive(m, "dataMoverImageLocation", &obj.DataMoverImageLocation)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "dataMoverImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "datamoverHostportNumber", &obj.DatamoverHostportNumber)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "datamoverHostportNumber-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalPrimitive(m, "datamoverServiceType", &obj.DatamoverServiceType)
@@ -43688,5 +43698,1769 @@ func UnmarshalZoneConfig(m map[string]json.RawMessage, result interface{}) (err 
 		return
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+//
+// GetProgressMonitors API - Methods, Types, and Helper Functions
+//
+
+// GetProgressMonitors : Gets the progress and status of tasks from Pulse
+// **Privileges:** ```CLUSTER_VIEW, TENANT_VIEW, PROTECTION_VIEW, RESTORE_VIEW``` <br><br>.
+func (backupRecovery *BackupRecoveryV1) GetProgressMonitors(getProgressMonitorsOptions *GetProgressMonitorsOptions) (result *GetTasksResult, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.GetProgressMonitorsWithContext(context.Background(), getProgressMonitorsOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// GetProgressMonitorsWithContext is an alternate form of the GetProgressMonitors method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) GetProgressMonitorsWithContext(ctx context.Context, getProgressMonitorsOptions *GetProgressMonitorsOptions) (result *GetTasksResult, response *core.DetailedResponse, err error) {
+	err = core.ValidateStruct(getProgressMonitorsOptions, "getProgressMonitorsOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	builder := core.NewRequestBuilder(core.GET)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	url := strings.TrimSuffix(backupRecovery.Service.Options.URL, "/v2")
+	// _, err = builder.ResolveRequestURL(usersUrl, `/irisservices/api/v1/public/users`, nil)
+	_, err = builder.ResolveRequestURL(url, `/irisservices/api/v1/progressMonitors`, nil)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range getProgressMonitorsOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "GetProgressMonitors")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	builder.AddHeader("Content-Type", "application/json")
+	if getProgressMonitorsOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*getProgressMonitorsOptions.XIBMTenantID))
+	}
+
+	if getProgressMonitorsOptions.TaskPathVec != nil {
+		builder.AddQuery("taskPathVec", strings.Join(getProgressMonitorsOptions.TaskPathVec, ","))
+	}
+	if getProgressMonitorsOptions.IncludeFinishedTasks != nil {
+		builder.AddQuery("includeFinishedTasks", fmt.Sprint(*getProgressMonitorsOptions.IncludeFinishedTasks))
+	}
+	if getProgressMonitorsOptions.StartTimeSecs != nil {
+		builder.AddQuery("startTimeSecs", fmt.Sprint(*getProgressMonitorsOptions.StartTimeSecs))
+	}
+	if getProgressMonitorsOptions.EndTimeSecs != nil {
+		builder.AddQuery("endTimeSecs", fmt.Sprint(*getProgressMonitorsOptions.EndTimeSecs))
+	}
+	if getProgressMonitorsOptions.MaxTasks != nil {
+		builder.AddQuery("maxTasks", fmt.Sprint(*getProgressMonitorsOptions.MaxTasks))
+	}
+	if getProgressMonitorsOptions.ExcludeSubTasks != nil {
+		builder.AddQuery("excludeSubTasks", fmt.Sprint(*getProgressMonitorsOptions.ExcludeSubTasks))
+	}
+
+	body := make(map[string]interface{})
+	if getProgressMonitorsOptions.NewAttributeVec != nil {
+		body["attributeVec"] = getProgressMonitorsOptions.NewAttributeVec
+	}
+	if getProgressMonitorsOptions.NewEndTimeSecs != nil {
+		body["endTimeSecs"] = getProgressMonitorsOptions.NewEndTimeSecs
+	}
+	if getProgressMonitorsOptions.NewExcludeSubTasks != nil {
+		body["excludeSubTasks"] = getProgressMonitorsOptions.NewExcludeSubTasks
+	}
+	if getProgressMonitorsOptions.NewFetchLogsMaxLevel != nil {
+		body["fetchLogsMaxLevel"] = getProgressMonitorsOptions.NewFetchLogsMaxLevel
+	}
+	if getProgressMonitorsOptions.NewIncludeEventLogs != nil {
+		body["includeEventLogs"] = getProgressMonitorsOptions.NewIncludeEventLogs
+	}
+	if getProgressMonitorsOptions.NewIncludeFinishedTasks != nil {
+		body["includeFinishedTasks"] = getProgressMonitorsOptions.NewIncludeFinishedTasks
+	}
+	if getProgressMonitorsOptions.NewMaxTasks != nil {
+		body["maxTasks"] = getProgressMonitorsOptions.NewMaxTasks
+	}
+	if getProgressMonitorsOptions.NewStartTimeSecs != nil {
+		body["startTimeSecs"] = getProgressMonitorsOptions.NewStartTimeSecs
+	}
+	if getProgressMonitorsOptions.NewTaskPathVec != nil {
+		body["taskPathVec"] = getProgressMonitorsOptions.NewTaskPathVec
+	}
+	_, err = builder.SetBodyContentJSON(body)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "set-json-body-error", common.GetComponentInfo())
+		return
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "GetProgressMonitors", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalGetTasksResult)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
+// GetProgressMonitorsOptions : The GetProgressMonitors options.
+type GetProgressMonitorsOptions struct {
+	// Specifies the key to be used to encrypt the source credential. If includeSourceCredentials is set to true this key
+	// must be specified.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// If specified, tasks matching the current query are futher filtered by these KeyValuePairs. This gives client an
+	// ability to search by custom attributes that they specified during the task creation. Only the Tasks having 'all' of
+	// the specified key=value pairs will be returned.
+	NewAttributeVec []KeyValuePair `json:"attributeVec,omitempty"`
+
+	// Tasks that ended before this time.
+	NewEndTimeSecs *int64 `json:"endTimeSecs,omitempty"`
+
+	// Skip information about the sub tasks of the matching root and sub tasks. By default, the entire task tree will be
+	// returned for matching tasks.
+	NewExcludeSubTasks *bool `json:"excludeSubTasks,omitempty"`
+
+	// Number of levels till which we need to fetch the event logs for a pulse tree. Note that it is applicable only when
+	// include_event_logs is true.
+	NewFetchLogsMaxLevel *int64 `json:"fetchLogsMaxLevel,omitempty"`
+
+	// If set, the event logs will be included in the response message. Otherwise they will be cleared out.
+	NewIncludeEventLogs *bool `json:"includeEventLogs,omitempty"`
+
+	// Returns finished tasks as well. By default, Pulse only returns active tasks.
+	NewIncludeFinishedTasks *bool `json:"includeFinishedTasks,omitempty"`
+
+	// Only return at most these many matching tasks. This constraint is applied with each query's result group.
+	NewMaxTasks *int64 `json:"maxTasks,omitempty"`
+
+	// Tasks that started after this time.
+	NewStartTimeSecs *int64 `json:"startTimeSecs,omitempty"`
+
+	// The hierarchical paths to the names of the tasks being queried. The task path-name specified here can be a prefix.
+	// Clients can specify multiple paths/prefixes. Pulse will return one ResultGroup for each path query.
+	//
+	// Each path is treated separately by Pulse, so if there are duplicate paths, Pulse will return duplicate results.
+	//
+	// Both root tasks and sub tasks can be specified in @task_path_vec.
+	NewTaskPathVec []string `json:"taskPathVec,omitempty"`
+
+	// The hierarchical paths to the names of the tasks being queried. The task path-name specified here can be a prefix.
+	// Clients can specify multiple paths/prefixes. Pulse will return one ResultGroup for each path query.
+	//
+	// Each path is treated separately by Pulse, so if there are duplicate paths, Pulse will return duplicate results.
+	//
+	// Both root tasks and sub tasks can be specified in @task_path_vec.
+	TaskPathVec []string `json:"-"`
+
+	// Returns finished tasks as well. By default, Pulse only returns active tasks.
+	IncludeFinishedTasks *bool `json:"-"`
+
+	// Tasks that started after this time.
+	StartTimeSecs *int64 `json:"-"`
+
+	// Tasks that ended before this time.
+	EndTimeSecs *int64 `json:"-"`
+
+	// Only return at most these many matching tasks. This constraint is applied with each query's result group.
+	MaxTasks *int64 `json:"-"`
+
+	// Skip information about the sub tasks of the matching root and sub tasks. By default, the entire task tree will be
+	// returned for matching tasks.
+	ExcludeSubTasks *bool `json:"-"`
+
+	// Allows users to set headers on API requests.
+	Headers map[string]string
+}
+
+// NewGetProgressMonitorsOptions : Instantiate GetProgressMonitorsOptions
+func (*BackupRecoveryV1) NewGetProgressMonitorsOptions() *GetProgressMonitorsOptions {
+	return &GetProgressMonitorsOptions{}
+}
+
+// SetNewAttributeVec : Allow user to set NewAttributeVec
+func (_options *GetProgressMonitorsOptions) SetNewAttributeVec(newAttributeVec []KeyValuePair) *GetProgressMonitorsOptions {
+	_options.NewAttributeVec = newAttributeVec
+	return _options
+}
+
+// SetNewEndTimeSecs : Allow user to set NewEndTimeSecs
+func (_options *GetProgressMonitorsOptions) SetNewEndTimeSecs(newEndTimeSecs int64) *GetProgressMonitorsOptions {
+	_options.NewEndTimeSecs = core.Int64Ptr(newEndTimeSecs)
+	return _options
+}
+
+// SetNewExcludeSubTasks : Allow user to set NewExcludeSubTasks
+func (_options *GetProgressMonitorsOptions) SetNewExcludeSubTasks(newExcludeSubTasks bool) *GetProgressMonitorsOptions {
+	_options.NewExcludeSubTasks = core.BoolPtr(newExcludeSubTasks)
+	return _options
+}
+
+// SetNewFetchLogsMaxLevel : Allow user to set NewFetchLogsMaxLevel
+func (_options *GetProgressMonitorsOptions) SetNewFetchLogsMaxLevel(newFetchLogsMaxLevel int64) *GetProgressMonitorsOptions {
+	_options.NewFetchLogsMaxLevel = core.Int64Ptr(newFetchLogsMaxLevel)
+	return _options
+}
+
+// SetNewIncludeEventLogs : Allow user to set NewIncludeEventLogs
+func (_options *GetProgressMonitorsOptions) SetNewIncludeEventLogs(newIncludeEventLogs bool) *GetProgressMonitorsOptions {
+	_options.NewIncludeEventLogs = core.BoolPtr(newIncludeEventLogs)
+	return _options
+}
+
+// SetNewIncludeFinishedTasks : Allow user to set NewIncludeFinishedTasks
+func (_options *GetProgressMonitorsOptions) SetNewIncludeFinishedTasks(newIncludeFinishedTasks bool) *GetProgressMonitorsOptions {
+	_options.NewIncludeFinishedTasks = core.BoolPtr(newIncludeFinishedTasks)
+	return _options
+}
+
+// SetNewMaxTasks : Allow user to set NewMaxTasks
+func (_options *GetProgressMonitorsOptions) SetNewMaxTasks(newMaxTasks int64) *GetProgressMonitorsOptions {
+	_options.NewMaxTasks = core.Int64Ptr(newMaxTasks)
+	return _options
+}
+
+// SetNewStartTimeSecs : Allow user to set NewStartTimeSecs
+func (_options *GetProgressMonitorsOptions) SetNewStartTimeSecs(newStartTimeSecs int64) *GetProgressMonitorsOptions {
+	_options.NewStartTimeSecs = core.Int64Ptr(newStartTimeSecs)
+	return _options
+}
+
+// SetNewTaskPathVec : Allow user to set NewTaskPathVec
+func (_options *GetProgressMonitorsOptions) SetNewTaskPathVec(newTaskPathVec []string) *GetProgressMonitorsOptions {
+	_options.NewTaskPathVec = newTaskPathVec
+	return _options
+}
+
+// SetTaskPathVec : Allow user to set TaskPathVec
+func (_options *GetProgressMonitorsOptions) SetTaskPathVec(taskPathVec []string) *GetProgressMonitorsOptions {
+	_options.TaskPathVec = taskPathVec
+	return _options
+}
+
+// SetIncludeFinishedTasks : Allow user to set IncludeFinishedTasks
+func (_options *GetProgressMonitorsOptions) SetIncludeFinishedTasks(includeFinishedTasks bool) *GetProgressMonitorsOptions {
+	_options.IncludeFinishedTasks = core.BoolPtr(includeFinishedTasks)
+	return _options
+}
+
+// SetStartTimeSecs : Allow user to set StartTimeSecs
+func (_options *GetProgressMonitorsOptions) SetStartTimeSecs(startTimeSecs int64) *GetProgressMonitorsOptions {
+	_options.StartTimeSecs = core.Int64Ptr(startTimeSecs)
+	return _options
+}
+
+// SetEndTimeSecs : Allow user to set EndTimeSecs
+func (_options *GetProgressMonitorsOptions) SetEndTimeSecs(endTimeSecs int64) *GetProgressMonitorsOptions {
+	_options.EndTimeSecs = core.Int64Ptr(endTimeSecs)
+	return _options
+}
+
+// SetMaxTasks : Allow user to set MaxTasks
+func (_options *GetProgressMonitorsOptions) SetMaxTasks(maxTasks int64) *GetProgressMonitorsOptions {
+	_options.MaxTasks = core.Int64Ptr(maxTasks)
+	return _options
+}
+
+// SetExcludeSubTasks : Allow user to set ExcludeSubTasks
+func (_options *GetProgressMonitorsOptions) SetExcludeSubTasks(excludeSubTasks bool) *GetProgressMonitorsOptions {
+	_options.ExcludeSubTasks = core.BoolPtr(excludeSubTasks)
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *GetProgressMonitorsOptions) SetHeaders(param map[string]string) *GetProgressMonitorsOptions {
+	options.Headers = param
+	return options
+}
+
+// GetTasksResult : GetTasksResult struct
+type GetTasksResult struct {
+	// Proto to describe the error returned by pulse.
+	Error *PrivateErrorProto `json:"error,omitempty"`
+
+	ResultGroupVec []GetTasksResultResultGroup `json:"resultGroupVec,omitempty"`
+}
+
+// UnmarshalGetTasksResult unmarshals an instance of GetTasksResult from the specified map of raw messages.
+func UnmarshalGetTasksResult(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetTasksResult)
+	err = core.UnmarshalModel(m, "error", &obj.Error, UnmarshalPrivateErrorProto)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "error-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "resultGroupVec", &obj.ResultGroupVec, UnmarshalGetTasksResultResultGroup)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "resultGroupVec-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetTasksResultResultGroup : There is 1-1 correspondence between number of query paths and number of ResultGroups returned by Pulse.
+type GetTasksResultResultGroup struct {
+	// All tasks that match the corresponding query.
+	TaskVec []GetTasksResultResultGroupTask `json:"taskVec,omitempty"`
+}
+
+// UnmarshalGetTasksResultResultGroup unmarshals an instance of GetTasksResultResultGroup from the specified map of raw messages.
+func UnmarshalGetTasksResultResultGroup(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetTasksResultResultGroup)
+	err = core.UnmarshalModel(m, "taskVec", &obj.TaskVec, UnmarshalGetTasksResultResultGroupTask)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "taskVec-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetTasksResultResultGroupTask : GetTasksResultResultGroupTask struct
+type GetTasksResultResultGroupTask struct {
+	// The progress on this task.
+	Progress *TaskProgress `json:"progress,omitempty"`
+
+	// Information about all the sub tasks for this task.
+	SubTaskVec []map[string]interface{} `json:"subTaskVec,omitempty"`
+
+	// The hierarchical name of the task.
+	TaskPath *string `json:"taskPath,omitempty"`
+
+	// The weight of this task.
+	Weight *int64 `json:"weight,omitempty"`
+}
+
+// UnmarshalGetTasksResultResultGroupTask unmarshals an instance of GetTasksResultResultGroupTask from the specified map of raw messages.
+func UnmarshalGetTasksResultResultGroupTask(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetTasksResultResultGroupTask)
+	err = core.UnmarshalModel(m, "progress", &obj.Progress, UnmarshalTaskProgress)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "progress-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "subTaskVec", &obj.SubTaskVec)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "subTaskVec-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "taskPath", &obj.TaskPath)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "taskPath-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "weight", &obj.Weight)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "weight-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// PrivateErrorProto : PrivateErrorProto struct
+type PrivateErrorProto struct {
+	// A string describing the errors encountered.
+	ErrorMsg *string `json:"errorMsg,omitempty"`
+
+	// The type of error encountered.
+	Type *int64 `json:"type,omitempty"`
+}
+
+// UnmarshalPrivateErrorProto unmarshals an instance of PrivateErrorProto from the specified map of raw messages.
+func UnmarshalPrivateErrorProto(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(PrivateErrorProto)
+	err = core.UnmarshalPrimitive(m, "errorMsg", &obj.ErrorMsg)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMsg-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "type", &obj.Type)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "type-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// PrivateTaskEvent : If a task has many small steps (some of them conditional), then a client can create a single task and attach each
+// small step as an event. The client can collect a few of them, and report progress on a batch. The events act like a
+// log for the task, and Pulse does not interpret them.
+type PrivateTaskEvent struct {
+	// Message associated with the event.
+	EventMsg *string `json:"eventMsg,omitempty"`
+
+	// How much the owning task completed when this event occurred.
+	OwnerPercentFinished *float32 `json:"ownerPercentFinished,omitempty"`
+
+	// How much work was remaining for the owning task when this event occurred.
+	OwnerRemainingWorkCount *int64 `json:"ownerRemainingWorkCount,omitempty"`
+
+	// The timestamp at which the event occurred.
+	TimestampSecs *int64 `json:"timestampSecs,omitempty"`
+}
+
+// UnmarshalPrivateTaskEvent unmarshals an instance of PrivateTaskEvent from the specified map of raw messages.
+func UnmarshalPrivateTaskEvent(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(PrivateTaskEvent)
+	err = core.UnmarshalPrimitive(m, "eventMsg", &obj.EventMsg)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "eventMsg-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "ownerPercentFinished", &obj.OwnerPercentFinished)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "ownerPercentFinished-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "ownerRemainingWorkCount", &obj.OwnerRemainingWorkCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "ownerRemainingWorkCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "timestampSecs", &obj.TimestampSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "timestampSecs-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// TaskProgress : TaskProgress struct
+type TaskProgress struct {
+	// If set this indicate the percentage of work which is not know at this time. This will be useful if client does not
+	// know total amount of work that has to done. But client know how much work it has completed and approximate how much
+	// more work need to be done. This is usually reported by the clients for leaf tasks. For non-leaf tasks, the progress
+	// may be dynamically inferred.
+	// (see ReportTaskProgressArg).
+	ApproxPercentUnknownWork *float32 `json:"approxPercentUnknownWork,omitempty"`
+
+	// The latest attributes (if any) reported for this task.
+	AttributeVec []KeyValueProgressPair `json:"attributeVec,omitempty"`
+
+	// The time when the task finished.
+	EndTimeSecs *int64 `json:"endTimeSecs,omitempty"`
+
+	// The events (if any) reported for this task.
+	EventVec []PrivateTaskEvent `json:"eventVec,omitempty"`
+
+	// The expected end time of this task (if it hasn't ended). This is extrapolated using the current progress, and any
+	// historic data about this task if it occurs periodically. TODO(gaurav): Deprecate this field once Iris has stopped
+	// using it.
+	ExpectedEndTimeSecs *int64 `json:"expectedEndTimeSecs,omitempty"`
+
+	// Expected time remaining for this task (if it hasn't ended).
+	ExpectedTimeRemainingSecs *int64 `json:"expectedTimeRemainingSecs,omitempty"`
+
+	// The expected raw count of the total work remaining. This is the highest work count value reported by the client.
+	// This field can be set to let pulse compute percent_finished by looking at the currently reported
+	// remaining_work_count and the expected_total_work_count.
+	ExpectedTotalWorkCount *int64 `json:"expectedTotalWorkCount,omitempty"`
+
+	// The timestamp at which task progress was last reported.
+	LastUpdateTimeSecs *int64 `json:"lastUpdateTimeSecs,omitempty"`
+
+	// The reported progress on this task. This is usually reported by clients for leaf tasks. For non-leaf tasks, the
+	// progress may be dynamically inferred.
+	// (see ReportTaskProgressArg).
+	PercentFinished *float32 `json:"percentFinished,omitempty"`
+
+	// The time when the task was started.
+	StartTimeSecs *int64 `json:"startTimeSecs,omitempty"`
+
+	// The status of the task.
+	Status *TaskStatus `json:"status,omitempty"`
+}
+
+// KeyValueProgressPair : Specifies a key/value pair.
+type KeyValueProgressPair struct {
+	// Specifies the name of the key.
+	Key *string `json:"key,omitempty"`
+
+	// Specifies a value for the key.
+	Value *Value `json:"value,omitempty"`
+}
+
+// UnmarshalKeyValueProgressPair unmarshals an instance of KeyValueProgressPair from the specified map of raw messages.
+func UnmarshalKeyValueProgressPair(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KeyValueProgressPair)
+	err = core.UnmarshalPrimitive(m, "key", &obj.Key)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "key-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "value", &obj.Value, UnmarshalValue)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "value-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// Value : Specifies a data type and data field used to store data.
+type Value struct {
+	// Specifies the fields to store data of a given type.
+	// Specify data in the appropriate field for the current data type.
+	Data *ValueData `json:"data,omitempty"`
+
+	// Specifies the type of value. 0 specifies a data point of type Int64. 1 specifies a data point of type Double. 2
+	// specifies a data point of type String. 3 specifies a data point of type Bytes.
+	Type *int64 `json:"type,omitempty"`
+}
+
+// UnmarshalValue unmarshals an instance of Value from the specified map of raw messages.
+func UnmarshalValue(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(Value)
+	err = core.UnmarshalModel(m, "data", &obj.Data, UnmarshalValueData)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "data-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "type", &obj.Type)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "type-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ValueData : Specifies the fields to store data of a given type. Specify data in the appropriate field for the current data type.
+type ValueData struct {
+	// Types that are valid to be assigned to OneofData:
+	// Value_Data_Int64Value
+	// Value_Data_DoubleValue
+	// Value_Data_StringValue
+	// Value_Data_BytesValue.
+	OneofData *IsValueDataOneofData `json:"OneofData,omitempty"`
+}
+
+// UnmarshalValueData unmarshals an instance of ValueData from the specified map of raw messages.
+func UnmarshalValueData(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ValueData)
+	err = core.UnmarshalModel(m, "OneofData", &obj.OneofData, UnmarshalIsValueDataOneofData)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "OneofData-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// IsValueDataOneofData : IsValueDataOneofData struct
+// This type supports additional properties of type interface{}.
+type IsValueDataOneofData struct {
+
+	// Allows users to set arbitrary properties of type interface{}.
+	additionalProperties map[string]interface{}
+}
+
+// SetProperty allows the user to set an arbitrary property on an instance of IsValueDataOneofData.
+func (o *IsValueDataOneofData) SetProperty(key string, value interface{}) {
+	if o.additionalProperties == nil {
+		o.additionalProperties = make(map[string]interface{})
+	}
+	o.additionalProperties[key] = value
+}
+
+// SetProperties allows the user to set a map of arbitrary properties on an instance of IsValueDataOneofData.
+func (o *IsValueDataOneofData) SetProperties(m map[string]interface{}) {
+	o.additionalProperties = make(map[string]interface{})
+	for k, v := range m {
+		o.additionalProperties[k] = v
+	}
+}
+
+// GetProperty allows the user to retrieve an arbitrary property from an instance of IsValueDataOneofData.
+func (o *IsValueDataOneofData) GetProperty(key string) interface{} {
+	return o.additionalProperties[key]
+}
+
+// GetProperties allows the user to retrieve the map of arbitrary properties from an instance of IsValueDataOneofData.
+func (o *IsValueDataOneofData) GetProperties() map[string]interface{} {
+	return o.additionalProperties
+}
+
+// MarshalJSON performs custom serialization for instances of IsValueDataOneofData
+func (o *IsValueDataOneofData) MarshalJSON() (buffer []byte, err error) {
+	m := make(map[string]interface{})
+	if len(o.additionalProperties) > 0 {
+		for k, v := range o.additionalProperties {
+			m[k] = v
+		}
+	}
+	buffer, err = json.Marshal(m)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-marshal", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalIsValueDataOneofData unmarshals an instance of IsValueDataOneofData from the specified map of raw messages.
+func UnmarshalIsValueDataOneofData(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(IsValueDataOneofData)
+	for k := range m {
+		var v interface{}
+		e := core.UnmarshalPrimitive(m, k, &v)
+		if e != nil {
+			err = core.SDKErrorf(e, "", "additional-properties-error", common.GetComponentInfo())
+			return
+		}
+		obj.SetProperty(k, v)
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// UnmarshalTaskProgress unmarshals an instance of TaskProgress from the specified map of raw messages.
+func UnmarshalTaskProgress(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(TaskProgress)
+	err = core.UnmarshalPrimitive(m, "approxPercentUnknownWork", &obj.ApproxPercentUnknownWork)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "approxPercentUnknownWork-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "attributeVec", &obj.AttributeVec, UnmarshalKeyValueProgressPair)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "attributeVec-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endTimeSecs", &obj.EndTimeSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "eventVec", &obj.EventVec, UnmarshalPrivateTaskEvent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "eventVec-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedEndTimeSecs", &obj.ExpectedEndTimeSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedEndTimeSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedTimeRemainingSecs", &obj.ExpectedTimeRemainingSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedTimeRemainingSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedTotalWorkCount", &obj.ExpectedTotalWorkCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedTotalWorkCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "lastUpdateTimeSecs", &obj.LastUpdateTimeSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "lastUpdateTimeSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "percentFinished", &obj.PercentFinished)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "percentFinished-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeSecs", &obj.StartTimeSecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeSecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "status", &obj.Status, UnmarshalTaskStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// TaskStatus : TaskStatus struct
+type TaskStatus struct {
+	// The error message (if any).
+	ErrorMsg *string `json:"errorMsg,omitempty"`
+
+	// The return type.
+	Type *int64 `json:"type,omitempty"`
+}
+
+// UnmarshalTaskStatus unmarshals an instance of TaskStatus from the specified map of raw messages.
+func UnmarshalTaskStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(TaskStatus)
+	err = core.UnmarshalPrimitive(m, "errorMsg", &obj.ErrorMsg)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMsg-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "type", &obj.Type)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "type-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetProtectionRunProgress : Get the progress of a run
+// Get the progress of a run.
+func (backupRecovery *BackupRecoveryV1) GetProtectionRunProgress(getProtectionRunProgressOptions *GetProtectionRunProgressOptions) (result *GetProtectionRunProgressBody, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.GetProtectionRunProgressWithContext(context.Background(), getProtectionRunProgressOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// GetProtectionRunProgressWithContext is an alternate form of the GetProtectionRunProgress method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) GetProtectionRunProgressWithContext(ctx context.Context, getProtectionRunProgressOptions *GetProtectionRunProgressOptions) (result *GetProtectionRunProgressBody, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(getProtectionRunProgressOptions, "getProtectionRunProgressOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(getProtectionRunProgressOptions, "getProtectionRunProgressOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	pathParamsMap := map[string]string{
+		"runId": *getProtectionRunProgressOptions.RunID,
+	}
+
+	builder := core.NewRequestBuilder(core.GET)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/runs/{runId}/progress`, pathParamsMap)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range getProtectionRunProgressOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "GetProtectionRunProgress")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+
+	if getProtectionRunProgressOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*getProtectionRunProgressOptions.XIBMTenantID))
+	}
+
+	if getProtectionRunProgressOptions.Objects != nil {
+		err = builder.AddQuerySlice("objects", getProtectionRunProgressOptions.Objects)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "add-query-slice-error", common.GetComponentInfo())
+			return
+		}
+	}
+	if getProtectionRunProgressOptions.TenantIds != nil {
+		builder.AddQuery("tenantIds", strings.Join(getProtectionRunProgressOptions.TenantIds, ","))
+	}
+	if getProtectionRunProgressOptions.IncludeTenants != nil {
+		builder.AddQuery("includeTenants", fmt.Sprint(*getProtectionRunProgressOptions.IncludeTenants))
+	}
+	if getProtectionRunProgressOptions.IncludeFinishedTasks != nil {
+		builder.AddQuery("includeFinishedTasks", fmt.Sprint(*getProtectionRunProgressOptions.IncludeFinishedTasks))
+	}
+	if getProtectionRunProgressOptions.StartTimeUsecs != nil {
+		builder.AddQuery("startTimeUsecs", fmt.Sprint(*getProtectionRunProgressOptions.StartTimeUsecs))
+	}
+	if getProtectionRunProgressOptions.EndTimeUsecs != nil {
+		builder.AddQuery("endTimeUsecs", fmt.Sprint(*getProtectionRunProgressOptions.EndTimeUsecs))
+	}
+	if getProtectionRunProgressOptions.MaxTasksNum != nil {
+		builder.AddQuery("maxTasksNum", fmt.Sprint(*getProtectionRunProgressOptions.MaxTasksNum))
+	}
+	if getProtectionRunProgressOptions.ExcludeObjectDetails != nil {
+		builder.AddQuery("excludeObjectDetails", fmt.Sprint(*getProtectionRunProgressOptions.ExcludeObjectDetails))
+	}
+	if getProtectionRunProgressOptions.IncludeEventLogs != nil {
+		builder.AddQuery("includeEventLogs", fmt.Sprint(*getProtectionRunProgressOptions.IncludeEventLogs))
+	}
+	if getProtectionRunProgressOptions.MaxLogLevel != nil {
+		builder.AddQuery("maxLogLevel", fmt.Sprint(*getProtectionRunProgressOptions.MaxLogLevel))
+	}
+	if getProtectionRunProgressOptions.RunTaskPath != nil {
+		builder.AddQuery("runTaskPath", fmt.Sprint(*getProtectionRunProgressOptions.RunTaskPath))
+	}
+	if getProtectionRunProgressOptions.ObjectTaskPaths != nil {
+		builder.AddQuery("objectTaskPaths", strings.Join(getProtectionRunProgressOptions.ObjectTaskPaths, ","))
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "GetProtectionRunProgress", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalGetProtectionRunProgressBody)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
+// GetProtectionRunProgressBody : Specifies the progress of a protection run.
+type GetProtectionRunProgressBody struct {
+	// Progress for the archival run.
+	ArchivalRun []ArchivalTargetProgressInfo `json:"archivalRun,omitempty"`
+
+	// Specifies the progress of a local backup run.
+	LocalRun *BackupRunProgressInfo `json:"localRun,omitempty"`
+
+	// Progress for the replication run.
+	ReplicationRun []ReplicationTargetProgressInfo `json:"replicationRun,omitempty"`
+}
+
+// UnmarshalGetProtectionRunProgressBody unmarshals an instance of GetProtectionRunProgressBody from the specified map of raw messages.
+func UnmarshalGetProtectionRunProgressBody(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetProtectionRunProgressBody)
+	err = core.UnmarshalModel(m, "archivalRun", &obj.ArchivalRun, UnmarshalArchivalTargetProgressInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "archivalRun-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "localRun", &obj.LocalRun, UnmarshalBackupRunProgressInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "localRun-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "replicationRun", &obj.ReplicationRun, UnmarshalReplicationTargetProgressInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "replicationRun-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetProtectionRunProgressOptions : The GetProtectionRunProgress options.
+type GetProtectionRunProgressOptions struct {
+
+	// Specifies the key to be used to encrypt the source credential. If includeSourceCredentials is set to true this key
+	// must be specified.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+	// Specifies a unique run id of the Protection Run.
+	RunID *string `json:"runId" validate:"required,ne="`
+
+	// Specifies the objects whose progress will be returned. This only applies to protection group runs and will be
+	// ignored for object runs. If the objects are specified, the run progress will not be returned and only the progress
+	// of the specified objects will be returned.
+	Objects []int64 `json:"objects,omitempty"`
+
+	// TenantIds contains ids of the tenants for which the run is to be returned.
+	TenantIds []string `json:"tenantIds,omitempty"`
+
+	// If true, the response will include Protection Group Runs which were created by all tenants which the current user
+	// has permission to see. If false, then only Protection Groups created by the current user will be returned. If it's
+	// not specified, it is true by default.
+	IncludeTenants *bool `json:"includeTenants,omitempty"`
+
+	// Specifies whether to return finished tasks. By default only active tasks are returned.
+	IncludeFinishedTasks *bool `json:"includeFinishedTasks,omitempty"`
+
+	// Specifies the time after which the progress task starts in Unix epoch Timestamp(in microseconds).
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the time before which the progress task ends in Unix epoch Timestamp(in microseconds).
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the maximum number of tasks to return.
+	MaxTasksNum *int64 `json:"maxTasksNum,omitempty"`
+
+	// Specifies whether to return objects. By default all the task tree are returned.
+	ExcludeObjectDetails *bool `json:"excludeObjectDetails,omitempty"`
+
+	// Specifies whether to include event logs.
+	IncludeEventLogs *bool `json:"includeEventLogs,omitempty"`
+
+	// Specifies the number of levels till which to fetch the event logs. This is applicable only when includeEventLogs is
+	// true.
+	MaxLogLevel *int64 `json:"maxLogLevel,omitempty"`
+
+	// Specifies the task path of the run or object run. This is applicable only if progress of a protection group with one
+	// or more object is required.If provided this will be used to fetch progress details directly without looking actual
+	// task path of the object. Objects field is stil expected else it changes the response format.
+	RunTaskPath *string `json:"runTaskPath,omitempty"`
+
+	// Specifies the object level task path. This relates to the objectID. If provided this will take precedence over the
+	// objects, and will be used to fetch progress details directly without looking actuall task path of the object.
+	ObjectTaskPaths []string `json:"objectTaskPaths,omitempty"`
+
+	// Allows users to set headers on API requests.
+	Headers map[string]string
+}
+
+// NewGetProtectionRunProgressOptions : Instantiate GetProtectionRunProgressOptions
+func (*BackupRecoveryV1) NewGetProtectionRunProgressOptions(runID string) *GetProtectionRunProgressOptions {
+	return &GetProtectionRunProgressOptions{
+		RunID: core.StringPtr(runID),
+	}
+}
+
+// SetRunID : Allow user to set RunID
+func (_options *GetProtectionRunProgressOptions) SetRunID(runID string) *GetProtectionRunProgressOptions {
+	_options.RunID = core.StringPtr(runID)
+	return _options
+}
+
+// SetObjects : Allow user to set Objects
+func (_options *GetProtectionRunProgressOptions) SetObjects(objects []int64) *GetProtectionRunProgressOptions {
+	_options.Objects = objects
+	return _options
+}
+
+// SetTenantIds : Allow user to set TenantIds
+func (_options *GetProtectionRunProgressOptions) SetTenantIds(tenantIds []string) *GetProtectionRunProgressOptions {
+	_options.TenantIds = tenantIds
+	return _options
+}
+
+// SetIncludeTenants : Allow user to set IncludeTenants
+func (_options *GetProtectionRunProgressOptions) SetIncludeTenants(includeTenants bool) *GetProtectionRunProgressOptions {
+	_options.IncludeTenants = core.BoolPtr(includeTenants)
+	return _options
+}
+
+// SetIncludeFinishedTasks : Allow user to set IncludeFinishedTasks
+func (_options *GetProtectionRunProgressOptions) SetIncludeFinishedTasks(includeFinishedTasks bool) *GetProtectionRunProgressOptions {
+	_options.IncludeFinishedTasks = core.BoolPtr(includeFinishedTasks)
+	return _options
+}
+
+// SetStartTimeUsecs : Allow user to set StartTimeUsecs
+func (_options *GetProtectionRunProgressOptions) SetStartTimeUsecs(startTimeUsecs int64) *GetProtectionRunProgressOptions {
+	_options.StartTimeUsecs = core.Int64Ptr(startTimeUsecs)
+	return _options
+}
+
+// SetEndTimeUsecs : Allow user to set EndTimeUsecs
+func (_options *GetProtectionRunProgressOptions) SetEndTimeUsecs(endTimeUsecs int64) *GetProtectionRunProgressOptions {
+	_options.EndTimeUsecs = core.Int64Ptr(endTimeUsecs)
+	return _options
+}
+
+// SetMaxTasksNum : Allow user to set MaxTasksNum
+func (_options *GetProtectionRunProgressOptions) SetMaxTasksNum(maxTasksNum int64) *GetProtectionRunProgressOptions {
+	_options.MaxTasksNum = core.Int64Ptr(maxTasksNum)
+	return _options
+}
+
+// SetExcludeObjectDetails : Allow user to set ExcludeObjectDetails
+func (_options *GetProtectionRunProgressOptions) SetExcludeObjectDetails(excludeObjectDetails bool) *GetProtectionRunProgressOptions {
+	_options.ExcludeObjectDetails = core.BoolPtr(excludeObjectDetails)
+	return _options
+}
+
+// SetIncludeEventLogs : Allow user to set IncludeEventLogs
+func (_options *GetProtectionRunProgressOptions) SetIncludeEventLogs(includeEventLogs bool) *GetProtectionRunProgressOptions {
+	_options.IncludeEventLogs = core.BoolPtr(includeEventLogs)
+	return _options
+}
+
+// SetMaxLogLevel : Allow user to set MaxLogLevel
+func (_options *GetProtectionRunProgressOptions) SetMaxLogLevel(maxLogLevel int64) *GetProtectionRunProgressOptions {
+	_options.MaxLogLevel = core.Int64Ptr(maxLogLevel)
+	return _options
+}
+
+// SetRunTaskPath : Allow user to set RunTaskPath
+func (_options *GetProtectionRunProgressOptions) SetRunTaskPath(runTaskPath string) *GetProtectionRunProgressOptions {
+	_options.RunTaskPath = core.StringPtr(runTaskPath)
+	return _options
+}
+
+// SetObjectTaskPaths : Allow user to set ObjectTaskPaths
+func (_options *GetProtectionRunProgressOptions) SetObjectTaskPaths(objectTaskPaths []string) *GetProtectionRunProgressOptions {
+	_options.ObjectTaskPaths = objectTaskPaths
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *GetProtectionRunProgressOptions) SetHeaders(param map[string]string) *GetProtectionRunProgressOptions {
+	options.Headers = param
+	return options
+}
+
+// ArchivalTargetProgressInfo : Specifies the progress of an archival run target.
+type ArchivalTargetProgressInfo struct {
+	// Specifies the archival target ID.
+	TargetID *int64 `json:"targetId,omitempty"`
+
+	// Specifies the archival task id. This is a protection group UID which only applies when archival type is 'Tape'.
+	ArchivalTaskID *string `json:"archivalTaskId,omitempty"`
+
+	// Specifies the archival target name.
+	TargetName *string `json:"targetName,omitempty"`
+
+	// Specifies the archival target type.
+	TargetType *string `json:"targetType,omitempty"`
+
+	// Specifies the usage type for the target.
+	UsageType *string `json:"usageType,omitempty"`
+
+	// Specifies the ownership context for the target.
+	OwnershipContext *string `json:"ownershipContext,omitempty"`
+
+	// Specifies the tier info for archival.
+	TierSettings *ArchivalTargetTierInfo `json:"tierSettings,omitempty"`
+
+	// Specifies the end time of the progress task in Unix epoch Timestamp(in microseconds).
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the event log created for progress Task.
+	Events []ProgressTaskEvent `json:"events,omitempty"`
+
+	// Specifies the expected remaining time of the progress task in Unix epoch Timestamp(in microseconds).
+	ExpectedRemainingTimeUsecs *int64 `json:"expectedRemainingTimeUsecs,omitempty"`
+
+	// Specifies the current completed percentage of the progress task.
+	PercentageCompleted *float32 `json:"percentageCompleted,omitempty"`
+
+	// Specifies the start time of the progress task in Unix epoch Timestamp(in microseconds).
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the stats within progress.
+	Stats *ProgressStats `json:"stats,omitempty"`
+
+	// Specifies the current status of the progress task.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies progress for objects.
+	Objects []ObjectProgressInfo `json:"objects,omitempty"`
+}
+
+// ProgressTaskEvent : Specifies the details about the various events which are created during the execution of Progress Task.
+type ProgressTaskEvent struct {
+	// Specifies the log message describing the current event.
+	Message *string `json:"message,omitempty"`
+
+	// Specifies the time of the event occurance in Unix epoch Timestamp(in microseconds).
+	OccuredAtUsecs *int64 `json:"occuredAtUsecs,omitempty"`
+}
+
+// ObjectProgressInfo : Specifies the progress of an object.
+type ObjectProgressInfo struct {
+	// Specifies object id.
+	ID *int64 `json:"id,omitempty"`
+
+	// Specifies the name of the object.
+	Name *string `json:"name,omitempty"`
+
+	// Specifies registered source id to which object belongs.
+	SourceID *int64 `json:"sourceId,omitempty"`
+
+	// Specifies registered source name to which object belongs.
+	SourceName *string `json:"sourceName,omitempty"`
+
+	// Specifies the environment of the object.
+	Environment *string `json:"environment,omitempty"`
+
+	// Specifies the end time of the progress task in Unix epoch Timestamp(in microseconds).
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the event log created for progress Task.
+	Events []ProgressTaskEvent `json:"events,omitempty"`
+
+	// Specifies the expected remaining time of the progress task in Unix epoch Timestamp(in microseconds).
+	ExpectedRemainingTimeUsecs *int64 `json:"expectedRemainingTimeUsecs,omitempty"`
+
+	// Specifies the current completed percentage of the progress task.
+	PercentageCompleted *float32 `json:"percentageCompleted,omitempty"`
+
+	// Specifies the start time of the progress task in Unix epoch Timestamp(in microseconds).
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the stats within progress.
+	Stats *ProgressStats `json:"stats,omitempty"`
+
+	// Specifies the current status of the progress task.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies progress for failed attempts of this object.
+	FailedAttempts []ProgressTaskInfo `json:"failedAttempts,omitempty"`
+}
+
+// Constants associated with the ObjectProgressInfo.Environment property.
+// Specifies the environment of the object.
+const (
+	ObjectProgressInfo_Environment_Kphysical = "kPhysical"
+	ObjectProgressInfo_Environment_Ksql      = "kSQL"
+)
+
+// Constants associated with the ObjectProgressInfo.Status property.
+// Specifies the current status of the progress task.
+const (
+	ObjectProgressInfo_Status_Active                   = "Active"
+	ObjectProgressInfo_Status_Canceled                 = "Canceled"
+	ObjectProgressInfo_Status_Finished                 = "Finished"
+	ObjectProgressInfo_Status_Finishedgarbagecollected = "FinishedGarbageCollected"
+	ObjectProgressInfo_Status_Finishedwitherror        = "FinishedWithError"
+)
+
+// UnmarshalObjectProgressInfo unmarshals an instance of ObjectProgressInfo from the specified map of raw messages.
+func UnmarshalObjectProgressInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ObjectProgressInfo)
+	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "name-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sourceId", &obj.SourceID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "sourceName", &obj.SourceName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "sourceName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "environment", &obj.Environment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "environment-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "events", &obj.Events, UnmarshalProgressTaskEvent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "events-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedRemainingTimeUsecs", &obj.ExpectedRemainingTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedRemainingTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "percentageCompleted", &obj.PercentageCompleted)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "percentageCompleted-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalProgressStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "failedAttempts", &obj.FailedAttempts, UnmarshalProgressTaskInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "failedAttempts-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ProgressTaskInfo : Specifies the details about a Progress Task.
+type ProgressTaskInfo struct {
+	// Specifies the end time of the progress task in Unix epoch Timestamp(in microseconds).
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the event log created for progress Task.
+	Events []ProgressTaskEvent `json:"events,omitempty"`
+
+	// Specifies the expected remaining time of the progress task in Unix epoch Timestamp(in microseconds).
+	ExpectedRemainingTimeUsecs *int64 `json:"expectedRemainingTimeUsecs,omitempty"`
+
+	// Specifies the current completed percentage of the progress task.
+	PercentageCompleted *float32 `json:"percentageCompleted,omitempty"`
+
+	// Specifies the start time of the progress task in Unix epoch Timestamp(in microseconds).
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the stats within progress.
+	Stats *ProgressStats `json:"stats,omitempty"`
+
+	// Specifies the current status of the progress task.
+	Status *string `json:"status,omitempty"`
+}
+
+// Constants associated with the ProgressTaskInfo.Status property.
+// Specifies the current status of the progress task.
+const (
+	ProgressTaskInfo_Status_Active                   = "Active"
+	ProgressTaskInfo_Status_Canceled                 = "Canceled"
+	ProgressTaskInfo_Status_Finished                 = "Finished"
+	ProgressTaskInfo_Status_Finishedgarbagecollected = "FinishedGarbageCollected"
+	ProgressTaskInfo_Status_Finishedwitherror        = "FinishedWithError"
+)
+
+// UnmarshalProgressTaskInfo unmarshals an instance of ProgressTaskInfo from the specified map of raw messages.
+func UnmarshalProgressTaskInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProgressTaskInfo)
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "events", &obj.Events, UnmarshalProgressTaskEvent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "events-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedRemainingTimeUsecs", &obj.ExpectedRemainingTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedRemainingTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "percentageCompleted", &obj.PercentageCompleted)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "percentageCompleted-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalProgressStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// UnmarshalProgressTaskEvent unmarshals an instance of ProgressTaskEvent from the specified map of raw messages.
+func UnmarshalProgressTaskEvent(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProgressTaskEvent)
+	err = core.UnmarshalPrimitive(m, "message", &obj.Message)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "message-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "occuredAtUsecs", &obj.OccuredAtUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "occuredAtUsecs-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// Constants associated with the ArchivalTargetProgressInfo.TargetType property.
+// Specifies the archival target type.
+const (
+	ArchivalTargetProgressInfo_TargetType_Cloud = "Cloud"
+	ArchivalTargetProgressInfo_TargetType_Nas   = "Nas"
+	ArchivalTargetProgressInfo_TargetType_Tape  = "Tape"
+)
+
+// Constants associated with the ArchivalTargetProgressInfo.UsageType property.
+// Specifies the usage type for the target.
+const (
+	ArchivalTargetProgressInfo_UsageType_Archival = "Archival"
+	ArchivalTargetProgressInfo_UsageType_Rpaas    = "Rpaas"
+	ArchivalTargetProgressInfo_UsageType_Tiering  = "Tiering"
+)
+
+// Constants associated with the ArchivalTargetProgressInfo.OwnershipContext property.
+// Specifies the ownership context for the target.
+const (
+	ArchivalTargetProgressInfo_OwnershipContext_Fortknox = "FortKnox"
+	ArchivalTargetProgressInfo_OwnershipContext_Local    = "Local"
+)
+
+// Constants associated with the ArchivalTargetProgressInfo.Status property.
+// Specifies the current status of the progress task.
+const (
+	ArchivalTargetProgressInfo_Status_Active                   = "Active"
+	ArchivalTargetProgressInfo_Status_Canceled                 = "Canceled"
+	ArchivalTargetProgressInfo_Status_Finished                 = "Finished"
+	ArchivalTargetProgressInfo_Status_Finishedgarbagecollected = "FinishedGarbageCollected"
+	ArchivalTargetProgressInfo_Status_Finishedwitherror        = "FinishedWithError"
+)
+
+// UnmarshalArchivalTargetProgressInfo unmarshals an instance of ArchivalTargetProgressInfo from the specified map of raw messages.
+func UnmarshalArchivalTargetProgressInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ArchivalTargetProgressInfo)
+	err = core.UnmarshalPrimitive(m, "targetId", &obj.TargetID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "archivalTaskId", &obj.ArchivalTaskID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "archivalTaskId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "targetName", &obj.TargetName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "targetType", &obj.TargetType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "targetType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "usageType", &obj.UsageType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "usageType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "ownershipContext", &obj.OwnershipContext)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "ownershipContext-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "tierSettings", &obj.TierSettings, UnmarshalArchivalTargetTierInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "tierSettings-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "events", &obj.Events, UnmarshalProgressTaskEvent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "events-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedRemainingTimeUsecs", &obj.ExpectedRemainingTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedRemainingTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "percentageCompleted", &obj.PercentageCompleted)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "percentageCompleted-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalProgressStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalObjectProgressInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// BackupRunProgressInfo : Specifies the progress of a local backup run.
+type BackupRunProgressInfo struct {
+	// Specifies the end time of the progress task in Unix epoch Timestamp(in microseconds).
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the event log created for progress Task.
+	Events []ProgressTaskEvent `json:"events,omitempty"`
+
+	// Specifies the expected remaining time of the progress task in Unix epoch Timestamp(in microseconds).
+	ExpectedRemainingTimeUsecs *int64 `json:"expectedRemainingTimeUsecs,omitempty"`
+
+	// Specifies the current completed percentage of the progress task.
+	PercentageCompleted *float32 `json:"percentageCompleted,omitempty"`
+
+	// Specifies the start time of the progress task in Unix epoch Timestamp(in microseconds).
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the stats within progress.
+	Stats *ProgressStats `json:"stats,omitempty"`
+
+	// Specifies the current status of the progress task.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies progress for objects.
+	Objects []ObjectProgressInfo `json:"objects,omitempty"`
+}
+
+// ProgressStats : Specifies the stats within progress.
+type ProgressStats struct {
+	// Specifies the total number of file and directory entities that are backed up in this run. Only applicable to file
+	// based backups.
+	BackupFileCount *int64 `json:"backupFileCount,omitempty"`
+
+	// Specifies whether the file system walk is done. Only applicable to file based backups.
+	FileWalkDone *bool `json:"fileWalkDone,omitempty"`
+
+	// Specifies the total number of file and directory entities visited in this backup. Only applicable to file based
+	// backups.
+	TotalFileCount *int64 `json:"totalFileCount,omitempty"`
+}
+
+// UnmarshalProgressStats unmarshals an instance of ProgressStats from the specified map of raw messages.
+func UnmarshalProgressStats(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ProgressStats)
+	err = core.UnmarshalPrimitive(m, "backupFileCount", &obj.BackupFileCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "backupFileCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "fileWalkDone", &obj.FileWalkDone)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "fileWalkDone-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "totalFileCount", &obj.TotalFileCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "totalFileCount-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// Constants associated with the BackupRunProgressInfo.Status property.
+// Specifies the current status of the progress task.
+const (
+	BackupRunProgressInfo_Status_Active                   = "Active"
+	BackupRunProgressInfo_Status_Canceled                 = "Canceled"
+	BackupRunProgressInfo_Status_Finished                 = "Finished"
+	BackupRunProgressInfo_Status_Finishedgarbagecollected = "FinishedGarbageCollected"
+	BackupRunProgressInfo_Status_Finishedwitherror        = "FinishedWithError"
+)
+
+// UnmarshalBackupRunProgressInfo unmarshals an instance of BackupRunProgressInfo from the specified map of raw messages.
+func UnmarshalBackupRunProgressInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(BackupRunProgressInfo)
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "events", &obj.Events, UnmarshalProgressTaskEvent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "events-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedRemainingTimeUsecs", &obj.ExpectedRemainingTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedRemainingTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "percentageCompleted", &obj.PercentageCompleted)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "percentageCompleted-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalProgressStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalObjectProgressInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ReplicationTargetProgressInfo : Specifies the progress of a replication run target.
+type ReplicationTargetProgressInfo struct {
+	// Specifies the id of the cluster.
+	ClusterID *int64 `json:"clusterId,omitempty"`
+
+	// Specifies the incarnation id of the cluster.
+	ClusterIncarnationID *int64 `json:"clusterIncarnationId,omitempty"`
+
+	// Specifies the name of the cluster.
+	ClusterName *string `json:"clusterName,omitempty"`
+
+	// Specifies the configuration for adding AWS as repilcation target.
+	AwsTargetConfig *AWSTargetConfig `json:"awsTargetConfig,omitempty"`
+
+	// Specifies the configuration for adding Azure as replication target.
+	AzureTargetConfig *AzureTargetConfig `json:"azureTargetConfig,omitempty"`
+
+	// Specifies the end time of the progress task in Unix epoch Timestamp(in microseconds).
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the event log created for progress Task.
+	Events []ProgressTaskEvent `json:"events,omitempty"`
+
+	// Specifies the expected remaining time of the progress task in Unix epoch Timestamp(in microseconds).
+	ExpectedRemainingTimeUsecs *int64 `json:"expectedRemainingTimeUsecs,omitempty"`
+
+	// Specifies the current completed percentage of the progress task.
+	PercentageCompleted *float32 `json:"percentageCompleted,omitempty"`
+
+	// Specifies the start time of the progress task in Unix epoch Timestamp(in microseconds).
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the stats within progress.
+	Stats *ProgressStats `json:"stats,omitempty"`
+
+	// Specifies the current status of the progress task.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies progress for objects.
+	Objects []ObjectProgressInfo `json:"objects,omitempty"`
+}
+
+// Constants associated with the ReplicationTargetProgressInfo.Status property.
+// Specifies the current status of the progress task.
+const (
+	ReplicationTargetProgressInfo_Status_Active                   = "Active"
+	ReplicationTargetProgressInfo_Status_Canceled                 = "Canceled"
+	ReplicationTargetProgressInfo_Status_Finished                 = "Finished"
+	ReplicationTargetProgressInfo_Status_Finishedgarbagecollected = "FinishedGarbageCollected"
+	ReplicationTargetProgressInfo_Status_Finishedwitherror        = "FinishedWithError"
+)
+
+// UnmarshalReplicationTargetProgressInfo unmarshals an instance of ReplicationTargetProgressInfo from the specified map of raw messages.
+func UnmarshalReplicationTargetProgressInfo(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ReplicationTargetProgressInfo)
+	err = core.UnmarshalPrimitive(m, "clusterId", &obj.ClusterID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clusterId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "clusterIncarnationId", &obj.ClusterIncarnationID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clusterIncarnationId-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "clusterName", &obj.ClusterName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "clusterName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "awsTargetConfig", &obj.AwsTargetConfig, UnmarshalAWSTargetConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "awsTargetConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "azureTargetConfig", &obj.AzureTargetConfig, UnmarshalAzureTargetConfig)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "azureTargetConfig-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "events", &obj.Events, UnmarshalProgressTaskEvent)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "events-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "expectedRemainingTimeUsecs", &obj.ExpectedRemainingTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "expectedRemainingTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "percentageCompleted", &obj.PercentageCompleted)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "percentageCompleted-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "stats", &obj.Stats, UnmarshalProgressStats)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "stats-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalObjectProgressInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// CancelRecoveryByIdOptions : The CancelRecoveryByID options.
+type CancelRecoveryByIdOptions struct {
+
+	// Specifies the key to be used to encrypt the source credential. If includeSourceCredentials is set to true this key
+	// must be specified.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Specifies the id of a Recovery.
+	ID *string `json:"id" validate:"required,ne="`
+
+	// Allows users to set headers on API requests.
+	Headers map[string]string
+}
+
+// NewCancelRecoveryByIdOptions : Instantiate CancelRecoveryByIdOptions
+func (*BackupRecoveryV1) NewCancelRecoveryByIdOptions(id string) *CancelRecoveryByIdOptions {
+	return &CancelRecoveryByIdOptions{
+		ID: core.StringPtr(id),
+	}
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *CancelRecoveryByIdOptions) SetXIBMTenantID(xIBMTenantID string) *CancelRecoveryByIdOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetID : Allow user to set ID
+func (_options *CancelRecoveryByIdOptions) SetID(id string) *CancelRecoveryByIdOptions {
+	_options.ID = core.StringPtr(id)
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *CancelRecoveryByIdOptions) SetHeaders(param map[string]string) *CancelRecoveryByIdOptions {
+	options.Headers = param
+	return options
+}
+
+// CancelRecoveryByID : Cancel Recovery for a given id
+// **Privileges:** `RESTORE_MODIFY`
+//
+// Cancel Recovery for a given id.
+func (backupRecovery *BackupRecoveryV1) CancelRecoveryByID(cancelRecoveryByIdOptions *CancelRecoveryByIdOptions) (response *core.DetailedResponse, err error) {
+	response, err = backupRecovery.CancelRecoveryByIDWithContext(context.Background(), cancelRecoveryByIdOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// CancelRecoveryByIDWithContext is an alternate form of the CancelRecoveryByID method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) CancelRecoveryByIDWithContext(ctx context.Context, cancelRecoveryByIdOptions *CancelRecoveryByIdOptions) (response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(cancelRecoveryByIdOptions, "cancelRecoveryByIdOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(cancelRecoveryByIdOptions, "cancelRecoveryByIdOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	pathParamsMap := map[string]string{
+		"id": *cancelRecoveryByIdOptions.ID,
+	}
+
+	builder := core.NewRequestBuilder(core.POST)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/recoveries/{id}/cancel`, pathParamsMap)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range cancelRecoveryByIdOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "CancelRecoveryByID")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	if cancelRecoveryByIdOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*cancelRecoveryByIdOptions.XIBMTenantID))
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	response, err = backupRecovery.Service.Request(request, nil)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "CancelRecoveryById", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+
 	return
 }
