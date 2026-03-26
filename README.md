@@ -25,7 +25,7 @@ IBM Cloud Backup and recovery supporting IKS/ROKS workload is only available in 
 ## Prerequisites
 
 - An [IBM Cloud](https://cloud.ibm.com/registration) account.
-- An IAM API key to allow the SDK to access your account. Create one [here](https://cloud.ibm.com/iam/apikeys).
+- An IAM API key to allow the SDK to access your account. [IBM Cloud API keys page](https://cloud.ibm.com/iam/apikeys).
 - Go version 1.23 or newer.
 
 ## Installation

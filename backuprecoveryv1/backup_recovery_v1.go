@@ -21006,10 +21006,10 @@ type KubernetesSourceRegistrationParams struct {
 // Constants associated with the KubernetesSourceRegistrationParams.DatamoverServiceType property.
 // Specifies the data mover service type of Kubernetes source.
 const (
-	KubernetesSourceRegistrationParams_DatamoverServiceType_Kclusterip = "kClusterIp"
-	KubernetesSourceRegistrationParams_DatamoverServiceType_Khostport = "kHostPort"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Kclusterip    = "kClusterIp"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Khostport     = "kHostPort"
 	KubernetesSourceRegistrationParams_DatamoverServiceType_Kloadbalancer = "kLoadBalancer"
-	KubernetesSourceRegistrationParams_DatamoverServiceType_Knodeport = "kNodePort"
+	KubernetesSourceRegistrationParams_DatamoverServiceType_Knodeport     = "kNodePort"
 )
 
 // Constants associated with the KubernetesSourceRegistrationParams.KubernetesDistribution property.
@@ -45460,6 +45460,836 @@ func (backupRecovery *BackupRecoveryV1) CancelRecoveryByIDWithContext(ctx contex
 		core.EnrichHTTPProblem(err, "CancelRecoveryById", getServiceComponentInfo())
 		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
 		return
+	}
+
+	return
+}
+
+// ConstructMetaInfoOptions : The ConstructMetaInfo options.
+type ConstructMetaInfoOptions struct {
+
+	// Specifies the key to be used to encrypt the source credential. If includeSourceCredentials is set to true this key
+	// must be specified.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Specifies the snapshot id.
+	SnapshotID *string `json:"snapshotId" validate:"required,ne="`
+
+	// Specifies the environment type of the Protection group.
+	Environment *string `json:"environment" validate:"required"`
+
+	// Specifies object params for kubernetes object.
+	KubernetesParams *ConstructMetaInfoRequestKubernetesParams `json:"kubernetesParams,omitempty"`
+
+	// Oracle Params to construct meta info for alternate restore or clone.
+	OracleParams *ConstructMetaInfoRequestOracleParams `json:"oracleParams,omitempty"`
+
+	// Specifies params to construct list of dependent objects.
+	SfdcParams *ConstructMetaInfoRequestSfdcParams `json:"sfdcParams,omitempty"`
+
+	// Allows users to set headers on API requests.
+	Headers map[string]string
+}
+
+// Constants associated with the ConstructMetaInfoOptions.Environment property.
+// Specifies the environment type of the Protection group.
+const (
+	ConstructMetaInfoOptions_Environment_Kacropolis             = "kAcropolis"
+	ConstructMetaInfoOptions_Environment_Kad                    = "kAD"
+	ConstructMetaInfoOptions_Environment_Kaurorasnapshotmanager = "kAuroraSnapshotManager"
+	ConstructMetaInfoOptions_Environment_Kaws                   = "kAWS"
+	ConstructMetaInfoOptions_Environment_Kawsaurorapostgres     = "kAwsAuroraPostgres"
+	ConstructMetaInfoOptions_Environment_Kawsdynamodb           = "kAwsDynamoDB"
+	ConstructMetaInfoOptions_Environment_Kawsnative             = "kAWSNative"
+	ConstructMetaInfoOptions_Environment_Kawsrdspostgres        = "kAwsRDSPostgres"
+	ConstructMetaInfoOptions_Environment_Kawsrdspostgresbackup  = "kAwsRDSPostgresBackup"
+	ConstructMetaInfoOptions_Environment_Kawss3                 = "kAwsS3"
+	ConstructMetaInfoOptions_Environment_Kawssnapshotmanager    = "kAWSSnapshotManager"
+	ConstructMetaInfoOptions_Environment_Kazure                 = "kAzure"
+	ConstructMetaInfoOptions_Environment_Kazureentraid          = "kAzureEntraID"
+	ConstructMetaInfoOptions_Environment_Kazurenative           = "kAzureNative"
+	ConstructMetaInfoOptions_Environment_Kazuresnapshotmanager  = "kAzureSnapshotManager"
+	ConstructMetaInfoOptions_Environment_Kazuresql              = "kAzureSQL"
+	ConstructMetaInfoOptions_Environment_Kcassandra             = "kCassandra"
+	ConstructMetaInfoOptions_Environment_Kcouchbase             = "kCouchbase"
+	ConstructMetaInfoOptions_Environment_Kdb2                   = "kDB2"
+	ConstructMetaInfoOptions_Environment_Kelastifile            = "kElastifile"
+	ConstructMetaInfoOptions_Environment_Kexchange              = "kExchange"
+	ConstructMetaInfoOptions_Environment_Kexperimentaladapter   = "kExperimentalAdapter"
+	ConstructMetaInfoOptions_Environment_Kflashblade            = "kFlashBlade"
+	ConstructMetaInfoOptions_Environment_Kgcp                   = "kGCP"
+	ConstructMetaInfoOptions_Environment_Kgenericnas            = "kGenericNas"
+	ConstructMetaInfoOptions_Environment_Kgpfs                  = "kGPFS"
+	ConstructMetaInfoOptions_Environment_Khbase                 = "kHBase"
+	ConstructMetaInfoOptions_Environment_Khdfs                  = "kHdfs"
+	ConstructMetaInfoOptions_Environment_Khive                  = "kHive"
+	ConstructMetaInfoOptions_Environment_Khyperflex             = "kHyperFlex"
+	ConstructMetaInfoOptions_Environment_Khyperv                = "kHyperV"
+	ConstructMetaInfoOptions_Environment_Kibmflashsystem        = "kIbmFlashSystem"
+	ConstructMetaInfoOptions_Environment_Kisilon                = "kIsilon"
+	ConstructMetaInfoOptions_Environment_Kkubernetes            = "kKubernetes"
+	ConstructMetaInfoOptions_Environment_Kkvm                   = "kKVM"
+	ConstructMetaInfoOptions_Environment_Kmongodb               = "kMongoDB"
+	ConstructMetaInfoOptions_Environment_Kmongodbphysical       = "kMongoDBPhysical"
+	ConstructMetaInfoOptions_Environment_Knetapp                = "kNetapp"
+	ConstructMetaInfoOptions_Environment_Knimble                = "kNimble"
+	ConstructMetaInfoOptions_Environment_Ko365                  = "kO365"
+	ConstructMetaInfoOptions_Environment_Ko365exchange          = "kO365Exchange"
+	ConstructMetaInfoOptions_Environment_Ko365exchangecsm       = "kO365ExchangeCSM"
+	ConstructMetaInfoOptions_Environment_Ko365group             = "kO365Group"
+	ConstructMetaInfoOptions_Environment_Ko365onedrive          = "kO365OneDrive"
+	ConstructMetaInfoOptions_Environment_Ko365onedrivecsm       = "kO365OneDriveCSM"
+	ConstructMetaInfoOptions_Environment_Ko365publicfolders     = "kO365PublicFolders"
+	ConstructMetaInfoOptions_Environment_Ko365sharepoint        = "kO365Sharepoint"
+	ConstructMetaInfoOptions_Environment_Ko365sharepointcsm     = "kO365SharepointCSM"
+	ConstructMetaInfoOptions_Environment_Ko365teams             = "kO365Teams"
+	ConstructMetaInfoOptions_Environment_Koracle                = "kOracle"
+	ConstructMetaInfoOptions_Environment_Kphysical              = "kPhysical"
+	ConstructMetaInfoOptions_Environment_Kpure                  = "kPure"
+	ConstructMetaInfoOptions_Environment_Krdssnapshotmanager    = "kRDSSnapshotManager"
+	ConstructMetaInfoOptions_Environment_Kremoteadapter         = "kRemoteAdapter"
+	ConstructMetaInfoOptions_Environment_Ksaphana               = "kSAPHANA"
+	ConstructMetaInfoOptions_Environment_Ksfdc                  = "kSfdc"
+	ConstructMetaInfoOptions_Environment_Ksql                   = "kSQL"
+	ConstructMetaInfoOptions_Environment_Kuda                   = "kUDA"
+	ConstructMetaInfoOptions_Environment_Kvcd                   = "kVCD"
+	ConstructMetaInfoOptions_Environment_Kview                  = "kView"
+	ConstructMetaInfoOptions_Environment_Kvmware                = "kVMware"
+)
+
+// NewConstructMetaInfoOptions : Instantiate ConstructMetaInfoOptions
+func (*BackupRecoveryV1) NewConstructMetaInfoOptions(snapshotID string, environment string) *ConstructMetaInfoOptions {
+	return &ConstructMetaInfoOptions{
+		SnapshotID:  core.StringPtr(snapshotID),
+		Environment: core.StringPtr(environment),
+	}
+}
+
+// SetSnapshotID : Allow user to set SnapshotID
+func (_options *ConstructMetaInfoOptions) SetSnapshotID(snapshotID string) *ConstructMetaInfoOptions {
+	_options.SnapshotID = core.StringPtr(snapshotID)
+	return _options
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *ConstructMetaInfoOptions) SetXIBMTenantID(xIBMTenantID string) *ConstructMetaInfoOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetEnvironment : Allow user to set Environment
+func (_options *ConstructMetaInfoOptions) SetEnvironment(environment string) *ConstructMetaInfoOptions {
+	_options.Environment = core.StringPtr(environment)
+	return _options
+}
+
+// SetKubernetesParams : Allow user to set KubernetesParams
+func (_options *ConstructMetaInfoOptions) SetKubernetesParams(kubernetesParams *ConstructMetaInfoRequestKubernetesParams) *ConstructMetaInfoOptions {
+	_options.KubernetesParams = kubernetesParams
+	return _options
+}
+
+// SetOracleParams : Allow user to set OracleParams
+func (_options *ConstructMetaInfoOptions) SetOracleParams(oracleParams *ConstructMetaInfoRequestOracleParams) *ConstructMetaInfoOptions {
+	_options.OracleParams = oracleParams
+	return _options
+}
+
+// SetSfdcParams : Allow user to set SfdcParams
+func (_options *ConstructMetaInfoOptions) SetSfdcParams(sfdcParams *ConstructMetaInfoRequestSfdcParams) *ConstructMetaInfoOptions {
+	_options.SfdcParams = sfdcParams
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *ConstructMetaInfoOptions) SetHeaders(param map[string]string) *ConstructMetaInfoOptions {
+	options.Headers = param
+	return options
+}
+
+// ConstructMetaInfoRequestKubernetesParams : Specifies object params for kubernetes object.
+type ConstructMetaInfoRequestKubernetesParams struct {
+	// Specifies the type of object id to fetch resources.
+	ObjectID *int64 `json:"objectId" validate:"required"`
+}
+
+// NewConstructMetaInfoRequestKubernetesParams : Instantiate ConstructMetaInfoRequestKubernetesParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewConstructMetaInfoRequestKubernetesParams(objectID int64) (_model *ConstructMetaInfoRequestKubernetesParams, err error) {
+	_model = &ConstructMetaInfoRequestKubernetesParams{
+		ObjectID: core.Int64Ptr(objectID),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalConstructMetaInfoRequestKubernetesParams unmarshals an instance of ConstructMetaInfoRequestKubernetesParams from the specified map of raw messages.
+func UnmarshalConstructMetaInfoRequestKubernetesParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConstructMetaInfoRequestKubernetesParams)
+	err = core.UnmarshalPrimitive(m, "objectId", &obj.ObjectID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objectId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConstructMetaInfoRequestOracleParams : Oracle Params to construct meta info for alternate restore or clone.
+type ConstructMetaInfoRequestOracleParams struct {
+	// Specifies the base directory of Oracle at destination.
+	BaseDir *string `json:"baseDir,omitempty"`
+
+	// Specifies the location to put the database files(datafiles, logfiles etc.).
+	DbFileDestination *string `json:"dbFileDestination,omitempty"`
+
+	// Specifies the name of the Oracle database that we restore to.
+	DbName *string `json:"dbName,omitempty"`
+
+	// Specifies the home directory of Oracle at destination.
+	HomeDir *string `json:"homeDir,omitempty"`
+
+	// Specifies whether operation is clone or not.
+	IsClone *bool `json:"isClone,omitempty"`
+
+	// Specifies whether the recovery is of type Disaster Recovery.
+	IsDisasterRecovery *bool `json:"isDisasterRecovery,omitempty"`
+
+	// Specifies whether the operation is granular restore or not.
+	IsGranularRestore *bool `json:"isGranularRestore,omitempty"`
+
+	// Specifies whether the operation is recovery validation or not.
+	IsRecoveryValidation *bool `json:"isRecoveryValidation,omitempty"`
+}
+
+// UnmarshalConstructMetaInfoRequestOracleParams unmarshals an instance of ConstructMetaInfoRequestOracleParams from the specified map of raw messages.
+func UnmarshalConstructMetaInfoRequestOracleParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConstructMetaInfoRequestOracleParams)
+	err = core.UnmarshalPrimitive(m, "baseDir", &obj.BaseDir)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "baseDir-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dbFileDestination", &obj.DbFileDestination)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dbFileDestination-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "dbName", &obj.DbName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "dbName-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "homeDir", &obj.HomeDir)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "homeDir-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isClone", &obj.IsClone)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isClone-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isDisasterRecovery", &obj.IsDisasterRecovery)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isDisasterRecovery-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isGranularRestore", &obj.IsGranularRestore)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isGranularRestore-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isRecoveryValidation", &obj.IsRecoveryValidation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isRecoveryValidation-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConstructMetaInfoRequestSfdcParams : Specifies params to construct list of dependent objects.
+type ConstructMetaInfoRequestSfdcParams struct {
+	// Specifies the type of meta info to fetch for salesforce object.
+	MetaInfoType *string `json:"metaInfoType" validate:"required"`
+
+	// Specifies the name of the object.
+	ObjectName *string `json:"objectName,omitempty"`
+}
+
+// Constants associated with the ConstructMetaInfoRequestSfdcParams.MetaInfoType property.
+// Specifies the type of meta info to fetch for salesforce object.
+const (
+	ConstructMetaInfoRequestSfdcParams_MetaInfoType_Dependentobjects = "DependentObjects"
+)
+
+// NewConstructMetaInfoRequestSfdcParams : Instantiate ConstructMetaInfoRequestSfdcParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewConstructMetaInfoRequestSfdcParams(metaInfoType string) (_model *ConstructMetaInfoRequestSfdcParams, err error) {
+	_model = &ConstructMetaInfoRequestSfdcParams{
+		MetaInfoType: core.StringPtr(metaInfoType),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalConstructMetaInfoRequestSfdcParams unmarshals an instance of ConstructMetaInfoRequestSfdcParams from the specified map of raw messages.
+func UnmarshalConstructMetaInfoRequestSfdcParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConstructMetaInfoRequestSfdcParams)
+	err = core.UnmarshalPrimitive(m, "metaInfoType", &obj.MetaInfoType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "metaInfoType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "objectName", &obj.ObjectName)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "objectName-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConstructMetaInfoResult : Result to store meta-info from an object snapshot and additional information.
+type ConstructMetaInfoResult struct {
+	// Specifies the environment type for fetching the meta Info.
+	Environment *string `json:"environment,omitempty"`
+
+	// Specifies include/exclude resource metadata for k8s obj.
+	KubernetesParams *ConstructMetaInfoResultKubernetesParams `json:"kubernetesParams,omitempty"`
+
+	// Specifies 3 Maps required to fill pfile text box.
+	OracleParams *ConstructMetaInfoResultOracleParams `json:"oracleParams,omitempty"`
+}
+
+// Constants associated with the ConstructMetaInfoResult.Environment property.
+// Specifies the environment type for fetching the meta Info.
+const (
+	ConstructMetaInfoResult_Environment_Kacropolis             = "kAcropolis"
+	ConstructMetaInfoResult_Environment_Kad                    = "kAD"
+	ConstructMetaInfoResult_Environment_Kaurorasnapshotmanager = "kAuroraSnapshotManager"
+	ConstructMetaInfoResult_Environment_Kaws                   = "kAWS"
+	ConstructMetaInfoResult_Environment_Kawsaurorapostgres     = "kAwsAuroraPostgres"
+	ConstructMetaInfoResult_Environment_Kawsdynamodb           = "kAwsDynamoDB"
+	ConstructMetaInfoResult_Environment_Kawsnative             = "kAWSNative"
+	ConstructMetaInfoResult_Environment_Kawsrdspostgres        = "kAwsRDSPostgres"
+	ConstructMetaInfoResult_Environment_Kawsrdspostgresbackup  = "kAwsRDSPostgresBackup"
+	ConstructMetaInfoResult_Environment_Kawss3                 = "kAwsS3"
+	ConstructMetaInfoResult_Environment_Kawssnapshotmanager    = "kAWSSnapshotManager"
+	ConstructMetaInfoResult_Environment_Kazure                 = "kAzure"
+	ConstructMetaInfoResult_Environment_Kazureentraid          = "kAzureEntraID"
+	ConstructMetaInfoResult_Environment_Kazurenative           = "kAzureNative"
+	ConstructMetaInfoResult_Environment_Kazuresnapshotmanager  = "kAzureSnapshotManager"
+	ConstructMetaInfoResult_Environment_Kazuresql              = "kAzureSQL"
+	ConstructMetaInfoResult_Environment_Kcassandra             = "kCassandra"
+	ConstructMetaInfoResult_Environment_Kcouchbase             = "kCouchbase"
+	ConstructMetaInfoResult_Environment_Kdb2                   = "kDB2"
+	ConstructMetaInfoResult_Environment_Kelastifile            = "kElastifile"
+	ConstructMetaInfoResult_Environment_Kexchange              = "kExchange"
+	ConstructMetaInfoResult_Environment_Kexperimentaladapter   = "kExperimentalAdapter"
+	ConstructMetaInfoResult_Environment_Kflashblade            = "kFlashBlade"
+	ConstructMetaInfoResult_Environment_Kgcp                   = "kGCP"
+	ConstructMetaInfoResult_Environment_Kgenericnas            = "kGenericNas"
+	ConstructMetaInfoResult_Environment_Kgpfs                  = "kGPFS"
+	ConstructMetaInfoResult_Environment_Khbase                 = "kHBase"
+	ConstructMetaInfoResult_Environment_Khdfs                  = "kHdfs"
+	ConstructMetaInfoResult_Environment_Khive                  = "kHive"
+	ConstructMetaInfoResult_Environment_Khyperv                = "kHyperV"
+	ConstructMetaInfoResult_Environment_Kibmflashsystem        = "kIbmFlashSystem"
+	ConstructMetaInfoResult_Environment_Kisilon                = "kIsilon"
+	ConstructMetaInfoResult_Environment_Kkubernetes            = "kKubernetes"
+	ConstructMetaInfoResult_Environment_Kkvm                   = "kKVM"
+	ConstructMetaInfoResult_Environment_Kmongodb               = "kMongoDB"
+	ConstructMetaInfoResult_Environment_Kmongodbphysical       = "kMongoDBPhysical"
+	ConstructMetaInfoResult_Environment_Knetapp                = "kNetapp"
+	ConstructMetaInfoResult_Environment_Ko365                  = "kO365"
+	ConstructMetaInfoResult_Environment_Ko365exchange          = "kO365Exchange"
+	ConstructMetaInfoResult_Environment_Ko365exchangecsm       = "kO365ExchangeCSM"
+	ConstructMetaInfoResult_Environment_Ko365group             = "kO365Group"
+	ConstructMetaInfoResult_Environment_Ko365onedrive          = "kO365OneDrive"
+	ConstructMetaInfoResult_Environment_Ko365onedrivecsm       = "kO365OneDriveCSM"
+	ConstructMetaInfoResult_Environment_Ko365publicfolders     = "kO365PublicFolders"
+	ConstructMetaInfoResult_Environment_Ko365sharepoint        = "kO365Sharepoint"
+	ConstructMetaInfoResult_Environment_Ko365sharepointcsm     = "kO365SharepointCSM"
+	ConstructMetaInfoResult_Environment_Ko365teams             = "kO365Teams"
+	ConstructMetaInfoResult_Environment_Koracle                = "kOracle"
+	ConstructMetaInfoResult_Environment_Kphysical              = "kPhysical"
+	ConstructMetaInfoResult_Environment_Kphysicalfiles         = "kPhysicalFiles"
+	ConstructMetaInfoResult_Environment_Kpure                  = "kPure"
+	ConstructMetaInfoResult_Environment_Krdssnapshotmanager    = "kRDSSnapshotManager"
+	ConstructMetaInfoResult_Environment_Kremoteadapter         = "kRemoteAdapter"
+	ConstructMetaInfoResult_Environment_Ksaphana               = "kSAPHANA"
+	ConstructMetaInfoResult_Environment_Ksfdc                  = "kSfdc"
+	ConstructMetaInfoResult_Environment_Ksql                   = "kSQL"
+	ConstructMetaInfoResult_Environment_Kuda                   = "kUDA"
+	ConstructMetaInfoResult_Environment_Kvcd                   = "kVCD"
+	ConstructMetaInfoResult_Environment_Kview                  = "kView"
+	ConstructMetaInfoResult_Environment_Kvmware                = "kVMware"
+)
+
+// UnmarshalConstructMetaInfoResult unmarshals an instance of ConstructMetaInfoResult from the specified map of raw messages.
+func UnmarshalConstructMetaInfoResult(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConstructMetaInfoResult)
+	err = core.UnmarshalPrimitive(m, "environment", &obj.Environment)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "environment-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "kubernetesParams", &obj.KubernetesParams, UnmarshalConstructMetaInfoResultKubernetesParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "kubernetesParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "oracleParams", &obj.OracleParams, UnmarshalConstructMetaInfoResultOracleParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "oracleParams-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// KubernetesHookRuleStatus : This object represents the execution status of a quiesce/unquiesce rule that was applied during a backup run.
+type KubernetesHookRuleStatus struct {
+	// Indicates whether the quiescing phase for this rule was successful.
+	IsQuiescingSuccessful *bool `json:"isQuiescingSuccessful,omitempty"`
+
+	// Indicates whether the unquiescing phase for this rule was successful.
+	IsUnquiescingSuccessful *bool `json:"isUnquiescingSuccessful,omitempty"`
+
+	// Key-value pairs representing the label selector used to match the pods for this rule.
+	PodSelectorLabels map[string]string `json:"podSelectorLabels,omitempty"`
+
+	// Index of the rule in the ordered list of rules applied during the run.
+	RuleIndex *int64 `json:"ruleIndex,omitempty"`
+
+	// Universally unique identifier assigned to this rule.
+	UUID *string `json:"uuid,omitempty"`
+}
+
+// UnmarshalKubernetesHookRuleStatus unmarshals an instance of KubernetesHookRuleStatus from the specified map of raw messages.
+func UnmarshalKubernetesHookRuleStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(KubernetesHookRuleStatus)
+	err = core.UnmarshalPrimitive(m, "isQuiescingSuccessful", &obj.IsQuiescingSuccessful)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isQuiescingSuccessful-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "isUnquiescingSuccessful", &obj.IsUnquiescingSuccessful)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "isUnquiescingSuccessful-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "podSelectorLabels", &obj.PodSelectorLabels)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "podSelectorLabels-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "ruleIndex", &obj.RuleIndex)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "ruleIndex-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uuid", &obj.UUID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uuid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConstructMetaInfoResultKubernetesParams : Specifies include/exclude resource metadata for k8s obj.
+type ConstructMetaInfoResultKubernetesParams struct {
+	// Specifies the list of PVCs that were backed up.
+	BackedUpPvcs []KubernetesPvcInfo `json:"backedUpPvcs,omitempty"`
+
+	// Specifies the count of resources that were backed up.
+	BackedUpResourceCount *int64 `json:"backedUpResourceCount,omitempty"`
+
+	// Specifies the resources that backed up resources.
+	BackedUpResources []ResourceInfo `json:"backedUpResources,omitempty"`
+
+	// Specifies the resources to excluded during backup.
+	ExcludedResources []string `json:"excludedResources,omitempty"`
+
+	// Specifies the resources to included during backup.
+	IncludedResources []string `json:"includedResources,omitempty"`
+
+	// Specifies if the backed up object (namespace) contains any cluster scoped resources too.
+	IncludesClusterScopedResources *bool `json:"includesClusterScopedResources,omitempty"`
+
+	// Execution status of each quiesce/unquiesce rule within the backup run.
+	QuiesceRuleStatus []KubernetesHookRuleStatus `json:"quiesceRuleStatus,omitempty"`
+}
+
+// UnmarshalConstructMetaInfoResultKubernetesParams unmarshals an instance of ConstructMetaInfoResultKubernetesParams from the specified map of raw messages.
+func UnmarshalConstructMetaInfoResultKubernetesParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConstructMetaInfoResultKubernetesParams)
+	err = core.UnmarshalModel(m, "backedUpPvcs", &obj.BackedUpPvcs, UnmarshalKubernetesPvcInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "backedUpPvcs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "backedUpResourceCount", &obj.BackedUpResourceCount)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "backedUpResourceCount-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "backedUpResources", &obj.BackedUpResources, UnmarshalResourceInfo)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "backedUpResources-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "excludedResources", &obj.ExcludedResources)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "excludedResources-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "includedResources", &obj.IncludedResources)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includedResources-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "includesClusterScopedResources", &obj.IncludesClusterScopedResources)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "includesClusterScopedResources-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "quiesceRuleStatus", &obj.QuiesceRuleStatus, UnmarshalKubernetesHookRuleStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "quiesceRuleStatus-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConstructMetaInfoResultOracleParams : Specifies 3 Maps required to fill pfile text box.
+type ConstructMetaInfoResultOracleParams struct {
+	// Specifies map for cohesity controlled pfile params.
+	CohesityPfileParamMap []KeyValuePair `json:"cohesityPfileParamMap,omitempty"`
+
+	// Specifies map for inherited pfile params.
+	InheritedPfileParamMap []KeyValuePair `json:"inheritedPfileParamMap,omitempty"`
+
+	// Specifies map for restricted pfile params.
+	RestrictedPfileParamMap []KeyValuePair `json:"restrictedPfileParamMap,omitempty"`
+}
+
+// UnmarshalConstructMetaInfoResultOracleParams unmarshals an instance of ConstructMetaInfoResultOracleParams from the specified map of raw messages.
+func UnmarshalConstructMetaInfoResultOracleParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(ConstructMetaInfoResultOracleParams)
+	err = core.UnmarshalModel(m, "cohesityPfileParamMap", &obj.CohesityPfileParamMap, UnmarshalKeyValuePair)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cohesityPfileParamMap-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "inheritedPfileParamMap", &obj.InheritedPfileParamMap, UnmarshalKeyValuePair)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "inheritedPfileParamMap-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "restrictedPfileParamMap", &obj.RestrictedPfileParamMap, UnmarshalKeyValuePair)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "restrictedPfileParamMap-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// ConstructMetaInfo : Construct meta info for any workflow from object snapshot and some other information
+// **Privileges:** `RESTORE_VIEW`
+//
+// Construct meta info from object snapshot and some additional params.
+func (backupRecovery *BackupRecoveryV1) ConstructMetaInfo(constructMetaInfoOptions *ConstructMetaInfoOptions) (result *ConstructMetaInfoResult, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.ConstructMetaInfoWithContext(context.Background(), constructMetaInfoOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// ConstructMetaInfoWithContext is an alternate form of the ConstructMetaInfo method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) ConstructMetaInfoWithContext(ctx context.Context, constructMetaInfoOptions *ConstructMetaInfoOptions) (result *ConstructMetaInfoResult, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(constructMetaInfoOptions, "constructMetaInfoOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(constructMetaInfoOptions, "constructMetaInfoOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	pathParamsMap := map[string]string{
+		"snapshotId": *constructMetaInfoOptions.SnapshotID,
+	}
+
+	builder := core.NewRequestBuilder(core.POST)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/snapshots/{snapshotId}/meta-info`, pathParamsMap)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range constructMetaInfoOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "ConstructMetaInfo")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	builder.AddHeader("Content-Type", "application/json")
+
+	body := make(map[string]interface{})
+	if constructMetaInfoOptions.Environment != nil {
+		body["environment"] = constructMetaInfoOptions.Environment
+	}
+	if constructMetaInfoOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*constructMetaInfoOptions.XIBMTenantID))
+	}
+	if constructMetaInfoOptions.KubernetesParams != nil {
+		body["kubernetesParams"] = constructMetaInfoOptions.KubernetesParams
+	}
+	if constructMetaInfoOptions.OracleParams != nil {
+		body["oracleParams"] = constructMetaInfoOptions.OracleParams
+	}
+	if constructMetaInfoOptions.SfdcParams != nil {
+		body["sfdcParams"] = constructMetaInfoOptions.SfdcParams
+	}
+	_, err = builder.SetBodyContentJSON(body)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "set-json-body-error", common.GetComponentInfo())
+		return
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "ConstructMetaInfo", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalConstructMetaInfoResult)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
+// GetProtectionGroupRunOptions : The GetProtectionGroupRun options.
+type GetProtectionGroupRunOptions struct {
+	// Specifies the key to be used to encrypt the source credential. If includeSourceCredentials is set to true this key
+	// must be specified.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Specifies a unique id of the Protection Group.
+	ID *string `json:"id" validate:"required,ne="`
+
+	// Specifies a unique run id of the Protection Group run.
+	RunID *string `json:"runId" validate:"required,ne="`
+
+	// Specifies the type of request from UI, which is used for services like magneto to determine the priority of
+	// requests.
+	RequestInitiatorType *string `json:"requestInitiatorType,omitempty"`
+
+	// TenantIds contains ids of the tenants for which the run is to be returned.
+	TenantIds []string `json:"tenantIds,omitempty"`
+
+	// If true, the response will include Protection Group Runs which were created by all tenants which the current user
+	// has permission to see. If false, then only Protection Groups created by the current user will be returned. If it's
+	// not specified, it is true by default.
+	IncludeTenants *bool `json:"includeTenants,omitempty"`
+
+	// Specifies if the result includes the object details for a protection run. If set to true, details of the protected
+	// object will be returned. If set to false or not specified, details will not be returned.
+	IncludeObjectDetails *bool `json:"includeObjectDetails,omitempty"`
+
+	// Specifies whether we can serve the GET request from the read replica cache. There is a lag of 15 seconds between the
+	// read replica and primary data source.
+	UseCachedData *bool `json:"useCachedData,omitempty"`
+
+	// Allows users to set headers on API requests.
+	Headers map[string]string
+}
+
+// Constants associated with the GetProtectionGroupRunOptions.RequestInitiatorType property.
+// Specifies the type of request from UI, which is used for services like magneto to determine the priority of requests.
+const (
+	GetProtectionGroupRunOptions_RequestInitiatorType_Helios = "Helios"
+	GetProtectionGroupRunOptions_RequestInitiatorType_Uiauto = "UIAuto"
+	GetProtectionGroupRunOptions_RequestInitiatorType_Uiuser = "UIUser"
+)
+
+// NewGetProtectionGroupRunOptions : Instantiate GetProtectionGroupRunOptions
+func (*BackupRecoveryV1) NewGetProtectionGroupRunOptions(id string, runID string) *GetProtectionGroupRunOptions {
+	return &GetProtectionGroupRunOptions{
+		ID:    core.StringPtr(id),
+		RunID: core.StringPtr(runID),
+	}
+}
+
+// SetID : Allow user to set ID
+func (_options *GetProtectionGroupRunOptions) SetID(id string) *GetProtectionGroupRunOptions {
+	_options.ID = core.StringPtr(id)
+	return _options
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *GetProtectionGroupRunOptions) SetXIBMTenantID(xIBMTenantID string) *GetProtectionGroupRunOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetRunID : Allow user to set RunID
+func (_options *GetProtectionGroupRunOptions) SetRunID(runID string) *GetProtectionGroupRunOptions {
+	_options.RunID = core.StringPtr(runID)
+	return _options
+}
+
+// SetRequestInitiatorType : Allow user to set RequestInitiatorType
+func (_options *GetProtectionGroupRunOptions) SetRequestInitiatorType(requestInitiatorType string) *GetProtectionGroupRunOptions {
+	_options.RequestInitiatorType = core.StringPtr(requestInitiatorType)
+	return _options
+}
+
+// SetTenantIds : Allow user to set TenantIds
+func (_options *GetProtectionGroupRunOptions) SetTenantIds(tenantIds []string) *GetProtectionGroupRunOptions {
+	_options.TenantIds = tenantIds
+	return _options
+}
+
+// SetIncludeTenants : Allow user to set IncludeTenants
+func (_options *GetProtectionGroupRunOptions) SetIncludeTenants(includeTenants bool) *GetProtectionGroupRunOptions {
+	_options.IncludeTenants = core.BoolPtr(includeTenants)
+	return _options
+}
+
+// SetIncludeObjectDetails : Allow user to set IncludeObjectDetails
+func (_options *GetProtectionGroupRunOptions) SetIncludeObjectDetails(includeObjectDetails bool) *GetProtectionGroupRunOptions {
+	_options.IncludeObjectDetails = core.BoolPtr(includeObjectDetails)
+	return _options
+}
+
+// SetUseCachedData : Allow user to set UseCachedData
+func (_options *GetProtectionGroupRunOptions) SetUseCachedData(useCachedData bool) *GetProtectionGroupRunOptions {
+	_options.UseCachedData = core.BoolPtr(useCachedData)
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *GetProtectionGroupRunOptions) SetHeaders(param map[string]string) *GetProtectionGroupRunOptions {
+	options.Headers = param
+	return options
+}
+
+// GetProtectionGroupRun : Get a run for a Protection Group
+// **Privileges:** `PROTECTION_VIEW`
+//
+// Get a run for a particular Protection Group.
+func (backupRecovery *BackupRecoveryV1) GetProtectionGroupRun(getProtectionGroupRunOptions *GetProtectionGroupRunOptions) (result *ProtectionGroupRun, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.GetProtectionGroupRunWithContext(context.Background(), getProtectionGroupRunOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// GetProtectionGroupRunWithContext is an alternate form of the GetProtectionGroupRun method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) GetProtectionGroupRunWithContext(ctx context.Context, getProtectionGroupRunOptions *GetProtectionGroupRunOptions) (result *ProtectionGroupRun, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(getProtectionGroupRunOptions, "getProtectionGroupRunOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(getProtectionGroupRunOptions, "getProtectionGroupRunOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	pathParamsMap := map[string]string{
+		"id":    *getProtectionGroupRunOptions.ID,
+		"runId": *getProtectionGroupRunOptions.RunID,
+	}
+
+	builder := core.NewRequestBuilder(core.GET)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/protection-groups/{id}/runs/{runId}`, pathParamsMap)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range getProtectionGroupRunOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "GetProtectionGroupRun")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	if getProtectionGroupRunOptions.RequestInitiatorType != nil {
+		builder.AddHeader("requestInitiatorType", fmt.Sprint(*getProtectionGroupRunOptions.RequestInitiatorType))
+	}
+	if getProtectionGroupRunOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*getProtectionGroupRunOptions.XIBMTenantID))
+	}
+
+	if getProtectionGroupRunOptions.TenantIds != nil {
+		builder.AddQuery("tenantIds", strings.Join(getProtectionGroupRunOptions.TenantIds, ","))
+	}
+	if getProtectionGroupRunOptions.IncludeTenants != nil {
+		builder.AddQuery("includeTenants", fmt.Sprint(*getProtectionGroupRunOptions.IncludeTenants))
+	}
+	if getProtectionGroupRunOptions.IncludeObjectDetails != nil {
+		builder.AddQuery("includeObjectDetails", fmt.Sprint(*getProtectionGroupRunOptions.IncludeObjectDetails))
+	}
+	if getProtectionGroupRunOptions.UseCachedData != nil {
+		builder.AddQuery("useCachedData", fmt.Sprint(*getProtectionGroupRunOptions.UseCachedData))
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "GetProtectionGroupRun", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalProtectionGroupRun)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
 	}
 
 	return
