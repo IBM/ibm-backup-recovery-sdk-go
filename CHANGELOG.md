@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.3.0
+
+### Content
+
+#### Features
+
+* Support for ConnectorAgent
+
 ## 1.2.6
 
 ### Content
