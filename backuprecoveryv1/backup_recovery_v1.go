@@ -20379,6 +20379,10 @@ type KubernetesFilterParams struct {
 	// Whether to include all the labels or any of them while performing inclusion/exclusion of objects.
 	LabelCombinationMethod *string `json:"labelCombinationMethod,omitempty"`
 
+	// The type of the entity for which the label filters are specified. Example: kPersistentVolumeClaim or
+	// kVirtualMachine.
+	LabelFilterEntityType *string `json:"labelFilterEntityType,omitempty"`
+
 	// Array of Object to represent Label that Specify Objects (e.g.: Persistent Volumes and Persistent Volume Claims) to
 	// Include or Exclude.It will be a two-dimensional array, where each inner array will consist of a key and value
 	// representing labels. Using this two dimensional array of Labels, the Cluster generates a list of items to include in
@@ -20400,12 +20404,24 @@ const (
 	KubernetesFilterParams_LabelCombinationMethod_Or  = "OR"
 )
 
+// Constants associated with the KubernetesFilterParams.LabelFilterEntityType property.
+// The type of the entity for which the label filters are specified. Example: kPersistentVolumeClaim or kVirtualMachine.
+const (
+	KubernetesFilterParams_LabelFilterEntityType_Kpersistentvolumeclaim = "kPersistentVolumeClaim"
+	KubernetesFilterParams_LabelFilterEntityType_Kvirtualmachine = "kVirtualMachine"
+)
+
 // UnmarshalKubernetesFilterParams unmarshals an instance of KubernetesFilterParams from the specified map of raw messages.
 func UnmarshalKubernetesFilterParams(m map[string]json.RawMessage, result interface{}) (err error) {
 	obj := new(KubernetesFilterParams)
 	err = core.UnmarshalPrimitive(m, "labelCombinationMethod", &obj.LabelCombinationMethod)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "labelCombinationMethod-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "labelFilterEntityType", &obj.LabelFilterEntityType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "labelFilterEntityType-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalModel(m, "labelVector", &obj.LabelVector, UnmarshalKubernetesLabel)
@@ -20799,6 +20815,9 @@ type KubernetesProtectionGroupParams struct {
 	// Specifies the objects included in the Protection Group.
 	Objects []KubernetesProtectionGroupObjectParams `json:"objects,omitempty"`
 
+	// Specifies whether or not to perform source side deduplication on this Protection Group.
+	PerformSourceSideDeduplication *bool `json:"performSourceSideDeduplication,omitempty"`
+
 	// Specifies the user specified timeout in seconds to wait for a volume snapshot to become ready. This is not supported
 	// if CSI snapshot is not enabled. Default: 900 secs for IBM baas, 300 secs for others.
 	SnapshotTimeoutSeconds *int64 `json:"snapshotTimeoutSeconds,omitempty"`
@@ -20862,6 +20881,11 @@ func UnmarshalKubernetesProtectionGroupParams(m map[string]json.RawMessage, resu
 	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalKubernetesProtectionGroupObjectParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "performSourceSideDeduplication", &obj.PerformSourceSideDeduplication)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "performSourceSideDeduplication-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalPrimitive(m, "snapshotTimeoutSeconds", &obj.SnapshotTimeoutSeconds)
@@ -21131,6 +21155,10 @@ type KubernetesPvcInfo struct {
 	// Specifies the id of the pvc.
 	ID *int64 `json:"id,omitempty"`
 
+	// This field will be used only for PVCs to indicate whether only metadata is present inside PVCs. Default: false (Both
+	// data and metadata present).
+	MetadataOnly *bool `json:"metadataOnly,omitempty"`
+
 	// Name of the pvc.
 	Name *string `json:"name,omitempty"`
 }
@@ -21141,6 +21169,11 @@ func UnmarshalKubernetesPvcInfo(m map[string]json.RawMessage, result interface{}
 	err = core.UnmarshalPrimitive(m, "id", &obj.ID)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "id-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "metadataOnly", &obj.MetadataOnly)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "metadataOnly-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalPrimitive(m, "name", &obj.Name)
@@ -21422,6 +21455,10 @@ type KubernetesRecoveryObjectParams struct {
 	// Specifies whether the volume bindings will be removed from all restored PVCs. This will effectively unbind the PVCs
 	// from their original PVs. Default: false.
 	UnbindPvcs *bool `json:"unbindPvcs,omitempty"`
+
+	// Specifies whether to use instant recovery for the VMs. The VMs will be restored using copy recovery by default when
+	// this field is unset or set to false. Default: false.
+	UseInstantRecovery *bool `json:"useInstantRecovery,omitempty"`
 }
 
 // Constants associated with the KubernetesRecoveryObjectParams.SnapshotTargetType property.
@@ -21570,6 +21607,11 @@ func UnmarshalKubernetesRecoveryObjectParams(m map[string]json.RawMessage, resul
 		err = core.SDKErrorf(err, "", "unbindPvcs-error", common.GetComponentInfo())
 		return
 	}
+	err = core.UnmarshalPrimitive(m, "useInstantRecovery", &obj.UseInstantRecovery)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "useInstantRecovery-error", common.GetComponentInfo())
+		return
+	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
 	return
 }
@@ -21656,6 +21698,9 @@ type KubernetesSourceRegistrationParams struct {
 
 	// Specifies the velero image location of the Kubernetes source.
 	VeleroImageLocation *string `json:"veleroImageLocation,omitempty"`
+
+	// Specifies the velero kubevirt plugin image location of the Kubernetes source.
+	VeleroKubevirtPluginImageLocation *string `json:"veleroKubevirtPluginImageLocation,omitempty"`
 
 	// Specifies the velero open shift plugin image for the Kubernetes source.
 	VeleroOpenshiftPluginImageLocation *string `json:"veleroOpenshiftPluginImageLocation,omitempty"`
@@ -21805,6 +21850,11 @@ func UnmarshalKubernetesSourceRegistrationParams(m map[string]json.RawMessage, r
 	err = core.UnmarshalPrimitive(m, "veleroImageLocation", &obj.VeleroImageLocation)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "veleroImageLocation-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "veleroKubevirtPluginImageLocation", &obj.VeleroKubevirtPluginImageLocation)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "veleroKubevirtPluginImageLocation-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalPrimitive(m, "veleroOpenshiftPluginImageLocation", &obj.VeleroOpenshiftPluginImageLocation)
@@ -31009,6 +31059,9 @@ type RecoverKubernetesNamespaceParamsKubernetesTargetParams struct {
 	// Specifies the objects to be recovered.
 	Objects []KubernetesRecoveryObjectParams `json:"objects,omitempty"`
 
+	// Specifies whether to preserve mac address for restored vm. Default is false.
+	PreserveMacAddress *bool `json:"preserveMacAddress,omitempty"`
+
 	// Specifies the parameters from where the cluster scoped resources would be recovered.
 	RecoverClusterScopedResources *RecoverClusterScopedResourcesParams `json:"recoverClusterScopedResources,omitempty"`
 
@@ -31078,6 +31131,11 @@ func UnmarshalRecoverKubernetesNamespaceParamsKubernetesTargetParams(m map[strin
 	err = core.UnmarshalModel(m, "objects", &obj.Objects, UnmarshalKubernetesRecoveryObjectParams)
 	if err != nil {
 		err = core.SDKErrorf(err, "", "objects-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "preserveMacAddress", &obj.PreserveMacAddress)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "preserveMacAddress-error", common.GetComponentInfo())
 		return
 	}
 	err = core.UnmarshalModel(m, "recoverClusterScopedResources", &obj.RecoverClusterScopedResources, UnmarshalRecoverClusterScopedResourcesParams)
