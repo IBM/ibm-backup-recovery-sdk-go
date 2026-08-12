@@ -109,6 +109,9 @@ func (m *ResourceControllerManager) Initialize(ctx context.Context) error {
 // Returns:
 //   - bool: true if the instance is a BRS instance, false otherwise
 func (m *ResourceControllerManager) GetClient() *resourcecontrollerv2.ResourceControllerV2 {
+	if m.resourceControllerClient == nil {
+		return nil
+	}
 	return m.resourceControllerClient.Client
 }
 
@@ -133,8 +136,9 @@ func (m *ResourceControllerManager) ListBRSInstances(ctx context.Context) ([]typ
 	// Paginate through all resource instances
 	for {
 		listOptions := &resourcecontroller.ListResourceInstancesOptions{
-			Type:  core.StringPtr(ResourceTypeServiceInstance.String()),
-			State: core.StringPtr(ResourceStateActive.String()),
+			Type:            core.StringPtr(ResourceTypeServiceInstance.String()),
+			State:           core.StringPtr(ResourceStateActive.String()),
+			ResourceGroupID: core.StringPtr(m.config.ResourceGroupID),
 		}
 
 		if start != "" {
@@ -190,18 +194,18 @@ func (m *ResourceControllerManager) ListBRSInstances(ctx context.Context) ([]typ
 //   - *types.BRSInstance: The BRS instance if found
 //   - error: An error if the operation fails or instance is not found
 func (m *ResourceControllerManager) GetBRSInstanceByName(ctx context.Context, name string) (*types.BRSInstance, error) {
-
-	if m.resourceControllerClient == nil || m.resourceControllerClient.Client == nil {
-		return nil, fmt.Errorf("resource controller client is not initialized")
-	}
 	if name == "" {
 		return nil, fmt.Errorf("name cannot be empty")
 	}
+	if m.resourceControllerClient == nil || m.resourceControllerClient.Client == nil {
+		return nil, fmt.Errorf("resource controller client is not initialized")
+	}
 
 	listOptions := &resourcecontroller.ListResourceInstancesOptions{
-		Type:  core.StringPtr(ResourceTypeServiceInstance.String()),
-		State: core.StringPtr(ResourceStateActive.String()),
-		Name:  core.StringPtr(name),
+		Type:            core.StringPtr(ResourceTypeServiceInstance.String()),
+		State:           core.StringPtr(ResourceStateActive.String()),
+		ResourceGroupID: core.StringPtr(m.config.ResourceGroupID),
+		Name:            core.StringPtr(name),
 	}
 
 	result, _, err := m.resourceControllerClient.Client.ListResourceInstancesWithContext(ctx, listOptions)
@@ -209,7 +213,7 @@ func (m *ResourceControllerManager) GetBRSInstanceByName(ctx context.Context, na
 		return nil, fmt.Errorf("%s: %w", "failed to list resource instances", err)
 	}
 
-	if *result.RowsCount == 0 || len(result.Resources) == 0 {
+	if result == nil || result.RowsCount == nil || *result.RowsCount == 0 || len(result.Resources) == 0 {
 		return nil, fmt.Errorf("No BRS instance found for name: %v", name)
 	}
 
@@ -256,11 +260,11 @@ func (m *ResourceControllerManager) checkInstanceCRN(crn string, result *resourc
 //   - *types.BRSInstance: The BRS instance if found
 //   - error: An error if the operation fails or instance is not found
 func (m *ResourceControllerManager) GetBRSInstanceByCRN(ctx context.Context, crn string) (*types.BRSInstance, error) {
-	if m.resourceControllerClient == nil || m.resourceControllerClient.Client == nil {
-		return nil, fmt.Errorf("resource controller client is not initialized")
-	}
 	if crn == "" {
 		return nil, fmt.Errorf("crn cannot be empty")
+	}
+	if m.resourceControllerClient == nil || m.resourceControllerClient.Client == nil {
+		return nil, fmt.Errorf("resource controller client is not initialized")
 	}
 
 	start := ""
@@ -268,8 +272,9 @@ func (m *ResourceControllerManager) GetBRSInstanceByCRN(ctx context.Context, crn
 	// Paginate through all resource instances
 	for {
 		listOptions := &resourcecontroller.ListResourceInstancesOptions{
-			Type:  core.StringPtr(ResourceTypeServiceInstance.String()),
-			State: core.StringPtr(ResourceStateActive.String()),
+			Type:            core.StringPtr(ResourceTypeServiceInstance.String()),
+			State:           core.StringPtr(ResourceStateActive.String()),
+			ResourceGroupID: core.StringPtr(m.config.ResourceGroupID),
 		}
 
 		if start != "" {

@@ -270,9 +270,10 @@ func (m *PrometheusMetrics) Handler() http.Handler {
 }
 
 // RecordOperation records an operation completion with its duration.
+// Label order matches registration: accountId, operation, status.
 func (m *PrometheusMetrics) RecordOperation(operation string, status OperationStatus, accountID string, duration time.Duration) {
-	m.operationTotal.WithLabelValues(operation, string(status), accountID).Inc()
-	m.operationDuration.WithLabelValues(operation, accountID).Observe(duration.Seconds())
+	m.operationTotal.WithLabelValues(accountID, operation, string(status)).Inc()
+	m.operationDuration.WithLabelValues(accountID, operation).Observe(duration.Seconds())
 }
 
 // RecordOperationSuccess records a successful operation.
@@ -286,8 +287,9 @@ func (m *PrometheusMetrics) RecordOperationFailure(operation, accountID string, 
 }
 
 // RecordRetry records a retry event.
+// Label order matches registration: accountId, operation, status.
 func (m *PrometheusMetrics) RecordRetry(operation string, status OperationStatus, accountID string) {
-	m.retryTotal.WithLabelValues(operation, string(status), accountID).Inc()
+	m.retryTotal.WithLabelValues(accountID, operation, string(status)).Inc()
 }
 
 // RecordRetryAttempt records a retry attempt.

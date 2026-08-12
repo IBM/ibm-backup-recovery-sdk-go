@@ -9,9 +9,9 @@
 package connectors
 
 import (
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/registry"
+	releasev1 "helm.sh/helm/v4/pkg/release/v1"
 )
 
 // HelmInstallConfig contains configuration for Helm chart installation
@@ -43,7 +43,7 @@ type HelmClient interface {
 
 	// Install installs a Helm chart with the given configuration
 	// Handles chart location internally using the registry client from actionConfig
-	Install(actionConfig *action.Configuration, config *HelmInstallConfig) (*release.Release, error)
+	Install(actionConfig *action.Configuration, config *HelmInstallConfig) (*releasev1.Release, error)
 }
 
 // RegistryClient interface abstracts registry operations

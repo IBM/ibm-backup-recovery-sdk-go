@@ -21,21 +21,24 @@ func main() {
 	apiKey := os.Getenv("BRS_API_KEY")
 	instanceCRN := os.Getenv("BRS_INSTANCE_CRN")
 	resourceGroupID := os.Getenv("BRS_RESOURCE_GROUP_ID")
+	accountID := os.Getenv("BRS_ACCOUNT_ID")
 
-	if apiKey == "" || instanceCRN == "" || resourceGroupID == "" {
+	if apiKey == "" || instanceCRN == "" || resourceGroupID == "" || accountID == "" {
 		log.Fatal("Error: Missing required environment variables\n" +
-			"Please set: BRS_API_KEY, BRS_INSTANCE_CRN, BRS_RESOURCE_GROUP_ID")
+			"Please set: BRS_API_KEY, BRS_INSTANCE_CRN, BRS_RESOURCE_GROUP_ID, BRS_ACCOUNT_ID")
 	}
 
-	// Create client with Prometheus metrics enabled
+	// Build config: EnableMetrics=true requires PrometheusConfig + AccountID.
 	cfg := config.DefaultConfig().
 		WithRegion("us-south").
 		WithAPIKey(apiKey).
 		WithResourceGroupID(resourceGroupID).
 		WithBRSInstanceCRN(instanceCRN).
-		WithMetricsConfig(&metrics.PrometheusConfig{
-			Namespace: "ibm_brs",
-		})
+		WithMetricsEnabled(true).
+		WithPrometheusConfig(&metrics.PrometheusConfig{
+			Namespace: "brs_migration_sdk",
+		}).
+		WithAccountID(accountID)
 
 	ctx := context.Background()
 	client, err := migrationv2.NewClient(ctx, cfg)
@@ -48,8 +51,8 @@ func main() {
 	fmt.Println("✓ Metrics collection enabled")
 	fmt.Println()
 
-	// Start HTTP server for metrics endpoint
-	metricsCollector := cfg.GetMetrics()
+	// Use the metrics instance the SDK already built from PrometheusConfig.
+	metricsCollector := cfg.GetMetrics().(*metrics.PrometheusMetrics)
 	http.Handle("/metrics", metricsCollector.Handler())
 
 	go func() {
@@ -104,4 +107,3 @@ func main() {
 	// Keep the server running
 	select {}
 }
-

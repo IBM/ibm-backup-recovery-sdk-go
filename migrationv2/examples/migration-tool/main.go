@@ -492,34 +492,26 @@ func CreateBackupRun(ctx context.Context, client *migrationv2.Client) {
 }
 
 func main() {
-	auth := &core.IamAuthenticator{
-		ApiKey: "",
-		URL:    "https://iam.cloud.ibm.com",
-	}
-	activityTrackerSinkConfig := activitytracker.HTTPSinkConfig{
-		IngestionEndpoint: "https://56b8a22f-9bc7-429b-9f23-3faf26e9e33d.ingress.us-south.logs.cloud.ibm.com/",
-		Timeout:           time.Duration(time.Second * 30),
-		IAMAuthenticator:  auth,
-	}
-	activityTrackerSink, err := activitytracker.NewHTTPSink(activityTrackerSinkConfig)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 	ctx := context.Background()
 	ctx = commoncontext.WithTransactionID(ctx, "123abc#")
-	// Initialize SDK client
-	cfg := &config.Config{
-		Region:          getEnv("IBM_REGION", "us-east"),
-		APIKey:          getEnv("IBM_API_KEY", ""),
-		BRSInstanceName: getEnv("BRS_INSTANCE_NAME", "brs-iks-roks-7216p-instance"), // Same for all
-		// BRSInstanceCRN:  "crn:v1:bluemix:public:backup-recovery-tests:us-east:a/0f628e88c6594675bbefa097a63b9293:63cc7397-1455-4b92-b4f5-6d39f1d352e5::",
-		ResourceGroupID:     getEnv("RESOURCE_GROUP_ID", "shared-resource-group"),
-		TenantId:            "u77h8fih5n/",
-		Timeout:             time.Duration(30 * time.Second),
-		EnableTaskAPI:       true,
-		ActivityTrackerSink: activityTrackerSink,
-	}
+
+	cfg := config.DefaultConfig().
+		WithRegion(getEnv("IBM_REGION", "us-east")).
+		WithAPIKey(getEnv("IBM_API_KEY", "")).
+		WithBRSInstanceName(getEnv("BRS_INSTANCE_NAME", "brs-iks-roks-7216p-instance")).
+		// WithBRSInstanceCRN("crn:v1:bluemix:public:backup-recovery-tests:us-east:a/0f628e88c6594675bbefa097a63b9293:63cc7397-1455-4b92-b4f5-6d39f1d352e5::").
+		WithResourceGroupID(getEnv("RESOURCE_GROUP_ID", "shared-resource-group")).
+		WithTimeout(30 * time.Second).
+		WithTaskAPI(true).
+		WithWorkflowAPI(false).
+		WithActivityTrackerEnabled(true).
+		WithActivityTrackerConfig(&activitytracker.HTTPSinkConfig{
+			IngestionEndpoint: "https://56b8a22f-9bc7-429b-9f23-3faf26e9e33d.ingress.us-south.logs.cloud.ibm.com/",
+			Timeout:           30 * time.Second,
+			// IAMAuthenticator is populated automatically from cfg.APIKey.
+		})
+	// TenantId is optional – set only when you know the exact value.
+	cfg.TenantId = "u77h8fih5n/"
 
 	client, err := migrationv2.NewClient(ctx, cfg)
 	if err != nil {

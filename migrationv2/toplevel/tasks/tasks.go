@@ -39,7 +39,9 @@ type DefaultTaskAPI struct {
 
 // NewTaskAPI creates a new task API instance
 func NewTaskAPI(brsClient types.BRSClientWrapperInterface, config *types.SDKConfig) TaskAPI {
-	sink := activitytracker.Sink(activitytracker.NoOpSink{})
+	// ActivityTrackerSink is always non-nil after ToSDKConfig (sets NoOpSink when disabled).
+	// Guard against nil for tests that build SDKConfig directly.
+	var sink activitytracker.Sink = activitytracker.NoOpSink{}
 	if config != nil && config.ActivityTrackerSink != nil {
 		sink = config.ActivityTrackerSink
 	}
@@ -49,22 +51,19 @@ func NewTaskAPI(brsClient types.BRSClientWrapperInterface, config *types.SDKConf
 	if config != nil && config.Logger != nil {
 		log = config.Logger
 	} else {
-		// Create a default logger with production settings
 		logConfig := logger.DefaultConfig()
 		logConfig.ServiceName = "brs-migration-sdk"
 		logConfig.Environment = "production"
 		log = logger.New(logConfig)
 	}
 
-	// Get metrics from config or create a no-op metrics
-	var metricsCollector metrics.Metrics
+	// Metrics is always non-nil after ToSDKConfig (sets NoopMetrics when disabled).
+	// Guard against nil for tests that build SDKConfig directly.
+	metricsCollector := metrics.Metrics(metrics.NewNoop())
 	if config != nil && config.Metrics != nil {
 		metricsCollector = config.Metrics
-	} else {
-		metricsCollector = metrics.NewNoop()
 	}
 
-	// Get accountID from config
 	var accountID string
 	if config != nil {
 		accountID = config.AccountID
@@ -81,22 +80,9 @@ func NewTaskAPI(brsClient types.BRSClientWrapperInterface, config *types.SDKConf
 	}
 }
 
-// validateAccountID validates that accountID is set if metrics or activity tracker are enabled
-// Returns error only if accountID is required but not set
-func (t *DefaultTaskAPI) validateAccountID(ctx context.Context) error {
-	// Check if metrics or activity tracker are enabled (not noop)
-	metricsEnabled := t.metrics != nil && t.metrics != metrics.NewNoop()
-	activityTrackerEnabled := t.activityTrackerSink != nil && t.activityTrackerSink != activitytracker.NoOpSink{}
-
-	// AccountID is only required if metrics or activity tracker are enabled
-	if (metricsEnabled || activityTrackerEnabled) && t.accountID == "" {
-		return errors.NewInvalidConfigError("accountID is required in SDKConfig when Metrics or ActivityTrackerSink is enabled", nil)
-	}
-	return nil
-}
-
-// getAccountID gets the account ID from config
-// Returns "unknown" if not set (for metrics fallback)
+// getAccountID returns the account ID, falling back to "unknown" for metrics labels.
+// AccountID is guaranteed non-empty when metrics or activity tracking is active,
+// because Config.Validate() enforces it before a Client can be constructed.
 func (t *DefaultTaskAPI) getAccountID(ctx context.Context) string {
 	if t.accountID == "" {
 		return "unknown"
@@ -104,22 +90,20 @@ func (t *DefaultTaskAPI) getAccountID(ctx context.Context) string {
 	return t.accountID
 }
 
-// getSourceIP gets the source IP from context
-// Returns empty string if not set
+// getSourceIP gets the source IP from context.
+// Returns empty string if not set.
 func (t *DefaultTaskAPI) getSourceIP(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	if sourceIP, ok := ctx.Value("source_iP").(string); ok {
+	if sourceIP, ok := ctx.Value("source_ip").(string); ok {
 		return sourceIP
 	}
 	return ""
 }
 
 func (t *DefaultTaskAPI) emitActivityEvent(ctx context.Context, event activitytracker.Event) {
-	if t.activityTrackerSink == nil {
-		return
-	}
+	// activityTrackerSink is always at least NoOpSink{}; Emit is a no-op when AT is disabled.
 	_ = t.activityTrackerSink.Emit(ctx, event)
 }
 
@@ -364,11 +348,6 @@ func (t *DefaultTaskAPI) GetConnectionByName(ctx context.Context, connectionName
 
 // ListConnections lists all connections
 func (t *DefaultTaskAPI) ListConnections(ctx context.Context) ([]*types.ConnectionResult, *errors.SDKError) {
-	// Validate accountID is set
-	if err := t.validateAccountID(ctx); err != nil {
-		return nil, errors.NewInvalidConfigError("accountID validation failed", err)
-	}
-
 	start := time.Now()
 	t.logger.Debug(ctx, "Listing all connections", "operation", types.OpListConnections)
 
@@ -467,6 +446,16 @@ func (t *DefaultTaskAPI) DeployConnector(ctx context.Context, connector connecto
 	}
 
 	t.logger.Debug(ctx, "Deploying new connector", "connectionID", connectionResult.ConnectionID, "connectorType", connector.GetType(), "operation", types.OpDeployConnector)
+
+	// Inject BRS client + platform type so the connector can resolve live chart
+	// metadata from the /v2/data-source-connectors/metadata API before installing.
+	// PlatformType is taken directly from ConnectionResult.Type (the raw BRS
+	// k8sPlatformType string, e.g. "kRoksVpc") which is always set by CreateConnection.
+	connector.SetDeployContext(connectors.ConnectorDeployContext{
+		BRSClient:    t.brsClient,
+		PlatformType: connectionResult.Type,
+	})
+
 	connectorResult, apiErr := connector.Deploy(ctx, connectionResult.RegistrationToken)
 	if apiErr != nil {
 		t.logger.Error(ctx, "Failed to deploy connector", logger.Err(apiErr), "connectionID", connectionResult.ConnectionID, "connectorType", connector.GetType(), "operation", types.OpDeployConnector)

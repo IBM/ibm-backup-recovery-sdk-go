@@ -58,7 +58,7 @@ go get -u github.com/IBM/ibm-backup-recovery-sdk-go/backuprecoveryv1
 
 If you are having difficulties using this SDK or have a question about the IBM Cloud services,
 please ask a question at
-[Stack Overflow](http://stackoverflow.com/questions/ask?tags=ibm-cloud).
+[Stack Overflow](https://stackoverflow.com/questions/ask?tags=ibm-cloud).
 
 ## Issues
 

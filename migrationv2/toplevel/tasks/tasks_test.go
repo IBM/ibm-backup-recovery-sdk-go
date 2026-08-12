@@ -3430,6 +3430,8 @@ func (m *mockConnectorDeployer) GetType() connectors.ConnectorType {
 	return connectors.ConnectorTypeHelm
 }
 
+func (m *mockConnectorDeployer) SetDeployContext(ctx connectors.ConnectorDeployContext) {}
+
 func (m *mockConnectorDeployer) Deploy(ctx context.Context, registrationToken string) (*connectors.ConnectorResult, error) {
 	if m.deployFunc != nil {
 		return m.deployFunc(ctx, registrationToken)

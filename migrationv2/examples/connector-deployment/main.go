@@ -21,18 +21,17 @@ import (
 )
 
 func initializeClient(ctx context.Context) (*migrationv2.Client, error) {
-	cfg := &config.Config{
-		Region:          getEnv("IBM_REGION", "us-south"),
-		APIKey:          getEnv("IBM_API_KEY", ""),
-		BRSInstanceName: getEnv("BRS_INSTANCE_NAME", "brs-instance"),
-		ResourceGroupID: getEnv("RESOURCE_GROUP_ID", "default"),
-		// AccountID is required only when using metrics or activity tracker
-		// AccountID:       getEnv("IBM_ACCOUNT_ID", ""),
-	}
-
-	if cfg.APIKey == "" {
+	apiKey := getEnv("IBM_API_KEY", "")
+	if apiKey == "" {
 		return nil, fmt.Errorf("IBM_API_KEY environment variable is required")
 	}
+
+	cfg := config.DefaultConfig().
+		WithRegion(getEnv("IBM_REGION", "us-south")).
+		WithAPIKey(apiKey).
+		WithBRSInstanceName(getEnv("BRS_INSTANCE_NAME", "brs-instance")).
+		WithResourceGroupID(getEnv("RESOURCE_GROUP_ID", "default"))
+	// WithAccountID is required only when metrics or activity tracking are enabled.
 
 	return migrationv2.NewClient(ctx, cfg)
 }
@@ -59,12 +58,13 @@ func deployBasicHelmConnector(ctx context.Context) {
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector",
 		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
+		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 		AuthConfig: &connectors.KubernetesAuthConfig{
 			ApiKey:     getEnv("IBM_API_KEY", ""),
 			AuthMethod: connectors.AuthMethodAPIKey,
-			Host:       "icr.io",
 			IamURL:     "https://iam.cloud.ibm.com",
 		},
 	}
@@ -109,6 +109,8 @@ func deployWithNodeSelector(ctx context.Context) {
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector-nodeselector",
 		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
+		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 
@@ -120,7 +122,6 @@ func deployWithNodeSelector(ctx context.Context) {
 		AuthConfig: &connectors.KubernetesAuthConfig{
 			ApiKey:     getEnv("IBM_API_KEY", ""),
 			AuthMethod: connectors.AuthMethodAPIKey,
-			Host:       "icr.io",
 			IamURL:     "https://iam.cloud.ibm.com",
 		},
 	}
@@ -165,6 +166,8 @@ func deployWithTolerations(ctx context.Context) {
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector-tolerations",
 		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
+		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 
@@ -185,7 +188,6 @@ func deployWithTolerations(ctx context.Context) {
 		AuthConfig: &connectors.KubernetesAuthConfig{
 			ApiKey:     getEnv("IBM_API_KEY", ""),
 			AuthMethod: connectors.AuthMethodAPIKey,
-			Host:       "icr.io",
 			IamURL:     "https://iam.cloud.ibm.com",
 		},
 	}
@@ -231,6 +233,8 @@ func deployWithResources(ctx context.Context) {
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector-resources",
 		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
+		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 
@@ -262,7 +266,6 @@ func deployWithResources(ctx context.Context) {
 		AuthConfig: &connectors.KubernetesAuthConfig{
 			ApiKey:     getEnv("IBM_API_KEY", ""),
 			AuthMethod: connectors.AuthMethodAPIKey,
-			Host:       "icr.io",
 			IamURL:     "https://iam.cloud.ibm.com",
 		},
 	}

@@ -128,6 +128,10 @@ func (a *VSIConnector) GetType() ConnectorType {
 	return ConnectorTypeAgent
 }
 
+// SetDeployContext satisfies ConnectorDeployer. VSI connector does not use BRS
+// metadata, so this is a no-op.
+func (a *VSIConnector) SetDeployContext(ctx ConnectorDeployContext) {}
+
 // Deploy deploys the Agent-based connector to VPC VSI
 func (a *VSIConnector) Deploy(ctx context.Context, registraionToken string) (*ConnectorResult, error) {
 

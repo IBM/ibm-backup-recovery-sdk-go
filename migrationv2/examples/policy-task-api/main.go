@@ -183,22 +183,24 @@ func main() {
 }
 
 func initializeClient(ctx context.Context) (*migrationv2.Client, error) {
-	cfg := config.DefaultConfig()
-	cfg.Region = getEnv("IBM_REGION", "us-south")
-	cfg.APIKey = getEnv("IBM_API_KEY", "")
-	cfg.BRSInstanceCRN = getEnv("BRS_INSTANCE_CRN", "")
-	cfg.ResourceGroupID = getEnv("RESOURCE_GROUP_ID", "not-required-when-using-existing-instance")
-	cfg.TenantId = getEnv("BRS_TENANT_ID", "")
-	cfg.EnableTaskAPI = true
-	cfg.EnableWorkflowAPI = false
-
-	if cfg.APIKey == "" {
+	apiKey := getEnv("IBM_API_KEY", "")
+	if apiKey == "" {
 		return nil, fmt.Errorf("IBM_API_KEY environment variable is required")
 	}
-
-	if cfg.BRSInstanceCRN == "" {
+	instanceCRN := getEnv("BRS_INSTANCE_CRN", "")
+	if instanceCRN == "" {
 		return nil, fmt.Errorf("BRS_INSTANCE_CRN environment variable is required")
 	}
+
+	cfg := config.DefaultConfig().
+		WithRegion(getEnv("IBM_REGION", "us-south")).
+		WithAPIKey(apiKey).
+		WithBRSInstanceCRN(instanceCRN).
+		WithResourceGroupID(getEnv("RESOURCE_GROUP_ID", "not-required-when-using-existing-instance")).
+		WithTaskAPI(true).
+		WithWorkflowAPI(false)
+	// TenantId is optional – set only when you know the exact value.
+	cfg.TenantId = getEnv("BRS_TENANT_ID", "")
 
 	return migrationv2.NewClient(ctx, cfg)
 }

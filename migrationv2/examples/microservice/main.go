@@ -129,14 +129,12 @@ func runMicroserviceInstance(ctx context.Context, instanceID int) {
 }
 
 func initializeClient(ctx context.Context, instanceID int) (*migrationv2.Client, error) {
-	// All instances use the same BRS instance
-	// This simulates multiple microservice instances in production
-	cfg := &config.Config{
-		Region:          getEnv("IBM_REGION", "us-south"),
-		APIKey:          getEnv("IBM_API_KEY", "demo-api-key"),
-		BRSInstanceName: getEnv("BRS_INSTANCE_NAME", "shared-brs-instance"), // Same for all
-		ResourceGroupID: getEnv("RESOURCE_GROUP_ID", "shared-resource-group"),
-	}
+	// All instances share the same BRS instance name so the SDK reuses it idempotently.
+	cfg := config.DefaultConfig().
+		WithRegion(getEnv("IBM_REGION", "us-south")).
+		WithAPIKey(getEnv("IBM_API_KEY", "demo-api-key")).
+		WithBRSInstanceName(getEnv("BRS_INSTANCE_NAME", "shared-brs-instance")).
+		WithResourceGroupID(getEnv("RESOURCE_GROUP_ID", "shared-resource-group"))
 
 	return migrationv2.NewClient(ctx, cfg)
 }

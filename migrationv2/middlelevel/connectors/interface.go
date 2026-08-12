@@ -11,7 +11,22 @@ package connectors
 import (
 	"context"
 	"time"
+
+	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/types"
 )
+
+// ConnectorDeployContext carries runtime context injected by the task layer into
+// a ConnectorDeployer before Deploy is called. Adding fields here in the future
+// will not change the interface signature.
+type ConnectorDeployContext struct {
+	// BRSClient is used to call BRS platform APIs (e.g. GetConnectorMetadata).
+	BRSClient types.BRSClientWrapperInterface
+
+	// PlatformType is the raw BRS k8sPlatformType string taken from
+	// ConnectionResult.Type (e.g. "kRoksVpc", "kIksClassic").
+	// Used to look up the correct entry in the metadata response.
+	PlatformType string
+}
 
 // ConnectorType defines the type of connector
 type ConnectorType string
@@ -31,6 +46,11 @@ const (
 type ConnectorDeployer interface {
 	// GetType returns the connector type
 	GetType() ConnectorType
+
+	// SetDeployContext injects runtime context (BRS client + platform type) so
+	// the deployer can resolve live chart metadata during Deploy.
+	// Must be called before Deploy.
+	SetDeployContext(ctx ConnectorDeployContext)
 
 	// Deploy deploys the connector to the target DataSource
 	Deploy(ctx context.Context, registraionToken string) (*ConnectorResult, error)

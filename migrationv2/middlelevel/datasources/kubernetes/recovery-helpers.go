@@ -11,8 +11,62 @@ import (
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/types"
 )
 
-// Fetch snapshot id by backupId and  groupId
-func (r *KubernetesDataSource) GetBackupRunSnapShotID(groupId, backupId string) (*string, error) {
+// NamespaceSnapshotMapping represents the relationship between a Kubernetes namespace and its backup snapshot.
+// This struct is used to map each namespace in a backup run to its corresponding snapshot ID,
+// enabling namespace-specific restore operations with different storage class mappings per namespace.
+//
+// Example: In a backup run with 2 namespaces:
+//   - Namespace "app-1" -> Snapshot "snap-123"
+//   - Namespace "app-2" -> Snapshot "snap-456"
+type NamespaceSnapshotMapping struct {
+	NamespaceName string // The name of the Kubernetes namespace (e.g., "busybox-app")
+	NamespaceID   int64  // The unique ID of the namespace object in BRS
+	SnapshotID    string // The snapshot ID for this namespace's backup
+	ObjectID      int64  // The object ID (same as NamespaceID, kept for compatibility)
+}
+
+// GetBackupRunSnapShotID fetches all snapshot IDs from a backup run.
+// This is a convenience function that returns just the snapshot IDs without namespace details.
+// For namespace-aware operations, use GetBackupRunNamespaceSnapshots() instead.
+//
+// Parameters:
+//   - groupId: The protection group ID
+//   - backupId: The backup run ID
+//
+// Returns: Array of snapshot IDs (one per namespace in the backup)
+func (r *KubernetesDataSource) GetBackupRunSnapShotID(groupId, backupId string) ([]string, error) {
+	mappings, err := r.GetBackupRunNamespaceSnapshots(groupId, backupId)
+	if err != nil {
+		return nil, err
+	}
+
+	snapshotIDs := make([]string, 0, len(mappings))
+	for _, mapping := range mappings {
+		snapshotIDs = append(snapshotIDs, mapping.SnapshotID)
+	}
+	return snapshotIDs, nil
+}
+
+// GetBackupRunNamespaceSnapshots fetches detailed namespace-to-snapshot mappings for a backup run.
+// This function retrieves all namespaces that were backed up in a specific backup run,
+// along with their corresponding snapshot IDs. This enables namespace-specific restore operations.
+//
+// Use case: When you need to apply different storage class mappings to different namespaces,
+// or when you want to filter which namespaces to restore.
+//
+// Parameters:
+//   - groupId: The protection group ID
+//   - backupId: The backup run ID
+//
+// Returns: Array of NamespaceSnapshotMapping, one entry per namespace in the backup
+//
+// Example return value for a backup with 2 namespaces:
+//
+//	[
+//	  {NamespaceName: "app-1", SnapshotID: "snap-123", NamespaceID: 72667},
+//	  {NamespaceName: "app-2", SnapshotID: "snap-456", NamespaceID: 78395}
+//	]
+func (r *KubernetesDataSource) GetBackupRunNamespaceSnapshots(groupId, backupId string) ([]NamespaceSnapshotMapping, error) {
 	getProtectionGroupRunOptions := &backuprecoveryv1.GetProtectionGroupRunOptions{
 		XIBMTenantID:         core.StringPtr(r.brsClient.GetTenantId()),
 		RunID:                &backupId,
@@ -23,15 +77,41 @@ func (r *KubernetesDataSource) GetBackupRunSnapShotID(groupId, backupId string) 
 	if err != nil {
 		return nil, err
 	}
-	if backupRun.Objects == nil ||
-		len(backupRun.Objects) == 0 ||
-		backupRun.Objects[0].ArchivalInfo == nil ||
-		backupRun.Objects[0].ArchivalInfo.ArchivalTargetResults == nil ||
-		len(backupRun.Objects[0].ArchivalInfo.ArchivalTargetResults) == 0 ||
-		backupRun.Objects[0].ArchivalInfo.ArchivalTargetResults[0].SnapshotID == nil {
+	if backupRun.Objects == nil || len(backupRun.Objects) == 0 {
+		return nil, fmt.Errorf("No objects found for runId: %s under groupId: %s", backupId, groupId)
+	}
+
+	// Collect namespace-to-snapshot mappings from all objects
+	mappings := make([]NamespaceSnapshotMapping, 0)
+	for _, obj := range backupRun.Objects {
+		if obj.ArchivalInfo != nil &&
+			obj.ArchivalInfo.ArchivalTargetResults != nil &&
+			len(obj.ArchivalInfo.ArchivalTargetResults) > 0 &&
+			obj.ArchivalInfo.ArchivalTargetResults[0].SnapshotID != nil &&
+			obj.Object != nil {
+
+			mapping := NamespaceSnapshotMapping{
+				SnapshotID: *obj.ArchivalInfo.ArchivalTargetResults[0].SnapshotID,
+			}
+
+			// Extract namespace name and ID from object
+			if obj.Object.Name != nil {
+				mapping.NamespaceName = *obj.Object.Name
+			}
+			if obj.Object.ID != nil {
+				mapping.NamespaceID = *obj.Object.ID
+				mapping.ObjectID = *obj.Object.ID
+			}
+
+			mappings = append(mappings, mapping)
+		}
+	}
+
+	if len(mappings) == 0 {
 		return nil, fmt.Errorf("No snapshotId found for runId: %s under groupId: %s", backupId, groupId)
 	}
-	return backupRun.Objects[0].ArchivalInfo.ArchivalTargetResults[0].SnapshotID, nil
+
+	return mappings, nil
 }
 
 // Fetch snapshot id by namespace name or namespaceId
@@ -134,12 +214,35 @@ func (k *KubernetesDataSource) RecoverNamespace(ctx context.Context, groupId, ba
 
 }
 
+// InitializeKubernetesNamespaceParams creates recovery parameters for Kubernetes namespaces.
+// This function implements the core logic for namespace-level storage class mapping with precedence.
+//
+// How it works:
+// 1. Fetches all namespaces from the backup run (with their snapshot IDs)
+// 2. Applies namespace filtering if IncludeNamespaces is specified
+// 3. For each namespace, determines which storage class mapping to use:
+//   - Namespace-level mapping (from RecoverMultipleObjects) takes HIGHEST PRIORITY
+//   - Top-level mapping (from RecoverObjectSpec) is used as DEFAULT
+//
+// Example scenario:
+//
+//	Top-level spec says: "class-A" -> "class-B" (applies to all namespaces)
+//	Namespace "app-1" override says: "class-A" -> "class-C" (only for app-1)
+//	Result: app-1 uses class-C, all other namespaces use class-B
+//
+// Parameters:
+//   - groupId: Protection group ID
+//   - backupId: Backup run ID
+//   - k8sRestoreParms: Restore parameters including namespace-specific overrides
+//
+// Returns: Array of recovery object parameters, one per namespace to be restored
 func (k *KubernetesDataSource) InitializeKubernetesNamespaceParams(groupId, backupId string, k8sRestoreParms *types.KubernetesRestoreParams) ([]backuprecoveryv1.KubernetesRecoveryObjectParams, error) {
 	// Initialize kubernetes Recovery Object Params
 	kubernetesRecoveryObjectParams := make([]backuprecoveryv1.KubernetesRecoveryObjectParams, 0)
 
-	// fetch snapshot ID corresponding to user provided `backupId` and `groupId`
-	snapshotID, err := k.GetBackupRunSnapShotID(groupId, backupId)
+	// Step 1: Fetch namespace-to-snapshot mappings for the backup run
+	// This gives us all namespaces that were backed up, with their snapshot IDs
+	namespaceMappings, err := k.GetBackupRunNamespaceSnapshots(groupId, backupId)
 	if err != nil {
 		return nil, err
 	}
@@ -148,19 +251,76 @@ func (k *KubernetesDataSource) InitializeKubernetesNamespaceParams(groupId, back
 		return nil, fmt.Errorf("RecoverObjectSpec is a required field")
 	}
 
-	// return namespace recovery params when snapshotId corresponding to user provided `backupId` and `groupId` is found
-	if snapshotID != nil {
-		recoveryObject := k.buildKubernetesRecoveryObject(*snapshotID, k8sRestoreParms.RecoverObjectSpec)
-		kubernetesRecoveryObjectParams = append(kubernetesRecoveryObjectParams, *recoveryObject)
-
+	// Step 2: Build a map of namespace-specific recovery specs
+	// Users provide namespace NAMES (not snapshot IDs) in RecoverMultipleObjects array
+	// Example: {"namespace": "app-1", "storageClasses": [...]}
+	namespaceSpecificSpecs := make(map[string]*types.RecoverObjectSpec)
+	for _, restoreObject := range k8sRestoreParms.RecoverMultipleObjects {
+		if restoreObject.SnapshotInfo != nil && restoreObject.SnapshotInfo.NamespaceInfo != nil {
+			namespaceName := restoreObject.SnapshotInfo.NamespaceInfo.Namespace
+			namespaceSpecificSpecs[namespaceName] = restoreObject.RecoverObjectSpec
+		}
 	}
 
-	// if multiple additional objects need to be recovered, fetch snapshot Id for each using namespace details and return recovery params for all these snapshot IDs
+	// Step 3: Create a filter set for namespace inclusion (if specified)
+	// If IncludeNamespaces is empty, all namespaces are included
+	// If IncludeNamespaces has values, only those namespaces are restored
+	includeNamespaceSet := make(map[string]bool)
+	if len(k8sRestoreParms.IncludeNamespaces) > 0 {
+		for _, ns := range k8sRestoreParms.IncludeNamespaces {
+			includeNamespaceSet[ns] = true
+		}
+	}
+
+	// Track which namespaces we've already processed
+	processedNamespaces := make(map[string]bool)
+
+	// Step 4: Process each namespace from the backup run
+	for _, mapping := range namespaceMappings {
+		// Apply namespace filter if specified
+		if len(includeNamespaceSet) > 0 && !includeNamespaceSet[mapping.NamespaceName] {
+			continue // Skip - this namespace is not in the include list
+		}
+
+		// Step 5: Determine which RecoverObjectSpec to use (PRECEDENCE LOGIC)
+		var recoverSpec *types.RecoverObjectSpec
+
+		// Check if there's a namespace-specific spec (HIGHEST PRIORITY)
+		if spec, exists := namespaceSpecificSpecs[mapping.NamespaceName]; exists && spec != nil {
+			recoverSpec = spec // Use namespace-level override
+		} else {
+			recoverSpec = k8sRestoreParms.RecoverObjectSpec // Use top-level default
+		}
+
+		// Build recovery object with the determined spec
+		recoveryObject := k.buildKubernetesRecoveryObject(mapping.SnapshotID, recoverSpec)
+		kubernetesRecoveryObjectParams = append(kubernetesRecoveryObjectParams, *recoveryObject)
+
+		// Mark this namespace as processed
+		processedNamespaces[mapping.NamespaceName] = true
+	}
+
+	// Step 6: Process any additional namespaces from RecoverMultipleObjects
+	// that weren't part of the current backup run (e.g., from different backup runs)
 	for _, restoreObject := range k8sRestoreParms.RecoverMultipleObjects {
+		if restoreObject.SnapshotInfo == nil {
+			continue
+		}
+
+		// Check if this namespace was already processed from the backup run
+		if restoreObject.SnapshotInfo.NamespaceInfo != nil {
+			namespaceName := restoreObject.SnapshotInfo.NamespaceInfo.Namespace
+			if processedNamespaces[namespaceName] {
+				continue // Already processed from backup run
+			}
+		}
+
+		// Resolve snapshot ID for this namespace
 		snapshotId, err := k.GetNamespaceSnapshotId(restoreObject.SnapshotInfo)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get recovery snapshot ID: %w", err)
+			return nil, fmt.Errorf("failed to get recovery snapshot ID for namespace: %w", err)
 		}
+
 		recoveryObject := k.buildKubernetesRecoveryObject(*snapshotId, restoreObject.RecoverObjectSpec)
 		kubernetesRecoveryObjectParams = append(kubernetesRecoveryObjectParams, *recoveryObject)
 	}

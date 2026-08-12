@@ -14,19 +14,19 @@ import (
 	"time"
 
 	"github.com/IBM/go-sdk-core/v5/core"
+	backuprecoveryv1 "github.com/IBM/ibm-backup-recovery-sdk-go/backuprecoveryv1"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/config"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/errors"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/logger"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/metrics"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/middlelevel"
-	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v4/pkg/action"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-// KubernetesConnectorConfig holds Kubernetes-specific connector deployment configuration
 type HelmKubeConnectorConfig struct {
 	// Namespace where the connector will be deployed
 	Namespace string `json:"namespace"`
@@ -36,8 +36,8 @@ type HelmKubeConnectorConfig struct {
 	ContainerEndpoint     string `json:"containerEndpoint,omitempty"`
 	ContainerEndpointType string `json:"containerEndpointType,omitempty"` // public or private
 
-	// StorageClass specifies the storage class to use for persistent volumes (optional)
-	// If not provided, Helm will use the default storage class
+	// StorageClass specifies the storage class to use for persistent volumes (optional).
+	// If not provided, Helm will use the default storage class.
 	StorageClass string `json:"storageClass,omitempty"`
 
 	// Replicas specifies the number of connector pods to run
@@ -52,6 +52,11 @@ type HelmKubeConnectorConfig struct {
 	ChartName string `json:"chartName,omitempty"`
 
 	ChartReference string `json:"chartReference,omitempty"`
+
+	// RegistryHost is the OCI registry used to pull the Helm chart (e.g. "icr.io").
+	// Only required when AuthMethod=APIKey. The SDK logs in to this registry using
+	// the ApiKey from AuthConfig before installing the chart.
+	RegistryHost string `json:"registryHost,omitempty"`
 
 	WaitTillDeploy bool `json:"waitTillDeploy,omitempty"` // defaults to false
 
@@ -209,6 +214,10 @@ type HelmConnector struct {
 	registryClient  RegistryClient
 	logger          logger.Logger
 
+	// deployCtx is injected by the task layer via SetDeployContext before Deploy.
+	// It carries the BRS client and the platform type from ConnectionResult.Type.
+	deployCtx ConnectorDeployContext
+
 	// State
 	deployed bool
 }
@@ -218,16 +227,21 @@ func NewHelmConnector(kubernetesConnectorConfig *HelmKubeConnectorConfig) (*Helm
 	if kubernetesConnectorConfig == nil {
 		return nil, errors.NewInvalidConfigError("connector config is required", nil)
 	}
+
 	// Get logger from config or create default
 	var log logger.Logger
 	if kubernetesConnectorConfig.Logger != nil {
 		log = kubernetesConnectorConfig.Logger
 	} else {
-		// Create default logger
 		logConfig := logger.DefaultConfig()
 		logConfig.ServiceName = "brs-helm-connector"
 		logConfig.Environment = "production"
 		log = logger.New(logConfig)
+	}
+
+	// Default metrics to NoOp if not provided
+	if kubernetesConnectorConfig.Metrics == nil {
+		kubernetesConnectorConfig.Metrics = metrics.NewNoop()
 	}
 
 	auth := &core.IamAuthenticator{
@@ -235,7 +249,6 @@ func NewHelmConnector(kubernetesConnectorConfig *HelmKubeConnectorConfig) (*Helm
 		ApiKey: kubernetesConnectorConfig.AuthConfig.GetAPIKey(),
 	}
 
-	// Pass logger, metrics, and accountID to IKS client
 	iksClientInstance, err := middlelevel.NewIKSClient(
 		kubernetesConnectorConfig.ContainerEndpoint,
 		kubernetesConnectorConfig.ContainerEndpointType,
@@ -250,6 +263,7 @@ func NewHelmConnector(kubernetesConnectorConfig *HelmKubeConnectorConfig) (*Helm
 
 	clientSet, restConfig, err := iksClientInstance.GetKubeApi(kubernetesConnectorConfig.ClusterName)
 	if err != nil {
+		log.Error(context.Background(), "Failed to get kubeconfig", logger.Err(err), "clusterName", kubernetesConnectorConfig.ClusterName)
 		return nil, err
 	}
 
@@ -285,6 +299,94 @@ func (h *HelmConnector) GetType() ConnectorType {
 	return ConnectorTypeHelm
 }
 
+// SetDeployContext satisfies ConnectorDeployer. The task layer calls this before
+// Deploy, injecting the BRS client and the platform type from ConnectionResult.Type
+// so that live chart metadata can be fetched.
+func (h *HelmConnector) SetDeployContext(ctx ConnectorDeployContext) {
+	h.deployCtx = ctx
+}
+
+// resolveChartRef calls the BRS metadata API to fetch the live chart OCI
+// reference for the given platform type. It only fills in the fields that the
+// user left empty in the config:
+//   - chartRepo  is resolved only when config.ChartReference == ""
+//   - chartVersion is resolved only when config.ChartVersion == ""
+//
+// If both fields were provided by the user the API call is skipped entirely.
+// A non-fatal error is logged and the caller continues with the static values.
+func (h *HelmConnector) resolveChartRef(ctx context.Context) {
+	needRepo := h.config.ChartReference == ""
+	needVersion := h.config.ChartVersion == ""
+
+	// Nothing to resolve — user supplied both values explicitly.
+	if !needRepo && !needVersion {
+		h.logger.Debug(ctx, "Chart reference and version provided by user; skipping metadata fetch",
+			"chartReference", h.config.ChartReference, "chartVersion", h.config.ChartVersion)
+		return
+	}
+
+	brsClient := h.deployCtx.BRSClient
+	platformType := h.deployCtx.PlatformType
+
+	if brsClient == nil || platformType == "" {
+		return
+	}
+
+	opts := &backuprecoveryv1.GetConnectorMetadataOptions{
+		XIBMTenantID: core.StringPtr(brsClient.GetTenantId()),
+	}
+	metadata, _, err := brsClient.GetBRSClient().GetConnectorMetadata(opts)
+	if err != nil {
+		h.logger.Warn(ctx, "Failed to fetch connector metadata from BRS; using static chart reference",
+			"platformType", platformType, "error", err)
+		return
+	}
+
+	for _, info := range metadata.K8sConnectorInfoList {
+		if info.K8sPlatformType == nil || *info.K8sPlatformType != platformType {
+			continue
+		}
+		ref := info.HelmChartOciRef
+		if ref == nil {
+			break
+		}
+
+		// Resolve chartRepo only if the user did not provide one.
+		if needRepo {
+			registryHost := ""
+			if ref.RegistryHost != nil {
+				registryHost = *ref.RegistryHost
+			}
+			namespace := ""
+			if ref.Namespace != nil {
+				namespace = *ref.Namespace + "/"
+			}
+			repository := ""
+			if ref.Repository != nil {
+				repository = *ref.Repository
+			}
+			chartRef := registryHost + namespace + repository
+			if chartRef != "" {
+				h.chartRepo = chartRef
+				h.logger.Info(ctx, "Resolved chart reference from BRS metadata",
+					"platformType", platformType, "chartRef", chartRef)
+			}
+		}
+
+		// Resolve chartVersion only if the user did not provide one.
+		if needVersion && ref.Tag != nil && *ref.Tag != "" {
+			h.chartVersion = *ref.Tag
+			h.logger.Info(ctx, "Resolved chart version from BRS metadata",
+				"platformType", platformType, "chartVersion", h.chartVersion)
+		}
+
+		return
+	}
+
+	h.logger.Warn(ctx, "No matching platform type in BRS metadata; using static chart reference",
+		"platformType", platformType)
+}
+
 // Deploy deploys the Helm-based connector to Kubernetes cluster
 func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*ConnectorResult, error) {
 	h.logger.Info(ctx, "Starting Helm connector deployment",
@@ -297,6 +399,10 @@ func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*
 		h.logger.Error(ctx, "Authentication config validation failed", logger.Err(err))
 		return nil, err
 	}
+
+	// Resolve chart OCI reference from BRS metadata API when the user left
+	// ChartReference or ChartVersion empty. PlatformType comes from ConnectionResult.Type.
+	h.resolveChartRef(ctx)
 
 	// Step 1: Ensure namespace exists
 	h.logger.Debug(ctx, "Checking if namespace exists", "namespace", h.namespace)
@@ -482,6 +588,9 @@ func (h *HelmConnector) Delete(ctx context.Context, connectorID string) error {
 
 	// Delete the namespace - this will remove all resources including the Helm release
 	h.logger.Debug(ctx, "Deleting namespace", "namespace", h.namespace)
+	if h.clientSet == nil {
+		return fmt.Errorf("kubernetes client not initialized")
+	}
 	err := h.clientSet.CoreV1().Namespaces().Delete(ctx, h.namespace, v1.DeleteOptions{})
 	if err != nil {
 		h.logger.Error(ctx, "Failed to delete namespace",
@@ -512,7 +621,11 @@ func (h *HelmConnector) setupRegistryClient(actionConfig *action.Configuration) 
 			return errors.NewInvalidConfigError("invalid kubernetes auth configuration", nil)
 		}
 
-		if err := h.registryClient.Login(cfg.Host, "iamapikey", cfg.ApiKey); err != nil {
+		registryHost := h.config.RegistryHost
+		if registryHost == "" {
+			registryHost = "icr.io" // default IBM Container Registry
+		}
+		if err := h.registryClient.Login(registryHost, "iamapikey", cfg.ApiKey); err != nil {
 			return err
 		}
 

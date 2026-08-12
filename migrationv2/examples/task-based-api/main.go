@@ -40,7 +40,6 @@ const (
 	BRS_TENANT_ID     = "your-tenant-id"
 
 	CLUSTER_NAME     = "my-iks-cluster"
-	CLUSTER_TYPE     = "IKS"
 	CLUSTER_ENDPOINT = "https://c100.us-south.containers.cloud.ibm.com:12345"
 	CLUSTER_ID       = "your-cluster-id"
 
@@ -106,22 +105,44 @@ func main() {
 }
 
 func initializeClient(ctx context.Context) (*migrationv2.Client, *http.Server, logger.Logger) {
-	logConfig := logger.Config{
+	log := logger.New(logger.Config{
 		Level:             "info",
 		Format:            "json",
 		ServiceName:       "brs-complete-demo",
 		Environment:       "development",
 		IncludeStackTrace: true,
-	}
-	log := logger.New(logConfig)
+	})
 
-	metricsConfig := metrics.PrometheusConfig{
-		Namespace: "brs_demo",
-		Registry:  nil,
-		Logger:    log,
-	}
-	metricsCollector := metrics.NewPrometheus(metricsConfig)
+	cfg := config.DefaultConfig().
+		WithRegion(IBM_REGION).
+		WithAPIKey(IBM_API_KEY).
+		WithBRSInstanceCRN(BRS_INSTANCE_CRN).
+		WithResourceGroupID(RESOURCE_GROUP_ID).
+		WithAccountID(IBM_ACCOUNT_ID).
+		WithLogger(log).
+		WithTaskAPI(true).
+		WithWorkflowAPI(false).
+		WithMetricsEnabled(true).
+		WithPrometheusConfig(&metrics.PrometheusConfig{
+			Namespace: "brs_demo",
+			Logger:    log,
+		}).
+		WithActivityTrackerEnabled(true).
+		WithActivityTrackerConfig(&activity_tracker.HTTPSinkConfig{
+			IngestionEndpoint: "https://your-activity-tracker-endpoint.com",
+			// IAMAuthenticator is populated automatically from cfg.APIKey.
+		})
+	// TenantId is optional – set only when you know the exact value.
+	cfg.TenantId = BRS_TENANT_ID
 
+	client, err := migrationv2.NewClient(ctx, cfg)
+	if err != nil {
+		log.Error(ctx, "Failed to create client", "error", err)
+		os.Exit(1)
+	}
+
+	// Expose the metrics instance that the SDK already built internally.
+	metricsCollector := cfg.GetMetrics().(*metrics.PrometheusMetrics)
 	metricsServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", METRICS_PORT),
 		Handler: metricsCollector.Handler(),
@@ -133,46 +154,7 @@ func initializeClient(ctx context.Context) (*migrationv2.Client, *http.Server, l
 		}
 	}()
 
-	var activitySink activity_tracker.Sink
-	httpSink, err := activity_tracker.NewHTTPSink(activity_tracker.HTTPSinkConfig{
-		IngestionEndpoint: "https://your-activity-tracker-endpoint.com",
-		IAMAuthenticator: &core.IamAuthenticator{
-			ApiKey: IBM_API_KEY,
-		},
-	})
-	if err != nil {
-		log.Warn(ctx, "Failed to create activity tracker sink, using NoOp", "error", err)
-		activitySink = activity_tracker.NoOpSink{}
-	} else {
-		activitySink = httpSink
-	}
-
-	cfg := config.DefaultConfig()
-	cfg.Region = IBM_REGION
-	cfg.APIKey = IBM_API_KEY
-	cfg.AccountID = IBM_ACCOUNT_ID // Required when using metrics or activity tracker
-	cfg.BRSInstanceCRN = BRS_INSTANCE_CRN
-	cfg.ResourceGroupID = RESOURCE_GROUP_ID
-	cfg.TenantId = BRS_TENANT_ID
-	cfg.EnableTaskAPI = true
-	cfg.EnableWorkflowAPI = false
-	cfg.Logger = log
-	cfg.Metrics = metricsCollector
-	cfg.ActivityTrackerSink = activitySink
-
-	if err := cfg.Validate(); err != nil {
-		log.Error(ctx, "Invalid configuration", "error", err)
-		os.Exit(1)
-	}
-
-	client, err := migrationv2.NewClient(ctx, cfg)
-	if err != nil {
-		log.Error(ctx, "Failed to create client", "error", err)
-		os.Exit(1)
-	}
-
-	log.Info(ctx, "SDK client initialized", "region", cfg.Region)
-
+	log.Info(ctx, "SDK client initialized", "region", IBM_REGION)
 	return client, metricsServer, log
 }
 
@@ -200,14 +182,16 @@ func deployConnector(ctx context.Context, client *migrationv2.Client, connection
 		ChartVersion:          "latest",
 		ReleaseName:           "brs-connector",
 		ChartName:             "ibm-backup-recovery-agent",
+		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
+		RegistryHost:          "icr.io",
 		WaitTillDeploy:        true,
 		ConnectorType:         connectors.ConnectorTypeHelm,
 		AuthConfig: &connectors.KubernetesAuthConfig{
 			AuthMethod: connectors.AuthMethodAPIKey,
 			ApiKey:     IBM_API_KEY,
 			IamURL:     "https://iam.cloud.ibm.com",
-			Host:       CLUSTER_ENDPOINT,
 		},
+		//BRSconfig -- Private variable
 	}
 	// Create connector deployer from config
 	helmConnector, err := helmConfig.CreateConnectorDeployer()
@@ -230,7 +214,7 @@ func registerDataSource(ctx context.Context, client *migrationv2.Client, connect
 			URL:    "https://iam.cloud.ibm.com",
 		},
 		ClusterName:           CLUSTER_NAME,
-		ClusterType:           CLUSTER_TYPE,
+		ClusterType:           "IKS",
 		ClusterEndpoint:       CLUSTER_ENDPOINT,
 		ContainerEndpoint:     "https://containers.cloud.ibm.com/global",
 		ContainerEndpointType: "public",

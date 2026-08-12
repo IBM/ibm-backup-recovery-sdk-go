@@ -196,12 +196,16 @@ func (k *KubernetesDataSource) GetK8Object(uniqueNameSpaces []types.NamespaceDat
 	}
 
 	k8sParams = &backuprecoveryv1.KubernetesProtectionGroupParams{
-		Objects:             objs,
-		LeverageCSISnapshot: core.BoolPtr(k.KubernetesProtectionParams.Settings.CSISnapshot),
-		IncludeParams: parseLabels(k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.Inclusion,
-			k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.LogicRule),
-		ExcludeParams: parseLabels(k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.Exclusion,
-			k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.LogicRule),
+		Objects: objs,
+	}
+
+	// Only set Settings-related fields if Settings is not nil
+	if k.KubernetesProtectionParams.Settings != nil {
+		k8sParams.LeverageCSISnapshot = core.BoolPtr(k.KubernetesProtectionParams.Settings.CSISnapshot)
+		k8sParams.IncludeParams = parseLabels(k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.Inclusion,
+			k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.LogicRule)
+		k8sParams.ExcludeParams = parseLabels(k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.Exclusion,
+			k.KubernetesProtectionParams.Settings.Labels.PersistentVolumeClaim.LogicRule)
 	}
 
 	return k8sParams

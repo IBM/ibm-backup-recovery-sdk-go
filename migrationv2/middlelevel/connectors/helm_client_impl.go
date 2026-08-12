@@ -9,14 +9,15 @@
 package connectors
 
 import (
-	"log/slog"
+	"fmt"
 	"os"
 	"time"
 
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/chart/loader"
+	"helm.sh/helm/v4/pkg/cli"
+	"helm.sh/helm/v4/pkg/kube"
+	releasev1 "helm.sh/helm/v4/pkg/release/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 )
@@ -44,18 +45,26 @@ func (h *DefaultHelmClient) Init(actionConfig *action.Configuration, namespace s
 		},
 	}
 
-	return actionConfig.Init(restGetter, namespace, os.Getenv("HELM_DRIVER"), slog.Debug)
+	return actionConfig.Init(restGetter, namespace, os.Getenv("HELM_DRIVER"))
 }
 
 // Install installs a Helm chart with the given configuration
-func (h *DefaultHelmClient) Install(actionConfig *action.Configuration, config *HelmInstallConfig) (*release.Release, error) {
+func (h *DefaultHelmClient) Install(actionConfig *action.Configuration, config *HelmInstallConfig) (*releasev1.Release, error) {
 	install := action.NewInstall(actionConfig)
 	install.ReleaseName = config.ReleaseName
 	install.Namespace = config.Namespace
 	install.CreateNamespace = false
-	install.Wait = config.Wait
+	// Helm v4 requires WaitStrategy to be set even when Wait=false because it is
+	// used unconditionally for hook execution. HookOnlyStrategy is the safe
+	// default (waits only for hook Pods/Jobs, not for chart resources).
+	// Upgrade to StatusWatcherStrategy when the caller asked for a full wait.
+	install.WaitStrategy = kube.HookOnlyStrategy
+	if config.Wait {
+		install.WaitStrategy = kube.StatusWatcherStrategy
+	}
 	install.Timeout = 20 * time.Minute
 	install.ChartPathOptions.Version = config.Version
+	install.DisableOpenAPIValidation = true
 
 	// Locate the chart (handles OCI registries with registry client)
 	chartPath, err := install.ChartPathOptions.LocateChart(config.ChartRef, cli.New())
@@ -69,5 +78,13 @@ func (h *DefaultHelmClient) Install(actionConfig *action.Configuration, config *
 		return nil, err
 	}
 
-	return install.Run(ch, config.Values)
+	releaser, err := install.Run(ch, config.Values)
+	if err != nil {
+		return nil, err
+	}
+	rel, ok := releaser.(*releasev1.Release)
+	if !ok {
+		return nil, fmt.Errorf("unexpected release type returned from Helm install: %T", releaser)
+	}
+	return rel, nil
 }

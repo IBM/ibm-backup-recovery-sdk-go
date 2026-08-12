@@ -53,8 +53,7 @@ type KubernetesAuthConfig struct {
 	IamURL string `json:"url,omitempty"`
 
 	//APIKeyBased
-	ApiKey string `json:"apiKey,omitempty"` // apiKey of the cluster
-	Host   string `json:"host,omitempty"`
+	ApiKey string `json:"apiKey,omitempty"` // IBM Cloud API key used to authenticate with IAM
 
 	// Certificate-based authentication
 	ClientCertData string `json:"clientCertData,omitempty"` // Client certificate (base64 encoded)
@@ -102,13 +101,6 @@ func (k *KubernetesAuthConfig) Validate() error {
 		}
 
 	case AuthMethodAPIKey:
-		if k.Host == "" {
-			return &ConnectorError{
-				Code:    "INVALID_AUTH_CONFIG",
-				Message: "host is required for api-based auth",
-			}
-		}
-
 		if k.ApiKey == "" {
 			return &ConnectorError{
 				Code:    "INVALID_AUTH_CONFIG",

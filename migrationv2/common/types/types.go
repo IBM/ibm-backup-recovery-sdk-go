@@ -202,7 +202,6 @@ type SDKConfig struct {
 	APIKey          string
 	BRSInstanceName string
 	ResourceGroupID string
-	Tags            []string
 	Timeout         time.Duration
 
 	// Polling Configuration
@@ -217,14 +216,14 @@ type SDKConfig struct {
 	EnableDebugLogging bool
 	Logger             logger.Logger // Structured logger instance
 
-	// Metrics
-	Metrics metrics.Metrics // Metrics collection instance
+	// Metrics collection instance. Non-nil when EnableMetrics=true.
+	Metrics metrics.Metrics
 
-	// Activity tracking
+	// Activity tracking sink. Non-nil when EnableActivityTracker=true.
 	ActivityTrackerSink activity_tracker.Sink
 
-	// AccountID for metrics and activity tracker labeling
-	// Required only if Metrics or ActivityTrackerSink is provided
+	// AccountID for metrics and activity tracker labeling.
+	// Set when EnableMetrics=true or EnableActivityTracker=true.
 	AccountID string
 }
 
@@ -450,9 +449,10 @@ type ProtectionSetting struct {
 	// Add protection settings fields as needed
 	RetentionDays int64 `json:"retentionDays,omitempty"`
 	// StartTime    string     `yaml:"startTime,omitempty"`
-	EndDate     string `yaml:"endDate,omitempty"`
-	CSISnapshot bool   `yaml:"CSISnapshot,omitempty"`
-	Labels      Labels `yaml:"labels,omitempty"`
+	EndDate          string `yaml:"endDate,omitempty"`
+	CSISnapshot      bool   `yaml:"CSISnapshot,omitempty"`
+	Labels           Labels `yaml:"labels,omitempty"`
+	PauseFutureRuns  bool   `yaml:"pauseFutureRuns,omitempty" json:"pauseFutureRuns,omitempty"`
 }
 
 type Labels struct {
@@ -676,13 +676,54 @@ type SystemRecoveryParams struct {
 	FullNasPath string `json:"fullNasPath"` // Full NAS path for recovery
 }
 
-// RestoreParams holds INPUT parameters for running a restore on k8s cluster
+// KubernetesRestoreParams holds INPUT parameters for running a Kubernetes restore operation.
+// This struct supports both simple restores (all namespaces with same settings) and
+// complex restores (different settings per namespace).
+//
+// Simple restore example (all namespaces use same storage class mapping):
+//
+//	{
+//	  "RecoverObjectSpec": {
+//	    "storageClasses": [{"old": "class-A", "new": "class-B"}]
+//	  }
+//	}
+//
+// Complex restore example (namespace-specific overrides):
+//
+//	{
+//	  "RecoverObjectSpec": {
+//	    "storageClasses": [{"old": "class-A", "new": "class-B"}]  // Default for all
+//	  },
+//	  "RecoverMultipleObjects": [
+//	    {
+//	      "SnapshotInfo": {"NamespaceInfo": {"namespace": "app-1"}},
+//	      "RecoverObjectSpec": {
+//	        "storageClasses": [{"old": "class-A", "new": "class-C"}]  // Override for app-1
+//	      }
+//	    }
+//	  ],
+//	  "IncludeNamespaces": ["app-1", "app-2"]  // Only restore these 2 namespaces
+//	}
 type KubernetesRestoreParams struct {
 	CleanupRequired bool `json:"cleanupRequired,omitempty"`
 	Expectation     bool `json:"expectation,omitempty"`
 
-	RecoverMultipleObjects          []RecoverObject                  `json:"recoverObjects,omitempty"`    // multiple namespace/snapshot recovery
-	RecoverObjectSpec               *RecoverObjectSpec               `json:"RecoverObjectSpec,omitempty"` // recovery specs for a single snapshot provided via groupId and backupId
+	// RecoverMultipleObjects allows specifying different restore settings for different namespaces.
+	// Each entry specifies a namespace (by name) and its specific recovery settings.
+	// Namespace-level settings OVERRIDE top-level RecoverObjectSpec settings.
+	RecoverMultipleObjects []RecoverObject `json:"recoverObjects,omitempty"`
+
+	// RecoverObjectSpec provides DEFAULT restore settings that apply to ALL namespaces.
+	// Individual namespaces can override these settings via RecoverMultipleObjects.
+	// Example: Set default storage class mapping that applies to all namespaces.
+	RecoverObjectSpec *RecoverObjectSpec `json:"RecoverObjectSpec,omitempty"`
+
+	// IncludeNamespaces filters which namespaces to restore from the backup run.
+	// If empty, ALL namespaces are restored.
+	// If specified, ONLY the listed namespaces are restored.
+	// Example: ["app-1", "app-2"] will restore only these 2 namespaces.
+	IncludeNamespaces []string `json:"includeNamespaces,omitempty"`
+
 	SkipClusterCompatibilityCheck   bool                             `json:"skipClusterCompatibilityCheck,omitempty"`
 	RenameRecoveredNamespacesParams *RenameRecoveredNamespacesParams `json:"renameRecoveredNamespacesParams,omitempty"`
 	RecoverToNewTarget              bool                             `json:"recoverToNewTarget,omitempty"`
@@ -695,17 +736,49 @@ type MigrationMapParams struct {
 	Target string `json:"target,omitempty"`
 }
 
-// namespace objects to be recovered
+// RecoverObject represents a single namespace to be recovered with its specific settings.
+// Used in RecoverMultipleObjects array to specify namespace-level overrides.
+//
+// Example: Restore namespace "app-1" with specific storage class mapping
+//
+//	{
+//	  "SnapshotInfo": {
+//	    "NamespaceInfo": {"namespace": "app-1"}
+//	  },
+//	  "RecoverObjectSpec": {
+//	    "storageClasses": [{"old": "class-A", "new": "class-C"}]
+//	  }
+//	}
 type RecoverObject struct {
-	SnapshotInfo      *SnapshotInfo      `json:"snapshotInfo,omitempty"`      //infor of snapshot to be recovered
-	RecoverObjectSpec *RecoverObjectSpec `json:"recoverObjectSpec,omitempty"` //resources to be recovered within the snapshot
+	// SnapshotInfo identifies which namespace to recover.
+	// Users typically provide the namespace NAME (not snapshot ID).
+	// The system will resolve the namespace name to its snapshot ID internally.
+	SnapshotInfo *SnapshotInfo `json:"snapshotInfo,omitempty"`
+
+	// RecoverObjectSpec defines HOW to recover this specific namespace.
+	// This OVERRIDES the top-level RecoverObjectSpec for this namespace only.
+	// Example: Different storage class mapping for this namespace.
+	RecoverObjectSpec *RecoverObjectSpec `json:"recoverObjectSpec,omitempty"`
 }
+
+// RecoverObjectSpec defines the recovery settings for a namespace.
+// This can be used at two levels:
+// 1. Top-level (applies to ALL namespaces as default)
+// 2. Namespace-level (overrides top-level for specific namespace)
+//
+// Example: Map old storage class to new storage class
+//
+//	{
+//	  "storageClasses": [
+//	    {"old": "ibmc-vpc-block-5iops-tier", "new": "ibmc-vpc-block-10iops-tier"}
+//	  ]
+//	}
 type RecoverObjectSpec struct {
-	IncludeObjects         *K8sObject            `json:"includeObjects,omitempty"` // k8s params to be included during the restore
-	ExcludeObjects         *K8sObject            `json:"excludeObjects,omitempty"` // k8s params to be excluded during the restore
-	UseStorageClassMapping *bool                 `json:"useStorageClassMapping,omitempty"`
-	StorageClasses         []StorageClassMapping `json:"storageClasses,omitempty"` // StorageClass mapping
-	RestoreOnlyPvc         bool                  `json:"restoreOnlyPvc,omitempty"` // only restores PVC
+	IncludeObjects         *K8sObject            `json:"includeObjects,omitempty"`         // Kubernetes resources to include in restore
+	ExcludeObjects         *K8sObject            `json:"excludeObjects,omitempty"`         // Kubernetes resources to exclude from restore
+	UseStorageClassMapping *bool                 `json:"useStorageClassMapping,omitempty"` // Whether to use storage class mapping
+	StorageClasses         []StorageClassMapping `json:"storageClasses,omitempty"`         // Storage class mappings (old -> new)
+	RestoreOnlyPvc         bool                  `json:"restoreOnlyPvc,omitempty"`         // Restore only PVCs (not other resources)
 }
 
 // info for the snapshot to be recovered. User can provide either NamespaceInfo or can directly provide SnapshotID

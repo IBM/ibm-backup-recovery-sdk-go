@@ -9,7 +9,6 @@
 package config
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -26,34 +25,35 @@ type Config struct {
 	// IBM Cloud configuration
 	Region          string
 	APIKey          string
-	BRSInstanceName string          // Optional: if empty, will be created automatically
-	BRSInstanceCRN  string          // Optional: if provided, will use existing instance
+	
+	// Exactly one of BRSInstanceName or BRSInstanceCRN must be provided.
+	BRSInstanceName string // Looked up by name; the instance must already exist in IBM Cloud
+	BRSInstanceCRN  string // Looked up by CRN (preferred — unambiguous and faster)
 	BRSEndpointType BRSEndpointType // defaults to public
 	ResourceGroupID string
-	Tags            []string
 
 	// SDK configuration
 	Timeout       time.Duration
-	RetryAttempts int
-	RetryDelay    time.Duration
 	EnableLogging bool
 
 	// API enablement flags (both optional)
 	EnableWorkflowAPI bool // Enable workflow-based APIs (for CLI, migration-tool)
 	EnableTaskAPI     bool // Enable task-based APIs (for IKS/ROKS e2e tests)
 
-	// Microservice mode configuration
-	// IMPORTANT: For microservice deployments with multiple instances:
-	// - MUST provide BRSInstanceCRN (shared across all instances)
-	MicroserviceMode bool // Enable microservice-safe mode (validates required config)
+	// IAMEndpoint overrides the default IBM Cloud IAM endpoint (optional).
+	IAMEndpoint string
 
-	// Optional custom settings
-	CustomSettings map[string]interface{}
-	IAMEndpoint    string
-	TenantId       string
+	// TenantId is the BRS tenant identifier.
+	// WARNING: if provided manually and it does not match the BRS instance's
+	// actual tenant ID, all API calls will fail with authorisation errors.
+	TenantId string
 
-	// Activity tracking configuration
-	ActivityTrackerSink activity_tracker.Sink
+	// Activity tracking configuration.
+	// EnableActivityTracker=true requires ActivityTrackerConfig and AccountID to be set.
+	EnableActivityTracker bool
+	// ActivityTrackerConfig holds the parameters used to build the HTTP sink internally.
+	// Mandatory when EnableActivityTracker=true.
+	ActivityTrackerConfig *activity_tracker.HTTPSinkConfig
 
 	// Logger configuration (three options):
 	// Option 1: Provide a logger instance directly
@@ -63,19 +63,22 @@ type Config struct {
 	// Option 3: Enable default logger (will create with default settings)
 	UseDefaultLogger bool
 
-	// Metrics configuration (three options):
-	// Option 1: Provide a metrics instance directly
-	Metrics metrics.Metrics
-	// Option 2: Provide metrics config and we'll create the metrics
-	MetricsConfig *metrics.PrometheusConfig
-	// Option 3: Enable default metrics (will create with default settings)
-	UseDefaultMetrics bool
-	// Option 4: Disable metrics collection
+	// Metrics configuration.
+	// EnableMetrics=true requires PrometheusConfig and AccountID to be set.
 	EnableMetrics bool
+	// PrometheusConfig holds the parameters used to build the Prometheus metrics instance internally.
+	// Mandatory when EnableMetrics=true.
+	PrometheusConfig *metrics.PrometheusConfig
 
-	// AccountID for metrics and activity tracker labeling
-	// Required only if Metrics or ActivityTrackerSink is provided
+	// AccountID for metrics and activity tracker labeling.
+	// Mandatory when EnableMetrics=true or EnableActivityTracker=true.
 	AccountID string
+
+	// activityTrackerSink and metrics are the fully constructed instances.
+	// They are built on first use by GetActivityTracker()/GetMetrics() and must
+	// never be set directly by callers.
+	activityTrackerSink activity_tracker.Sink
+	metrics             metrics.Metrics
 }
 
 type BRSEndpointType string
@@ -85,20 +88,15 @@ const (
 	BRSendpointType_Private BRSEndpointType = "private"
 )
 
-// DefaultConfig returns a configuration with default values
-// By default, both WorkflowAPI and TaskAPI are enabled, and default logger is enabled
+// DefaultConfig returns a configuration with default values.
+// Metrics and activity tracking are disabled by default; opt in via EnableMetrics/EnableActivityTracker.
 func DefaultConfig() *Config {
 	return &Config{
 		Timeout:           30 * time.Minute,
-		RetryAttempts:     3,
-		RetryDelay:        5 * time.Second,
 		EnableLogging:     true,
 		EnableWorkflowAPI: true, // Enabled by default
 		EnableTaskAPI:     true, // Enabled by default
 		UseDefaultLogger:  true, // Enabled by default
-		EnableMetrics:     true, // Enabled by default
-		UseDefaultMetrics: true, // Enabled by default
-		CustomSettings:    make(map[string]interface{}),
 	}
 }
 
@@ -119,13 +117,19 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	// Validate AccountID if metrics or activity tracker are enabled
-	c.initializeMetrics()
-	metricsEnabled := c.Metrics != nil && c.Metrics != metrics.NewNoop()
-	activityTrackerEnabled := c.ActivityTrackerSink != nil
+	// When EnableMetrics=true, PrometheusConfig is mandatory.
+	if c.EnableMetrics && c.PrometheusConfig == nil {
+		return errors.NewInvalidConfigError("PrometheusConfig is required when EnableMetrics=true", nil)
+	}
 
-	if (metricsEnabled || activityTrackerEnabled) && c.AccountID == "" {
-		return errors.NewInvalidConfigError("AccountID is required when Metrics or ActivityTrackerSink is enabled", nil)
+	// When EnableActivityTracker=true, ActivityTrackerConfig is mandatory.
+	if c.EnableActivityTracker && c.ActivityTrackerConfig == nil {
+		return errors.NewInvalidConfigError("ActivityTrackerConfig is required when EnableActivityTracker=true", nil)
+	}
+
+	// AccountID is mandatory whenever metrics or activity tracking is enabled.
+	if (c.EnableMetrics || c.EnableActivityTracker) && c.AccountID == "" {
+		return errors.NewInvalidConfigError("AccountID is required when EnableMetrics=true or EnableActivityTracker=true", nil)
 	}
 
 	if c.BRSInstanceCRN != "" {
@@ -134,28 +138,12 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	// Microservice mode validation
-	if c.MicroserviceMode {
-		// In microservice mode, BRS instance CRN is REQUIRED
-		if c.BRSInstanceCRN == "" {
-			return errors.NewInvalidConfigError(
-				"BRSInstanceCRN is required in microservice mode - all instances must share the same BRS instance",
-				nil,
-			)
-		}
-		// will not auto create
-		if c.BRSInstanceName != "" && c.BRSInstanceCRN == "" {
-			return errors.NewInvalidConfigError(
-				"in microservice mode, use BRSInstanceCRN instead of BRSInstanceName to ensure all instances use the same BRS instance",
-				nil,
-			)
-		}
-	} else {
-		// Single instance mode - auto-creation is allowed
-		if c.BRSInstanceName == "" && c.BRSInstanceCRN == "" {
-			// Will create a new instance with auto-generated name
-			c.BRSInstanceName = fmt.Sprintf("brs-mig-sdk-auto-%d", time.Now().Unix())
-		}
+	// Exactly one of BRSInstanceCRN or BRSInstanceName is required.
+	if c.BRSInstanceName == "" && c.BRSInstanceCRN == "" {
+		return errors.NewInvalidConfigError(
+			"one of BRSInstanceCRN or BRSInstanceName is required; the BRS instance must already exist in IBM Cloud",
+			nil,
+		)
 	}
 
 	if c.ResourceGroupID == "" {
@@ -167,22 +155,19 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// ToSDKConfig converts to types.SDKConfig
+// ToSDKConfig converts to types.SDKConfig.
+// Caller (NewClient) guarantees all three initialize* methods have already run,
+// so Logger, metrics, and activityTrackerSink are non-nil here.
 func (c *Config) ToSDKConfig() *types.SDKConfig {
-	// Ensure logger and metrics are initialized
-	c.initializeLogger()
-	c.initializeMetrics()
-
 	return &types.SDKConfig{
 		Region:              c.Region,
 		APIKey:              c.APIKey,
 		BRSInstanceName:     c.BRSInstanceName,
 		ResourceGroupID:     c.ResourceGroupID,
-		Tags:                c.Tags,
 		Timeout:             c.Timeout,
-		ActivityTrackerSink: c.ActivityTrackerSink,
+		ActivityTrackerSink: c.activityTrackerSink,
 		Logger:              c.Logger,
-		Metrics:             c.Metrics,
+		Metrics:             c.metrics,
 		AccountID:           c.AccountID,
 	}
 }
@@ -226,48 +211,68 @@ func (c *Config) GetLogger() logger.Logger {
 	return c.Logger
 }
 
-// initializeMetrics creates a metrics instance if not already provided
+// initializeMetrics builds a Prometheus metrics instance from PrometheusConfig
+// when EnableMetrics=true, or assigns a NoOp instance so callers never receive nil.
 func (c *Config) initializeMetrics() {
-	// If metrics already exists, nothing to do
-	if c.Metrics != nil {
+	if c.metrics != nil {
 		return
 	}
-
-	// If metrics is disabled, use NoOp metrics
-	if !c.EnableMetrics {
-		c.Metrics = metrics.NewNoop()
+	if c.EnableMetrics && c.PrometheusConfig != nil {
+		c.metrics = metrics.NewPrometheus(*c.PrometheusConfig)
 		return
 	}
-
-	// If MetricsConfig is provided, create metrics from config
-	if c.MetricsConfig != nil {
-		c.Metrics = metrics.NewPrometheus(*c.MetricsConfig)
-		return
-	}
-
-	// If UseDefaultMetrics is true, create default metrics
-	if c.UseDefaultMetrics {
-		// Ensure logger is initialized first (metrics needs logger)
-		c.initializeLogger()
-
-		defaultMetricsConfig := metrics.PrometheusConfig{
-			Namespace: "brs_migration_sdk",
-			Registry:  nil, // Use default registry
-			Logger:    c.Logger,
-		}
-		c.Metrics = metrics.NewPrometheus(defaultMetricsConfig)
-		return
-	}
-
-	// Fallback: if nothing is configured, use NoOp metrics
-	c.Metrics = metrics.NewNoop()
+	// EnableMetrics=false or no config: use NoOp so callers never receive nil.
+	c.metrics = metrics.NewNoop()
 }
 
-// GetMetrics returns the metrics instance, initializing it if necessary
+// initializeActivityTracker builds an HTTPSink from ActivityTrackerConfig when
+// EnableActivityTracker=true, or assigns a NoOpSink so callers never receive nil.
+func (c *Config) initializeActivityTracker() {
+	if c.activityTrackerSink != nil {
+		return
+	}
+	if c.EnableActivityTracker && c.ActivityTrackerConfig != nil {
+		// Reuse the config's own API key so the user never has to supply a
+		// separate IAMAuthenticator inside ActivityTrackerConfig.
+		sinkCfg := *c.ActivityTrackerConfig
+		if sinkCfg.IAMAuthenticator == nil {
+			if auth, ok := c.GetAuth().(*core.IamAuthenticator); ok {
+				sinkCfg.IAMAuthenticator = auth
+			}
+		}
+		sink, err := activity_tracker.NewHTTPSink(sinkCfg)
+		if err == nil {
+			c.activityTrackerSink = sink
+			return
+		}
+		// If sink construction fails, fall through to NoOpSink so the SDK
+		// remains functional; the error will surface when the first event is emitted.
+	}
+	// EnableActivityTracker=false or construction failed: NoOpSink so callers never receive nil.
+	c.activityTrackerSink = activity_tracker.NoOpSink{}
+}
+
+// GetMetrics returns the fully initialised metrics instance.
+// On the first call it builds a PrometheusMetrics from PrometheusConfig when
+// EnableMetrics=true, or falls back to a no-op implementation.
+// Subsequent calls return the same instance.
 func (c *Config) GetMetrics() metrics.Metrics {
 	c.initializeMetrics()
-	return c.Metrics
+	return c.metrics
 }
+
+// GetActivityTracker returns the fully initialised activity tracker sink.
+// On the first call it builds an HTTPSink from ActivityTrackerConfig when
+// EnableActivityTracker=true, or falls back to a no-op implementation.
+// Subsequent calls return the same instance.
+func (c *Config) GetActivityTracker() activity_tracker.Sink {
+	c.initializeActivityTracker()
+	return c.activityTrackerSink
+}
+
+// ---------------------------------------------------------------------------
+// Builder (With*) methods
+// ---------------------------------------------------------------------------
 
 // WithRegion sets the region
 func (c *Config) WithRegion(region string) *Config {
@@ -299,27 +304,9 @@ func (c *Config) WithResourceGroupID(id string) *Config {
 	return c
 }
 
-// WithTags sets the tags
-func (c *Config) WithTags(tags []string) *Config {
-	c.Tags = tags
-	return c
-}
-
 // WithTimeout sets the timeout
 func (c *Config) WithTimeout(timeout time.Duration) *Config {
 	c.Timeout = timeout
-	return c
-}
-
-// WithRetryAttempts sets the retry attempts
-func (c *Config) WithRetryAttempts(attempts int) *Config {
-	c.RetryAttempts = attempts
-	return c
-}
-
-// WithRetryDelay sets the retry delay
-func (c *Config) WithRetryDelay(delay time.Duration) *Config {
-	c.RetryDelay = delay
 	return c
 }
 
@@ -355,12 +342,6 @@ func (c *Config) WithDefaultLogger(enabled bool) *Config {
 	return c
 }
 
-// WithCustomSetting adds a custom setting
-func (c *Config) WithCustomSetting(key string, value interface{}) *Config {
-	c.CustomSettings[key] = value
-	return c
-}
-
 // WithWorkflowAPI enables or disables workflow-based APIs
 func (c *Config) WithWorkflowAPI(enabled bool) *Config {
 	c.EnableWorkflowAPI = enabled
@@ -373,50 +354,44 @@ func (c *Config) WithTaskAPI(enabled bool) *Config {
 	return c
 }
 
-// WithMicroserviceMode enables microservice-safe mode
-// WithMetrics sets the metrics instance directly
-func (c *Config) WithMetrics(m metrics.Metrics) *Config {
-	c.Metrics = m
-	c.MetricsConfig = nil
-	c.UseDefaultMetrics = false
-	return c
-}
-
-// WithMetricsConfig sets the metrics configuration (metrics will be created from this config)
-func (c *Config) WithMetricsConfig(metricsConfig *metrics.PrometheusConfig) *Config {
-	c.MetricsConfig = metricsConfig
-	c.Metrics = nil
-	c.UseDefaultMetrics = false
-	return c
-}
-
-// WithDefaultMetrics enables the default metrics
-func (c *Config) WithDefaultMetrics(enabled bool) *Config {
-	c.UseDefaultMetrics = enabled
-	if enabled {
-		c.Metrics = nil
-		c.MetricsConfig = nil
-	}
-	return c
-}
-
-// WithMetricsEnabled enables or disables metrics collection
+// WithMetricsEnabled enables or disables metrics collection.
+// When true, a PrometheusConfig and AccountID must also be provided.
 func (c *Config) WithMetricsEnabled(enabled bool) *Config {
 	c.EnableMetrics = enabled
 	return c
 }
 
-// WithAccountID sets the account ID (required if metrics or activity tracker are enabled)
+// WithPrometheusConfig sets the Prometheus configuration used to build the
+// metrics instance internally. Must be paired with WithMetricsEnabled(true) and WithAccountID.
+func (c *Config) WithPrometheusConfig(cfg *metrics.PrometheusConfig) *Config {
+	c.PrometheusConfig = cfg
+	return c
+}
+
+// WithActivityTrackerEnabled enables or disables activity tracking.
+// When true, ActivityTrackerConfig and AccountID must also be provided.
+func (c *Config) WithActivityTrackerEnabled(enabled bool) *Config {
+	c.EnableActivityTracker = enabled
+	return c
+}
+
+// WithActivityTrackerConfig sets the HTTP sink configuration used to build the
+// activity tracker sink internally. Must be paired with WithActivityTrackerEnabled(true) and WithAccountID.
+func (c *Config) WithActivityTrackerConfig(cfg *activity_tracker.HTTPSinkConfig) *Config {
+	c.ActivityTrackerConfig = cfg
+	return c
+}
+
+// WithAccountID sets the account ID.
+// Required when EnableMetrics=true or EnableActivityTracker=true.
 func (c *Config) WithAccountID(accountID string) *Config {
 	c.AccountID = accountID
 	return c
 }
 
-// This enforces that BRSInstanceCRN is provided and validates microservice requirements
-func (c *Config) WithMicroserviceMode(enabled bool) *Config {
-	c.MicroserviceMode = enabled
-	return c
-}
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 func (c *Config) GetAuth() core.Authenticator {
 	if c.APIKey != "" {

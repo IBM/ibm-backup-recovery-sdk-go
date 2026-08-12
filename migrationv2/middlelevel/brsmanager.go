@@ -149,8 +149,11 @@ func (m *BRSManager) getOrCreateInstance(ctx context.Context, name string) error
 		)
 	}
 	if brsInstance == nil {
-		m.logger.Warn(ctx, "BRS instance not found, would create new instance", "instanceName", name)
-		// create a new brsInstnace
+		m.logger.Error(ctx, "BRS instance not found and auto-creation not implemented", "instanceName", name)
+		return errors.NewInvalidConfigError(
+			fmt.Sprintf("BRS instance '%s' not found. Please create the instance first or provide a valid BRSInstanceCRN", name),
+			nil,
+		)
 	}
 
 	m.config.TenantId = ensureTrailingSlash(brsInstance.TenantID)
@@ -261,9 +264,13 @@ func (m *BRSManager) GetInstanceCRN() string {
 	return m.instanceCRN
 }
 
-// GetInstanceId returns the BRS instance Id
+// GetInstanceId returns the BRS instance Id extracted from a CRN.
+// Returns an empty string if crn is empty or has fewer than 3 colon-separated segments.
 func (m *BRSManager) GetInstanceId(crn string) string {
 	ids := strings.Split(crn, ":")
+	if len(ids) < 3 {
+		return ""
+	}
 	return ids[len(ids)-3]
 }
 

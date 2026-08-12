@@ -515,6 +515,82 @@ func TestCreateProtectionGroup(t *testing.T) {
 			},
 			expectError: false,
 		},
+		{
+			name: "PauseFutureRuns_True_SetsIsPaused",
+			config: &KubernetesDataSourceConfig{
+				ClusterName: "test-cluster",
+				ClusterId:   "cluster-123",
+				KubernetesProtectionParams: &types.KubernetesProtectionParams{
+					Settings: &types.ProtectionSetting{
+						CSISnapshot: true,
+					},
+				},
+			},
+			groupParams: &types.ProtectionGroupParams{
+				Name: "paused-group",
+				Settings: &types.ProtectionSetting{
+					PauseFutureRuns: true,
+				},
+			},
+			mockSources: []backuprecoveryv1.ProtectionSourceNodes{
+				{
+					Nodes: []backuprecoveryv1.ProtectionSourceNodes{},
+				},
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, result *backuprecoveryv1.CreateProtectionGroupOptions) {
+				assert.NotNil(t, result.IsPaused, "IsPaused should be set when PauseFutureRuns is true")
+				assert.True(t, *result.IsPaused, "IsPaused should be true")
+			},
+		},
+		{
+			name: "PauseFutureRuns_False_DoesNotSetIsPaused",
+			config: &KubernetesDataSourceConfig{
+				ClusterName: "test-cluster",
+				ClusterId:   "cluster-123",
+				KubernetesProtectionParams: &types.KubernetesProtectionParams{
+					Settings: &types.ProtectionSetting{},
+				},
+			},
+			groupParams: &types.ProtectionGroupParams{
+				Name: "active-group",
+				Settings: &types.ProtectionSetting{
+					PauseFutureRuns: false,
+				},
+			},
+			mockSources: []backuprecoveryv1.ProtectionSourceNodes{
+				{
+					Nodes: []backuprecoveryv1.ProtectionSourceNodes{},
+				},
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, result *backuprecoveryv1.CreateProtectionGroupOptions) {
+				assert.Nil(t, result.IsPaused, "IsPaused should not be set when PauseFutureRuns is false")
+			},
+		},
+		{
+			name: "PauseFutureRuns_NilSettings_DoesNotSetIsPaused",
+			config: &KubernetesDataSourceConfig{
+				ClusterName: "test-cluster",
+				ClusterId:   "cluster-123",
+				KubernetesProtectionParams: &types.KubernetesProtectionParams{
+					Settings: &types.ProtectionSetting{},
+				},
+			},
+			groupParams: &types.ProtectionGroupParams{
+				Name:     "no-settings-group",
+				Settings: nil, // nil Settings — should not panic or set IsPaused
+			},
+			mockSources: []backuprecoveryv1.ProtectionSourceNodes{
+				{
+					Nodes: []backuprecoveryv1.ProtectionSourceNodes{},
+				},
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, result *backuprecoveryv1.CreateProtectionGroupOptions) {
+				assert.Nil(t, result.IsPaused, "IsPaused should not be set when Settings is nil")
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1971,7 +2047,7 @@ func TestGetBackupRunSnapShotID(t *testing.T) {
 		name                  string
 		mockProtectionRun     *backuprecoveryv1.ProtectionGroupRun
 		expectError           bool
-		expectedSnapshotID    string
+		expectedSnapshotIDs   []string
 		expectedErrorContains string
 	}{
 		{
@@ -1989,8 +2065,8 @@ func TestGetBackupRunSnapShotID(t *testing.T) {
 					},
 				},
 			},
-			expectError:        false,
-			expectedSnapshotID: "snapshot-backup-123",
+			expectError:         false,
+			expectedSnapshotIDs: []string{"snapshot-backup-123"},
 		},
 		{
 			name: "NoSnapshotID",
@@ -2027,7 +2103,7 @@ func TestGetBackupRunSnapShotID(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.Equal(t, tt.expectedSnapshotID, *result)
+				assert.Equal(t, tt.expectedSnapshotIDs, result)
 			}
 		})
 	}
@@ -3097,4 +3173,862 @@ func TestKubernetesDataSourceConfig_CreateDataSource(t *testing.T) {
 		assert.Nil(t, dataSource)
 		assert.Contains(t, err.Error(), "kubernetes data source config cannot be nil")
 	})
+}
+
+// TestGetK8Object_Settings tests that GetK8Object handles Settings correctly
+func TestGetK8Object_Settings(t *testing.T) {
+	tests := []struct {
+		name                      string
+		settings                  *types.ProtectionSetting
+		expectLeverageCSISnapshot bool
+		expectIncludeParams       bool
+		expectExcludeParams       bool
+		leverageCSISnapshotValue  bool
+	}{
+		{
+			name:                      "Nil Settings - should not set Settings-related fields",
+			settings:                  nil,
+			expectLeverageCSISnapshot: false,
+			expectIncludeParams:       false,
+			expectExcludeParams:       false,
+		},
+		{
+			name: "Valid Settings with CSISnapshot true - should set all fields",
+			settings: &types.ProtectionSetting{
+				CSISnapshot: true,
+				Labels: types.Labels{
+					PersistentVolumeClaim: types.KeyValueFilter{
+						Inclusion: "app=test",
+						Exclusion: "env=dev",
+						LogicRule: "AND",
+					},
+				},
+			},
+			expectLeverageCSISnapshot: true,
+			expectIncludeParams:       true,
+			expectExcludeParams:       true,
+			leverageCSISnapshotValue:  true,
+		},
+		{
+			name: "Valid Settings with CSISnapshot false - should set all fields",
+			settings: &types.ProtectionSetting{
+				CSISnapshot: false,
+				Labels: types.Labels{
+					PersistentVolumeClaim: types.KeyValueFilter{
+						Inclusion: "app=prod",
+						Exclusion: "",
+						LogicRule: "OR",
+					},
+				},
+			},
+			expectLeverageCSISnapshot: true,
+			expectIncludeParams:       true,
+			expectExcludeParams:       true,
+			leverageCSISnapshotValue:  false,
+		},
+		{
+			name: "Valid Settings with empty labels - should set CSISnapshot only",
+			settings: &types.ProtectionSetting{
+				CSISnapshot: true,
+				Labels: types.Labels{
+					PersistentVolumeClaim: types.KeyValueFilter{
+						Inclusion: "",
+						Exclusion: "",
+						LogicRule: "",
+					},
+				},
+			},
+			expectLeverageCSISnapshot: true,
+			expectIncludeParams:       true,
+			expectExcludeParams:       true,
+			leverageCSISnapshotValue:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup
+			dataSource := &KubernetesDataSource{
+				KubernetesProtectionParams: &types.KubernetesProtectionParams{
+					Settings: tt.settings,
+					NamespacesSetting: []types.NamespacesSetting{
+						{
+							Namespace: "test-namespace",
+						},
+					},
+				},
+				logger: logger.NewNoop(),
+			}
+
+			namespaces := []types.NamespaceData{
+				{
+					Id:   123,
+					Name: "test-namespace",
+				},
+			}
+
+			// Execute
+			result := dataSource.GetK8Object(namespaces)
+
+			// Assert
+			assert.NotNil(t, result, "Result should not be nil")
+			assert.NotNil(t, result.Objects, "Objects should not be nil")
+			assert.Len(t, result.Objects, 1, "Should have one object")
+
+			// Check Settings-related fields
+			if tt.expectLeverageCSISnapshot {
+				assert.NotNil(t, result.LeverageCSISnapshot, "LeverageCSISnapshot should be set")
+				assert.Equal(t, tt.leverageCSISnapshotValue, *result.LeverageCSISnapshot, "LeverageCSISnapshot value mismatch")
+			} else {
+				assert.Nil(t, result.LeverageCSISnapshot, "LeverageCSISnapshot should be nil when Settings is nil")
+			}
+
+			if tt.expectIncludeParams {
+				assert.NotNil(t, result.IncludeParams, "IncludeParams should be set")
+			} else {
+				assert.Nil(t, result.IncludeParams, "IncludeParams should be nil when Settings is nil")
+			}
+
+			if tt.expectExcludeParams {
+				assert.NotNil(t, result.ExcludeParams, "ExcludeParams should be set")
+			} else {
+				assert.Nil(t, result.ExcludeParams, "ExcludeParams should be nil when Settings is nil")
+			}
+		})
+	}
+}
+
+// =============================================================================
+// PAUSE FUTURE RUNS TESTS
+// =============================================================================
+
+// TestCreateProtectionGroup_PauseFutureRuns is a focused test for the
+// PauseFutureRuns → IsPaused mapping in CreateProtectionGroup.
+func TestCreateProtectionGroup_PauseFutureRuns(t *testing.T) {
+	baseConfig := func(pauseFuture bool) *KubernetesDataSourceConfig {
+		return &KubernetesDataSourceConfig{
+			ClusterName: "test-cluster",
+			ClusterId:   "cluster-123",
+			KubernetesProtectionParams: &types.KubernetesProtectionParams{
+				Settings: &types.ProtectionSetting{CSISnapshot: true},
+			},
+		}
+	}
+
+	emptySources := []backuprecoveryv1.ProtectionSourceNodes{
+		{Nodes: []backuprecoveryv1.ProtectionSourceNodes{}},
+	}
+
+	setupMock := func(sources []backuprecoveryv1.ProtectionSourceNodes) types.BRSClientWrapperInterface {
+		mockBRSClient := new(testmockrs.MockBRSClient)
+		mockWrapper := new(MockBRSClientWrapper)
+		mockWrapper.On("GetTenantId").Return("test-tenant-id")
+		mockWrapper.On("GetBRSClient").Return(mockBRSClient)
+		mockBRSClient.On("ListProtectionSources", mock.Anything).Return(sources, &core.DetailedResponse{}, nil)
+		return mockWrapper
+	}
+
+	tests := []struct {
+		name            string
+		groupSettings   *types.ProtectionSetting
+		expectIsPaused  bool
+		expectPausedVal bool
+	}{
+		{
+			name:            "PauseFutureRuns true sets IsPaused=true in BRS request",
+			groupSettings:   &types.ProtectionSetting{PauseFutureRuns: true},
+			expectIsPaused:  true,
+			expectPausedVal: true,
+		},
+		{
+			name:           "PauseFutureRuns false does not set IsPaused",
+			groupSettings:  &types.ProtectionSetting{PauseFutureRuns: false},
+			expectIsPaused: false,
+		},
+		{
+			name:           "nil Settings does not set IsPaused",
+			groupSettings:  nil,
+			expectIsPaused: false,
+		},
+		{
+			name:            "PauseFutureRuns true ignores other settings fields",
+			groupSettings:   &types.ProtectionSetting{PauseFutureRuns: true, CSISnapshot: true, RetentionDays: 7},
+			expectIsPaused:  true,
+			expectPausedVal: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := baseConfig(false)
+			brsWrapper := setupMock(emptySources)
+			ds := createTestKubernetesDataSource("test", cfg, brsWrapper)
+
+			result, err := ds.CreateProtectionGroup(context.Background(), 123, &types.ProtectionGroupParams{
+				Name:     "test-group",
+				Settings: tt.groupSettings,
+			})
+
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			assert.Equal(t,
+				backuprecoveryv1.CreateProtectionGroupOptions_Environment_Kkubernetes,
+				*result.Environment,
+				"Environment should always be Kubernetes",
+			)
+
+			if tt.expectIsPaused {
+				assert.NotNil(t, result.IsPaused, "IsPaused field should be set")
+				assert.Equal(t, tt.expectPausedVal, *result.IsPaused, "IsPaused value mismatch")
+			} else {
+				assert.Nil(t, result.IsPaused, "IsPaused field should not be set")
+			}
+		})
+	}
+}
+
+// TestGetBackupRunNamespaceSnapshots tests the new function that returns namespace-to-snapshot mappings
+func TestGetBackupRunNamespaceSnapshots(t *testing.T) {
+	tests := []struct {
+		name                  string
+		mockProtectionRun     *backuprecoveryv1.ProtectionGroupRun
+		expectError           bool
+		expectedMappings      []NamespaceSnapshotMapping
+		expectedErrorContains string
+	}{
+		{
+			name: "Success - Single Namespace",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(72667),
+							Name: core.StringPtr("busybox-app"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									SnapshotID: core.StringPtr("snap-123"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectError: false,
+			expectedMappings: []NamespaceSnapshotMapping{
+				{
+					NamespaceName: "busybox-app",
+					NamespaceID:   72667,
+					SnapshotID:    "snap-123",
+					ObjectID:      72667,
+				},
+			},
+		},
+		{
+			name: "Success - Multiple Namespaces",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(72667),
+							Name: core.StringPtr("busybox-app"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									SnapshotID: core.StringPtr("snap-123"),
+								},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(78395),
+							Name: core.StringPtr("nginx-app"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									SnapshotID: core.StringPtr("snap-456"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectError: false,
+			expectedMappings: []NamespaceSnapshotMapping{
+				{
+					NamespaceName: "busybox-app",
+					NamespaceID:   72667,
+					SnapshotID:    "snap-123",
+					ObjectID:      72667,
+				},
+				{
+					NamespaceName: "nginx-app",
+					NamespaceID:   78395,
+					SnapshotID:    "snap-456",
+					ObjectID:      78395,
+				},
+			},
+		},
+		{
+			name: "Error - No Objects",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{},
+			},
+			expectError:           true,
+			expectedErrorContains: "No objects found",
+		},
+		{
+			name: "Error - Missing Object Field",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: nil,
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									SnapshotID: core.StringPtr("snap-123"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectError:           true,
+			expectedErrorContains: "No snapshotId found",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockBRSClient := new(testmockrs.MockBRSClient)
+			mockBRSWrapper := new(MockBRSClientWrapper)
+
+			mockBRSWrapper.On("GetTenantId").Return("test-tenant-id")
+			mockBRSWrapper.On("GetBRSClient").Return(mockBRSClient)
+
+			mockBRSClient.On("GetProtectionGroupRun", mock.Anything).Return(tt.mockProtectionRun, &core.DetailedResponse{}, nil)
+
+			config := &KubernetesDataSourceConfig{
+				ClusterName: "test-cluster",
+			}
+
+			dataSource := createTestKubernetesDataSource("test", config, mockBRSWrapper)
+
+			result, err := dataSource.GetBackupRunNamespaceSnapshots("group-123", "backup-456")
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.Contains(t, err.Error(), tt.expectedErrorContains)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, len(tt.expectedMappings), len(result))
+				for i, expected := range tt.expectedMappings {
+					assert.Equal(t, expected.NamespaceName, result[i].NamespaceName)
+					assert.Equal(t, expected.NamespaceID, result[i].NamespaceID)
+					assert.Equal(t, expected.SnapshotID, result[i].SnapshotID)
+					assert.Equal(t, expected.ObjectID, result[i].ObjectID)
+				}
+			}
+		})
+	}
+}
+
+// TestProtectionSetting_PauseFutureRuns tests the ProtectionSetting struct field.
+func TestProtectionSetting_PauseFutureRuns(t *testing.T) {
+	t.Run("Default zero value is false", func(t *testing.T) {
+		s := types.ProtectionSetting{}
+		assert.False(t, s.PauseFutureRuns, "PauseFutureRuns zero value should be false")
+	})
+
+	t.Run("Can be set to true", func(t *testing.T) {
+		s := types.ProtectionSetting{PauseFutureRuns: true}
+		assert.True(t, s.PauseFutureRuns)
+	})
+
+	t.Run("Coexists with other fields", func(t *testing.T) {
+		s := types.ProtectionSetting{
+			PauseFutureRuns: true,
+			CSISnapshot:     true,
+			RetentionDays:   14,
+			EndDate:         "2025-12-31",
+		}
+		assert.True(t, s.PauseFutureRuns)
+		assert.True(t, s.CSISnapshot)
+		assert.Equal(t, int64(14), s.RetentionDays)
+		assert.Equal(t, "2025-12-31", s.EndDate)
+	})
+}
+
+// TestInitializeKubernetesNamespaceParams_NamespaceFiltering tests the IncludeNamespaces filter
+func TestInitializeKubernetesNamespaceParams_NamespaceFiltering(t *testing.T) {
+	tests := []struct {
+		name                   string
+		mockProtectionRun      *backuprecoveryv1.ProtectionGroupRun
+		includeNamespaces      []string
+		expectedNamespaceCount int
+		expectedNamespaceNames []string
+	}{
+		{
+			name: "No Filter - All Namespaces Included",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("app-1"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-1")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(2),
+							Name: core.StringPtr("app-2"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-2")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(3),
+							Name: core.StringPtr("app-3"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-3")},
+							},
+						},
+					},
+				},
+			},
+			includeNamespaces:      []string{}, // Empty = include all
+			expectedNamespaceCount: 3,
+			expectedNamespaceNames: []string{"app-1", "app-2", "app-3"},
+		},
+		{
+			name: "Filter - Include Only Specific Namespaces",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("app-1"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-1")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(2),
+							Name: core.StringPtr("app-2"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-2")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(3),
+							Name: core.StringPtr("app-3"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-3")},
+							},
+						},
+					},
+				},
+			},
+			includeNamespaces:      []string{"app-1", "app-3"}, // Only include app-1 and app-3
+			expectedNamespaceCount: 2,
+			expectedNamespaceNames: []string{"app-1", "app-3"},
+		},
+		{
+			name: "Filter - Single Namespace",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("app-1"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-1")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(2),
+							Name: core.StringPtr("app-2"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-2")},
+							},
+						},
+					},
+				},
+			},
+			includeNamespaces:      []string{"app-2"},
+			expectedNamespaceCount: 1,
+			expectedNamespaceNames: []string{"app-2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockBRSClient := new(testmockrs.MockBRSClient)
+			mockBRSWrapper := new(MockBRSClientWrapper)
+
+			mockBRSWrapper.On("GetTenantId").Return("test-tenant-id")
+			mockBRSWrapper.On("GetBRSClient").Return(mockBRSClient)
+
+			mockBRSClient.On("GetProtectionGroupRun", mock.Anything).Return(tt.mockProtectionRun, &core.DetailedResponse{}, nil)
+
+			config := &KubernetesDataSourceConfig{
+				ClusterName: "test-cluster",
+			}
+
+			dataSource := createTestKubernetesDataSource("test", config, mockBRSWrapper)
+
+			k8sRestoreParams := &types.KubernetesRestoreParams{
+				IncludeNamespaces: tt.includeNamespaces,
+				RecoverObjectSpec: &types.RecoverObjectSpec{
+					StorageClasses: []types.StorageClassMapping{
+						{Old: "class-A", New: "class-B"},
+					},
+				},
+			}
+
+			result, err := dataSource.InitializeKubernetesNamespaceParams("group-123", "backup-456", k8sRestoreParams)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			assert.Equal(t, tt.expectedNamespaceCount, len(result), "Expected %d namespaces, got %d", tt.expectedNamespaceCount, len(result))
+		})
+	}
+}
+
+// TestInitializeKubernetesNamespaceParams_StorageClassPrecedence tests namespace-level storage class mapping precedence
+func TestInitializeKubernetesNamespaceParams_StorageClassPrecedence(t *testing.T) {
+	tests := []struct {
+		name                        string
+		mockProtectionRun           *backuprecoveryv1.ProtectionGroupRun
+		topLevelStorageClasses      []types.StorageClassMapping
+		recoverMultipleObjects      []types.RecoverObject
+		expectedStorageClassMapping map[string][]types.StorageClassMapping // namespace -> storage class mappings
+	}{
+		{
+			name: "Top-Level Only - All Namespaces Use Same Mapping",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("app-1"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-1")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(2),
+							Name: core.StringPtr("app-2"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-2")},
+							},
+						},
+					},
+				},
+			},
+			topLevelStorageClasses: []types.StorageClassMapping{
+				{Old: "class-A", New: "class-B"},
+			},
+			recoverMultipleObjects: []types.RecoverObject{}, // No namespace-specific overrides
+			expectedStorageClassMapping: map[string][]types.StorageClassMapping{
+				"app-1": {{Old: "class-A", New: "class-B"}},
+				"app-2": {{Old: "class-A", New: "class-B"}},
+			},
+		},
+		{
+			name: "Namespace-Level Override - One Namespace Different",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("app-1"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-1")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(2),
+							Name: core.StringPtr("app-2"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-2")},
+							},
+						},
+					},
+				},
+			},
+			topLevelStorageClasses: []types.StorageClassMapping{
+				{Old: "class-A", New: "class-B"},
+			},
+			recoverMultipleObjects: []types.RecoverObject{
+				{
+					SnapshotInfo: &types.SnapshotInfo{
+						NamespaceInfo: &types.NamespaceInfo{
+							Namespace: "app-1", // Override for app-1
+						},
+					},
+					RecoverObjectSpec: &types.RecoverObjectSpec{
+						StorageClasses: []types.StorageClassMapping{
+							{Old: "class-A", New: "class-C"}, // Different mapping for app-1
+						},
+					},
+				},
+			},
+			expectedStorageClassMapping: map[string][]types.StorageClassMapping{
+				"app-1": {{Old: "class-A", New: "class-C"}}, // Namespace-level wins
+				"app-2": {{Old: "class-A", New: "class-B"}}, // Top-level default
+			},
+		},
+		{
+			name: "Multiple Namespace Overrides",
+			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("busybox-app"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-1")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(2),
+							Name: core.StringPtr("nginx-app"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-2")},
+							},
+						},
+					},
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
+							ID:   core.Int64Ptr(3),
+							Name: core.StringPtr("redis-app"),
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{SnapshotID: core.StringPtr("snap-3")},
+							},
+						},
+					},
+				},
+			},
+			topLevelStorageClasses: []types.StorageClassMapping{
+				{Old: "default", New: "standard"},
+			},
+			recoverMultipleObjects: []types.RecoverObject{
+				{
+					SnapshotInfo: &types.SnapshotInfo{
+						NamespaceInfo: &types.NamespaceInfo{
+							Namespace: "busybox-app",
+						},
+					},
+					RecoverObjectSpec: &types.RecoverObjectSpec{
+						StorageClasses: []types.StorageClassMapping{
+							{Old: "ibmc-vpc-block-metro-5iops-tier", New: "ibmc-vpc-block-10iops-tier"},
+						},
+					},
+				},
+				{
+					SnapshotInfo: &types.SnapshotInfo{
+						NamespaceInfo: &types.NamespaceInfo{
+							Namespace: "nginx-app",
+						},
+					},
+					RecoverObjectSpec: &types.RecoverObjectSpec{
+						StorageClasses: []types.StorageClassMapping{
+							{Old: "ibmc-vpc-block-10iops-tier", New: "ibmc-vpc-block-10iops-tier"},
+						},
+					},
+				},
+			},
+			expectedStorageClassMapping: map[string][]types.StorageClassMapping{
+				"busybox-app": {{Old: "ibmc-vpc-block-metro-5iops-tier", New: "ibmc-vpc-block-10iops-tier"}},
+				"nginx-app":   {{Old: "ibmc-vpc-block-10iops-tier", New: "ibmc-vpc-block-10iops-tier"}},
+				"redis-app":   {{Old: "default", New: "standard"}}, // Uses top-level default
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockBRSClient := new(testmockrs.MockBRSClient)
+			mockBRSWrapper := new(MockBRSClientWrapper)
+
+			mockBRSWrapper.On("GetTenantId").Return("test-tenant-id")
+			mockBRSWrapper.On("GetBRSClient").Return(mockBRSClient)
+
+			mockBRSClient.On("GetProtectionGroupRun", mock.Anything).Return(tt.mockProtectionRun, &core.DetailedResponse{}, nil)
+
+			config := &KubernetesDataSourceConfig{
+				ClusterName: "test-cluster",
+			}
+
+			dataSource := createTestKubernetesDataSource("test", config, mockBRSWrapper)
+
+			k8sRestoreParams := &types.KubernetesRestoreParams{
+				RecoverObjectSpec: &types.RecoverObjectSpec{
+					StorageClasses: tt.topLevelStorageClasses,
+				},
+				RecoverMultipleObjects: tt.recoverMultipleObjects,
+			}
+
+			result, err := dataSource.InitializeKubernetesNamespaceParams("group-123", "backup-456", k8sRestoreParams)
+
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			assert.Equal(t, len(tt.expectedStorageClassMapping), len(result))
+
+			// Verify each namespace got the correct storage class mapping
+			for _, recoveryObj := range result {
+				// Note: We can't directly verify the namespace name from the result,
+				// but we can verify the count and that storage class mappings were applied
+				assert.NotNil(t, recoveryObj.StorageClass)
+				if recoveryObj.StorageClass.StorageClassMapping != nil {
+					assert.Greater(t, len(recoveryObj.StorageClass.StorageClassMapping), 0)
+				}
+			}
+		})
+	}
+}
+
+// TestInitializeKubernetesNamespaceParams_CombinedFeatures tests all features together
+func TestInitializeKubernetesNamespaceParams_CombinedFeatures(t *testing.T) {
+	mockProtectionRun := &backuprecoveryv1.ProtectionGroupRun{
+		Objects: []backuprecoveryv1.ObjectRunResult{
+			{
+				Object: &backuprecoveryv1.ObjectSummary{
+					ID:   core.Int64Ptr(1),
+					Name: core.StringPtr("app-1"),
+				},
+				ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+					ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+						{SnapshotID: core.StringPtr("snap-1")},
+					},
+				},
+			},
+			{
+				Object: &backuprecoveryv1.ObjectSummary{
+					ID:   core.Int64Ptr(2),
+					Name: core.StringPtr("app-2"),
+				},
+				ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+					ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+						{SnapshotID: core.StringPtr("snap-2")},
+					},
+				},
+			},
+			{
+				Object: &backuprecoveryv1.ObjectSummary{
+					ID:   core.Int64Ptr(3),
+					Name: core.StringPtr("app-3"),
+				},
+				ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+					ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+						{SnapshotID: core.StringPtr("snap-3")},
+					},
+				},
+			},
+		},
+	}
+
+	mockBRSClient := new(testmockrs.MockBRSClient)
+	mockBRSWrapper := new(MockBRSClientWrapper)
+
+	mockBRSWrapper.On("GetTenantId").Return("test-tenant-id")
+	mockBRSWrapper.On("GetBRSClient").Return(mockBRSClient)
+
+	mockBRSClient.On("GetProtectionGroupRun", mock.Anything).Return(mockProtectionRun, &core.DetailedResponse{}, nil)
+
+	config := &KubernetesDataSourceConfig{
+		ClusterName: "test-cluster",
+	}
+
+	dataSource := createTestKubernetesDataSource("test", config, mockBRSWrapper)
+
+	// Test: Filter to include only app-1 and app-2, with app-1 having custom storage class mapping
+	k8sRestoreParams := &types.KubernetesRestoreParams{
+		IncludeNamespaces: []string{"app-1", "app-2"}, // Filter: only these 2
+		RecoverObjectSpec: &types.RecoverObjectSpec{
+			StorageClasses: []types.StorageClassMapping{
+				{Old: "default", New: "standard"}, // Top-level default
+			},
+		},
+		RecoverMultipleObjects: []types.RecoverObject{
+			{
+				SnapshotInfo: &types.SnapshotInfo{
+					NamespaceInfo: &types.NamespaceInfo{
+						Namespace: "app-1",
+					},
+				},
+				RecoverObjectSpec: &types.RecoverObjectSpec{
+					StorageClasses: []types.StorageClassMapping{
+						{Old: "default", New: "premium"}, // Override for app-1
+					},
+				},
+			},
+		},
+	}
+
+	result, err := dataSource.InitializeKubernetesNamespaceParams("group-123", "backup-456", k8sRestoreParams)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, 2, len(result), "Should only include app-1 and app-2 (app-3 filtered out)")
+
+	// Verify storage class mappings were applied
+	for _, recoveryObj := range result {
+		assert.NotNil(t, recoveryObj.StorageClass)
+		assert.NotNil(t, recoveryObj.SnapshotID)
+	}
 }

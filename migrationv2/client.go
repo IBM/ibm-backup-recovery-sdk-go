@@ -12,7 +12,6 @@ import (
 	"context"
 	"fmt"
 
-	activity_tracker "github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/activity-tracker"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/config"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/errors"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/middlelevel"
@@ -39,25 +38,32 @@ type Client struct {
 	ConnectorFactory  connectors.ConnectorFactory
 }
 
-// NewClient creates a new SDK client
-// BRS instance is optional:
-// - If BRSInstanceCRN is provided, it will use the existing instance
-// - If BRSInstanceName is provided, it will get or create that instance
-// - If neither is provided, it will auto-create an instance with generated name
+// NewClient creates a new SDK client.
+// The BRS instance must already exist in IBM Cloud — this SDK does not create instances.
+// Exactly one of cfg.BRSInstanceCRN or cfg.BRSInstanceName must be set:
+//   - BRSInstanceCRN: instance is resolved directly by CRN (recommended — unambiguous)
+//   - BRSInstanceName: instance is looked up by name
 func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
-	// Validate configuration (includes logger validation)
+	if cfg == nil {
+		return nil, fmt.Errorf("config cannot be nil")
+	}
+
+	// Validate configuration before touching the network so a nil/missing APIKey
+	// never reaches GetAuth() and produces a nil authenticator.
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	// Get logger and metrics from config (will initialize if needed)
 	log := cfg.GetLogger()
 	metricsCollector := cfg.GetMetrics()
+	cfg.GetActivityTracker()
 
-	// Create resource controller manager with logger
 	resourceControllerManager := middlelevel.NewResourceControllerManager(cfg, log)
+	if resourceControllerManager == nil {
+		return nil, fmt.Errorf("failed to create resource controller manager: config is nil")
+	}
 
-	// Initialize resource controller instance (create)
+	// Initialize resource controller instance.
 	if err := resourceControllerManager.Initialize(ctx); err != nil {
 		return nil, fmt.Errorf(
 			"failed to initialize Resource Controller instance: %v",
@@ -80,9 +86,6 @@ func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
 	brsClient := brsManager.GetBRSClient()
 
 	sdkConfig := cfg.ToSDKConfig()
-	if sdkConfig.ActivityTrackerSink == nil {
-		sdkConfig.ActivityTrackerSink = activity_tracker.NoOpSink{}
-	}
 
 	// Create client
 	client := &Client{

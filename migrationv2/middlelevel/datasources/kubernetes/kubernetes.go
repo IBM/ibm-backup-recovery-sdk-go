@@ -149,6 +149,11 @@ func NewKubernetesDataSource(name string, config *KubernetesDataSourceConfig, br
 		log = logger.New(logConfig)
 	}
 
+	// Default metrics to NoOp if not provided
+	if config.Metrics == nil {
+		config.Metrics = metrics.NewNoop()
+	}
+
 	log.Info(ctx, "Creating Kubernetes data source",
 		"name", name,
 		"clusterName", config.ClusterName,
@@ -174,7 +179,7 @@ func NewKubernetesDataSource(name string, config *KubernetesDataSourceConfig, br
 		ClusterID:                  config.ClusterId,
 		ClusterName:                config.ClusterName,
 		ClusterEndpoint:            config.ClusterEndpoint,
-		Namespace:                  "config",
+		Namespace:                  config.IncludeNamespace,
 		KubeConfig:                 "",
 		KubernetesProtectionParams: config.KubernetesProtectionParams,
 		KubernetesRestoreParams:    config.KubernetesRestoreParams,
@@ -338,6 +343,10 @@ func (k *KubernetesDataSource) CreateProtectionGroup(ctx context.Context, regist
 	protectionGroupOptions := &backuprecoveryv1.CreateProtectionGroupOptions{
 		Environment:      &env,
 		KubernetesParams: k8sParams,
+	}
+
+	if groupParams.Settings != nil && groupParams.Settings.PauseFutureRuns {
+		protectionGroupOptions.IsPaused = core.BoolPtr(true)
 	}
 
 	return protectionGroupOptions, nil
