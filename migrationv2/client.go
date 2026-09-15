@@ -12,8 +12,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/IBM/go-sdk-core/v5/core"
+	activity_tracker "github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/activity-tracker"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/config"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/errors"
+	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/logger"
+	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/metrics"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/middlelevel"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/middlelevel/connectors"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/middlelevel/datasources"
@@ -54,9 +58,52 @@ func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
 		return nil, err
 	}
 
-	log := cfg.GetLogger()
-	metricsCollector := cfg.GetMetrics()
-	cfg.GetActivityTracker()
+	// Initialize logger
+	var log logger.Logger
+	if cfg.Logger != nil {
+		log = cfg.Logger
+	} else if !cfg.EnableLogging {
+		log = logger.NewNoOpLogger()
+	} else if cfg.LoggerConfig != nil {
+		log = logger.New(*cfg.LoggerConfig)
+	} else if cfg.UseDefaultLogger {
+		defaultLogConfig := logger.DefaultConfig()
+		defaultLogConfig.ServiceName = "brs-migration-sdk"
+		defaultLogConfig.Environment = "production"
+		defaultLogConfig.Level = "info"
+		log = logger.New(defaultLogConfig)
+	} else {
+		log = logger.NewNoOpLogger()
+	}
+
+	// Initialize metrics
+	var metricsCollector metrics.Metrics
+	if cfg.EnableMetrics && cfg.PrometheusConfig != nil {
+		metricsCollector = metrics.NewPrometheus(*cfg.PrometheusConfig)
+	} else {
+		metricsCollector = metrics.NewNoop()
+	}
+	cfg.SetMetrics(metricsCollector)
+
+	// Initialize activity tracker
+	var activityTrackerSink activity_tracker.Sink
+	if cfg.EnableActivityTracker && cfg.ActivityTrackerConfig != nil {
+		sinkCfg := *cfg.ActivityTrackerConfig
+		if sinkCfg.IAMAuthenticator == nil {
+			if auth, ok := cfg.GetAuth().(*core.IamAuthenticator); ok {
+				sinkCfg.IAMAuthenticator = auth
+			}
+		}
+		sink, err := activity_tracker.NewHTTPSink(sinkCfg)
+		if err == nil {
+			activityTrackerSink = sink
+		} else {
+			activityTrackerSink = activity_tracker.NoOpSink{}
+		}
+	} else {
+		activityTrackerSink = activity_tracker.NoOpSink{}
+	}
+	cfg.SetActivityTrackerSink(activityTrackerSink)
 
 	resourceControllerManager := middlelevel.NewResourceControllerManager(cfg, log)
 	if resourceControllerManager == nil {

@@ -41,7 +41,12 @@ type Config struct {
 	EnableTaskAPI     bool // Enable task-based APIs (for IKS/ROKS e2e tests)
 
 	// IAMEndpoint overrides the default IBM Cloud IAM endpoint (optional).
+	// Example: "https://iam.test.cloud.ibm.com" for staging.
 	IAMEndpoint string
+
+	// ResourceControllerEndpoint overrides the default IBM Cloud Resource Controller endpoint (optional).
+	// Example: "https://resource-controller.test.cloud.ibm.com" for staging.
+	ResourceControllerEndpoint string
 
 	// TenantId is the BRS tenant identifier.
 	// WARNING: if provided manually and it does not match the BRS instance's
@@ -252,22 +257,30 @@ func (c *Config) initializeActivityTracker() {
 	c.activityTrackerSink = activity_tracker.NoOpSink{}
 }
 
-// GetMetrics returns the fully initialised metrics instance.
-// On the first call it builds a PrometheusMetrics from PrometheusConfig when
-// EnableMetrics=true, or falls back to a no-op implementation.
-// Subsequent calls return the same instance.
+// GetMetrics returns the fully initialised metrics instance, initializing it
+// lazily on first call if not already set via SetMetrics.
 func (c *Config) GetMetrics() metrics.Metrics {
 	c.initializeMetrics()
 	return c.metrics
 }
 
-// GetActivityTracker returns the fully initialised activity tracker sink.
-// On the first call it builds an HTTPSink from ActivityTrackerConfig when
-// EnableActivityTracker=true, or falls back to a no-op implementation.
-// Subsequent calls return the same instance.
+// SetMetrics stores a pre-built metrics instance. Called by NewClient after
+// building the instance itself so the value is available via ToSDKConfig.
+func (c *Config) SetMetrics(m metrics.Metrics) {
+	c.metrics = m
+}
+
+// GetActivityTracker returns the fully initialised activity tracker sink,
+// initializing it lazily on first call if not already set via SetActivityTrackerSink.
 func (c *Config) GetActivityTracker() activity_tracker.Sink {
 	c.initializeActivityTracker()
 	return c.activityTrackerSink
+}
+
+// SetActivityTrackerSink stores a pre-built activity tracker sink. Called by
+// NewClient after building the instance itself so the value is available via ToSDKConfig.
+func (c *Config) SetActivityTrackerSink(sink activity_tracker.Sink) {
+	c.activityTrackerSink = sink
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +314,18 @@ func (c *Config) WithBRSInstanceCRN(crn string) *Config {
 // WithResourceGroupID sets the resource group ID
 func (c *Config) WithResourceGroupID(id string) *Config {
 	c.ResourceGroupID = id
+	return c
+}
+
+// WithIAMEndpoint overrides the IAM endpoint (e.g. staging).
+func (c *Config) WithIAMEndpoint(url string) *Config {
+	c.IAMEndpoint = url
+	return c
+}
+
+// WithResourceControllerEndpoint overrides the Resource Controller endpoint (e.g. staging).
+func (c *Config) WithResourceControllerEndpoint(url string) *Config {
+	c.ResourceControllerEndpoint = url
 	return c
 }
 
@@ -393,10 +418,15 @@ func (c *Config) WithAccountID(accountID string) *Config {
 // Helpers
 // ---------------------------------------------------------------------------
 
+// GetAuth returns an IamAuthenticator for the configured API key.
+// When IAMEndpoint is set it is propagated to the authenticator so every
+// SDK client that uses this authenticator (Resource Controller, BRS, IKS, …)
+// hits the correct IAM endpoint rather than the production default.
 func (c *Config) GetAuth() core.Authenticator {
 	if c.APIKey != "" {
 		return &core.IamAuthenticator{
 			ApiKey: c.APIKey,
+			URL:    c.IAMEndpoint, // empty string is fine; SDK uses default when empty
 		}
 	}
 

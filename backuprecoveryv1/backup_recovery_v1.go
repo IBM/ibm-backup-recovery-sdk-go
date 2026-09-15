@@ -1979,6 +1979,166 @@ func (backupRecoveryConnector *BackupRecoveryV1Connector) GetDataSourceConnector
 	return
 }
 
+// GetBatchVaultsFailoverStatus : Get the status of latest failover for the all specified Backup and Recovery instances. Here the Backup and Recovery instance refers to the vault
+// Gets the status of latest failover of all Protection Groups and Policies for the all specified Backup and Recovery
+// instances i.e. vaults.
+func (backupRecovery *BackupRecoveryV1) GetBatchVaultsFailoverStatus(getBatchVaultsFailoverStatusOptions *GetBatchVaultsFailoverStatusOptions) (result *GetBatchVaultFailoverStatus, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.GetBatchVaultsFailoverStatusWithContext(context.Background(), getBatchVaultsFailoverStatusOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// GetBatchVaultsFailoverStatusWithContext is an alternate form of the GetBatchVaultsFailoverStatus method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) GetBatchVaultsFailoverStatusWithContext(ctx context.Context, getBatchVaultsFailoverStatusOptions *GetBatchVaultsFailoverStatusOptions) (result *GetBatchVaultFailoverStatus, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(getBatchVaultsFailoverStatusOptions, "getBatchVaultsFailoverStatusOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(getBatchVaultsFailoverStatusOptions, "getBatchVaultsFailoverStatusOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	builder := core.NewRequestBuilder(core.GET)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/failovers`, nil)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range getBatchVaultsFailoverStatusOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "GetBatchVaultsFailoverStatus")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	if getBatchVaultsFailoverStatusOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*getBatchVaultsFailoverStatusOptions.XIBMTenantID))
+	}
+
+	builder.AddQuery("cloudType", fmt.Sprint(*getBatchVaultsFailoverStatusOptions.CloudType))
+	err = builder.AddQuerySlice("vaultIds", getBatchVaultsFailoverStatusOptions.VaultIds)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "add-query-slice-error", common.GetComponentInfo())
+		return
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "GetBatchVaultsFailoverStatus", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalGetBatchVaultFailoverStatus)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
+// InitVaultsFailover : Initiate a failover for the specified Backup and Recovery instance. Here the Backup and Recovery instance refers to the vault
+// Initiates a failover of all Protection Groups and Policies that use a given vault as a secondary target. This
+// operation is supported only for IBM Cloud Backup and Recovery instances as of now and can only from the secondary
+// site.
+func (backupRecovery *BackupRecoveryV1) InitVaultsFailover(initVaultsFailoverOptions *InitVaultsFailoverOptions) (result *VaultFailover, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.InitVaultsFailoverWithContext(context.Background(), initVaultsFailoverOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// InitVaultsFailoverWithContext is an alternate form of the InitVaultsFailover method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) InitVaultsFailoverWithContext(ctx context.Context, initVaultsFailoverOptions *InitVaultsFailoverOptions) (result *VaultFailover, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(initVaultsFailoverOptions, "initVaultsFailoverOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(initVaultsFailoverOptions, "initVaultsFailoverOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	builder := core.NewRequestBuilder(core.POST)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/failovers`, nil)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range initVaultsFailoverOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "InitVaultsFailover")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	builder.AddHeader("Content-Type", "application/json")
+	if initVaultsFailoverOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*initVaultsFailoverOptions.XIBMTenantID))
+	}
+
+	body := make(map[string]interface{})
+	if initVaultsFailoverOptions.CloudType != nil {
+		body["cloudType"] = initVaultsFailoverOptions.CloudType
+	}
+	if initVaultsFailoverOptions.FailoverRequestParams != nil {
+		body["failoverRequestParams"] = initVaultsFailoverOptions.FailoverRequestParams
+	}
+	_, err = builder.SetBodyContentJSON(body)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "set-json-body-error", common.GetComponentInfo())
+		return
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "InitVaultsFailover", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalVaultFailover)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
 // GetObjectSnapshots : List the snapshots for a given object
 // List the snapshots for a given object.
 func (backupRecovery *BackupRecoveryV1) GetObjectSnapshots(getObjectSnapshotsOptions *GetObjectSnapshotsOptions) (result *GetObjectSnapshotsResponse, response *core.DetailedResponse, err error) {
@@ -2775,6 +2935,9 @@ func (backupRecovery *BackupRecoveryV1) CreateProtectionGroupWithContext(ctx con
 	if createProtectionGroupOptions.IsPaused != nil {
 		body["isPaused"] = createProtectionGroupOptions.IsPaused
 	}
+	if createProtectionGroupOptions.PausedNote != nil {
+		body["pausedNote"] = createProtectionGroupOptions.PausedNote
+	}
 	if createProtectionGroupOptions.AdvancedConfigs != nil {
 		body["advancedConfigs"] = createProtectionGroupOptions.AdvancedConfigs
 	}
@@ -2993,6 +3156,9 @@ func (backupRecovery *BackupRecoveryV1) UpdateProtectionGroupWithContext(ctx con
 	}
 	if updateProtectionGroupOptions.IsPaused != nil {
 		body["isPaused"] = updateProtectionGroupOptions.IsPaused
+	}
+	if updateProtectionGroupOptions.PausedNote != nil {
+		body["pausedNote"] = updateProtectionGroupOptions.PausedNote
 	}
 	if updateProtectionGroupOptions.AdvancedConfigs != nil {
 		body["advancedConfigs"] = updateProtectionGroupOptions.AdvancedConfigs
@@ -4219,6 +4385,166 @@ func (backupRecovery *BackupRecoveryV1) DownloadIndexedFileWithContext(ctx conte
 		core.EnrichHTTPProblem(err, "DownloadIndexedFile", getServiceComponentInfo())
 		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
 		return
+	}
+
+	return
+}
+
+// GetBatchVaultRecoveryScanStatus : Get the status of latest recovery scan for the all specified Backup and Recovery instances. Here the Backup and Recovery instance refers to the vault
+// Gets the status of latest recovery scan for the all specified Backup and Recovery instances.
+func (backupRecovery *BackupRecoveryV1) GetBatchVaultRecoveryScanStatus(getBatchVaultRecoveryScanStatusOptions *GetBatchVaultRecoveryScanStatusOptions) (result *GetBatchVaultRecoveryScanStatus, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.GetBatchVaultRecoveryScanStatusWithContext(context.Background(), getBatchVaultRecoveryScanStatusOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// GetBatchVaultRecoveryScanStatusWithContext is an alternate form of the GetBatchVaultRecoveryScanStatus method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) GetBatchVaultRecoveryScanStatusWithContext(ctx context.Context, getBatchVaultRecoveryScanStatusOptions *GetBatchVaultRecoveryScanStatusOptions) (result *GetBatchVaultRecoveryScanStatus, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(getBatchVaultRecoveryScanStatusOptions, "getBatchVaultRecoveryScanStatusOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(getBatchVaultRecoveryScanStatusOptions, "getBatchVaultRecoveryScanStatusOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	builder := core.NewRequestBuilder(core.GET)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/recovery-scans`, nil)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range getBatchVaultRecoveryScanStatusOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "GetBatchVaultRecoveryScanStatus")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	if getBatchVaultRecoveryScanStatusOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*getBatchVaultRecoveryScanStatusOptions.XIBMTenantID))
+	}
+
+	builder.AddQuery("cloudType", fmt.Sprint(*getBatchVaultRecoveryScanStatusOptions.CloudType))
+	if getBatchVaultRecoveryScanStatusOptions.VaultIds != nil {
+		err = builder.AddQuerySlice("vaultIds", getBatchVaultRecoveryScanStatusOptions.VaultIds)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "add-query-slice-error", common.GetComponentInfo())
+			return
+		}
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "GetBatchVaultRecoveryScanStatus", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalGetBatchVaultRecoveryScanStatus)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
+	}
+
+	return
+}
+
+// VaultRecoveryScan : Initiate a recovery scan on the specified Backup and Recovery instance. Here the Backup and Recovery instance refers to the vault
+// Initiates a recovery scan for the specified Backup and Recovery instance. This scan identifies protections and
+// policies that have this instance set as a backup copy location. The scan may take a few hours to complete.
+func (backupRecovery *BackupRecoveryV1) VaultRecoveryScan(vaultRecoveryScanOptions *VaultRecoveryScanOptions) (result *RecoveryScan, response *core.DetailedResponse, err error) {
+	result, response, err = backupRecovery.VaultRecoveryScanWithContext(context.Background(), vaultRecoveryScanOptions)
+	err = core.RepurposeSDKProblem(err, "")
+	return
+}
+
+// VaultRecoveryScanWithContext is an alternate form of the VaultRecoveryScan method which supports a Context parameter
+func (backupRecovery *BackupRecoveryV1) VaultRecoveryScanWithContext(ctx context.Context, vaultRecoveryScanOptions *VaultRecoveryScanOptions) (result *RecoveryScan, response *core.DetailedResponse, err error) {
+	err = core.ValidateNotNil(vaultRecoveryScanOptions, "vaultRecoveryScanOptions cannot be nil")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "unexpected-nil-param", common.GetComponentInfo())
+		return
+	}
+	err = core.ValidateStruct(vaultRecoveryScanOptions, "vaultRecoveryScanOptions")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "struct-validation-error", common.GetComponentInfo())
+		return
+	}
+
+	builder := core.NewRequestBuilder(core.POST)
+	builder = builder.WithContext(ctx)
+	builder.EnableGzipCompression = backupRecovery.GetEnableGzipCompression()
+	_, err = builder.ResolveRequestURL(backupRecovery.Service.Options.URL, `/data-protect/recovery-scans`, nil)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "url-resolve-error", common.GetComponentInfo())
+		return
+	}
+
+	for headerName, headerValue := range vaultRecoveryScanOptions.Headers {
+		builder.AddHeader(headerName, headerValue)
+	}
+
+	sdkHeaders := common.GetSdkHeaders("backup_recovery", "V1", "VaultRecoveryScan")
+	for headerName, headerValue := range sdkHeaders {
+		builder.AddHeader(headerName, headerValue)
+	}
+	builder.AddHeader("Accept", "application/json")
+	builder.AddHeader("Content-Type", "application/json")
+	if vaultRecoveryScanOptions.XIBMTenantID != nil {
+		builder.AddHeader("X-IBM-Tenant-Id", fmt.Sprint(*vaultRecoveryScanOptions.XIBMTenantID))
+	}
+
+	body := make(map[string]interface{})
+	if vaultRecoveryScanOptions.CloudType != nil {
+		body["cloudType"] = vaultRecoveryScanOptions.CloudType
+	}
+	if vaultRecoveryScanOptions.RecoveryScanRequestParams != nil {
+		body["recoveryScanRequestParams"] = vaultRecoveryScanOptions.RecoveryScanRequestParams
+	}
+	_, err = builder.SetBodyContentJSON(body)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "set-json-body-error", common.GetComponentInfo())
+		return
+	}
+
+	request, err := builder.Build()
+	if err != nil {
+		err = core.SDKErrorf(err, "", "build-error", common.GetComponentInfo())
+		return
+	}
+
+	var rawResponse map[string]json.RawMessage
+	response, err = backupRecovery.Service.Request(request, &rawResponse)
+	if err != nil {
+		core.EnrichHTTPProblem(err, "VaultRecoveryScan", getServiceComponentInfo())
+		err = core.SDKErrorf(err, "", "http-request-err", common.GetComponentInfo())
+		return
+	}
+	if rawResponse != nil {
+		err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalRecoveryScan)
+		if err != nil {
+			err = core.SDKErrorf(err, "", "unmarshal-resp-error", common.GetComponentInfo())
+			return
+		}
+		response.Result = result
 	}
 
 	return
@@ -8950,6 +9276,58 @@ func UnmarshalBackupRunSummary(m map[string]json.RawMessage, result interface{})
 	return
 }
 
+// BatchVaultFailoverStatus : Specifies the status of failovers for multiple Backup and Recovery instances.
+type BatchVaultFailoverStatus struct {
+	// Specifies the status of a vault Failover.
+	Status *VaultFailoverStatus `json:"status,omitempty"`
+
+	// Specifies the unique id of the Backup and Recovery instance.
+	VaultID *int64 `json:"vaultId,omitempty"`
+}
+
+// UnmarshalBatchVaultFailoverStatus unmarshals an instance of BatchVaultFailoverStatus from the specified map of raw messages.
+func UnmarshalBatchVaultFailoverStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(BatchVaultFailoverStatus)
+	err = core.UnmarshalModel(m, "status", &obj.Status, UnmarshalVaultFailoverStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "vaultId", &obj.VaultID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vaultId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// BatchVaultRecoveryScanStatus : Specifies the status of recovery scans for multiple Backup and Recovery instances.
+type BatchVaultRecoveryScanStatus struct {
+	// Specifies the status of a Recovery Scan.
+	Status *RecoveryScanStatus `json:"status,omitempty"`
+
+	// Specifies the unique id of the Backup and Recovery instance.
+	VaultID *int64 `json:"vaultId,omitempty"`
+}
+
+// UnmarshalBatchVaultRecoveryScanStatus unmarshals an instance of BatchVaultRecoveryScanStatus from the specified map of raw messages.
+func UnmarshalBatchVaultRecoveryScanStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(BatchVaultRecoveryScanStatus)
+	err = core.UnmarshalModel(m, "status", &obj.Status, UnmarshalRecoveryScanStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "vaultId", &obj.VaultID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vaultId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // BlackoutWindow : Specifies a time range in a single day when new Protection Group Runs of Protection Groups cannot be started. For
 // example, a Protection Group with a daily schedule could define a blackout period for Sunday.
 type BlackoutWindow struct {
@@ -12511,6 +12889,9 @@ type CreateProtectionGroupOptions struct {
 	// run if any is not impacted.
 	IsPaused *bool `json:"isPaused,omitempty"`
 
+	// A note from the current user explaining the reason for pausing future runs, if applicable.
+	PausedNote *string `json:"pausedNote,omitempty"`
+
 	// Specifies the advanced configuration for a protection job.
 	AdvancedConfigs []KeyValuePair `json:"advancedConfigs,omitempty"`
 
@@ -12648,6 +13029,12 @@ func (_options *CreateProtectionGroupOptions) SetPauseInBlackouts(pauseInBlackou
 // SetIsPaused : Allow user to set IsPaused
 func (_options *CreateProtectionGroupOptions) SetIsPaused(isPaused bool) *CreateProtectionGroupOptions {
 	_options.IsPaused = core.BoolPtr(isPaused)
+	return _options
+}
+
+// SetPausedNote : Allow user to set PausedNote
+func (_options *CreateProtectionGroupOptions) SetPausedNote(pausedNote string) *CreateProtectionGroupOptions {
+	_options.PausedNote = core.StringPtr(pausedNote)
 	return _options
 }
 
@@ -15679,6 +16066,36 @@ func UnmarshalFailedRunDetails(m map[string]json.RawMessage, result interface{})
 	return
 }
 
+// FailoverRequestParams : Specifies the parameters specific to the Backup and Recovery instance. viz the vault.
+type FailoverRequestParams struct {
+	// Specifies the unique id of the IBM Cloud Backup and Recovery instance for which the failover is to be initiated.
+	VaultID *int64 `json:"vaultId" validate:"required"`
+}
+
+// NewFailoverRequestParams : Instantiate FailoverRequestParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewFailoverRequestParams(vaultID int64) (_model *FailoverRequestParams, err error) {
+	_model = &FailoverRequestParams{
+		VaultID: core.Int64Ptr(vaultID),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalFailoverRequestParams unmarshals an instance of FailoverRequestParams from the specified map of raw messages.
+func UnmarshalFailoverRequestParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(FailoverRequestParams)
+	err = core.UnmarshalPrimitive(m, "vaultId", &obj.VaultID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vaultId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // File : Specifies a File.
 type File struct {
 	// Specifies tag applied to the object.
@@ -16414,6 +16831,171 @@ func (_options *GenerateDataSourceConnectionRegistrationTokenOptions) SetXIBMTen
 
 // SetHeaders : Allow user to set Headers
 func (options *GenerateDataSourceConnectionRegistrationTokenOptions) SetHeaders(param map[string]string) *GenerateDataSourceConnectionRegistrationTokenOptions {
+	options.Headers = param
+	return options
+}
+
+// GetBatchVaultFailoverStatus : Specifies the batch failover status for multiple Backup and Recovery instances.
+type GetBatchVaultFailoverStatus struct {
+	// Specifies the error message if the batch failover status retrieval failed.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
+	// Array of failover statuses for the specified Backup and Recovery instances.
+	FailoverStatuses []BatchVaultFailoverStatus `json:"failoverStatuses,omitempty"`
+}
+
+// UnmarshalGetBatchVaultFailoverStatus unmarshals an instance of GetBatchVaultFailoverStatus from the specified map of raw messages.
+func UnmarshalGetBatchVaultFailoverStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetBatchVaultFailoverStatus)
+	err = core.UnmarshalPrimitive(m, "errorMessage", &obj.ErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "failoverStatuses", &obj.FailoverStatuses, UnmarshalBatchVaultFailoverStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "failoverStatuses-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetBatchVaultRecoveryScanStatus : Specifies the status of recovery scans for multiple Backup and Recovery instances.
+type GetBatchVaultRecoveryScanStatus struct {
+	// Specifies the error message if the batch recovery scan status retrieval failed.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
+	// Array of recovery scan statuses for the specified Backup and Recovery instances.
+	RecoveryScanStatuses []BatchVaultRecoveryScanStatus `json:"recoveryScanStatuses,omitempty"`
+}
+
+// UnmarshalGetBatchVaultRecoveryScanStatus unmarshals an instance of GetBatchVaultRecoveryScanStatus from the specified map of raw messages.
+func UnmarshalGetBatchVaultRecoveryScanStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(GetBatchVaultRecoveryScanStatus)
+	err = core.UnmarshalPrimitive(m, "errorMessage", &obj.ErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoveryScanStatuses", &obj.RecoveryScanStatuses, UnmarshalBatchVaultRecoveryScanStatus)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryScanStatuses-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// GetBatchVaultRecoveryScanStatusOptions : The GetBatchVaultRecoveryScanStatus options.
+type GetBatchVaultRecoveryScanStatusOptions struct {
+	// Specifies the cloud environment type where the Backup and Recovery instance is used. Currently, only 'ibm' is
+	// supported for recover scans.
+	CloudType *string `json:"cloudType" validate:"required"`
+
+	// Specifies the unique id of the tenant.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Specifies the unique ids of the Backup and Recovery instances for which the latest recovery scan status is to be
+	// fetched.
+	VaultIds []int64 `json:"vaultIds,omitempty"`
+
+	// Allows users to set headers on API requests
+	Headers map[string]string
+}
+
+// Constants associated with the GetBatchVaultRecoveryScanStatusOptions.CloudType property.
+// Specifies the cloud environment type where the Backup and Recovery instance is used. Currently, only 'ibm' is
+// supported for recover scans.
+const (
+	GetBatchVaultRecoveryScanStatusOptions_CloudType_Ibm = "ibm"
+)
+
+// NewGetBatchVaultRecoveryScanStatusOptions : Instantiate GetBatchVaultRecoveryScanStatusOptions
+func (*BackupRecoveryV1) NewGetBatchVaultRecoveryScanStatusOptions(cloudType string, xIBMTenantID string) *GetBatchVaultRecoveryScanStatusOptions {
+	return &GetBatchVaultRecoveryScanStatusOptions{
+		CloudType:    core.StringPtr(cloudType),
+		XIBMTenantID: core.StringPtr(xIBMTenantID),
+	}
+}
+
+// SetCloudType : Allow user to set CloudType
+func (_options *GetBatchVaultRecoveryScanStatusOptions) SetCloudType(cloudType string) *GetBatchVaultRecoveryScanStatusOptions {
+	_options.CloudType = core.StringPtr(cloudType)
+	return _options
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *GetBatchVaultRecoveryScanStatusOptions) SetXIBMTenantID(xIBMTenantID string) *GetBatchVaultRecoveryScanStatusOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetVaultIds : Allow user to set VaultIds
+func (_options *GetBatchVaultRecoveryScanStatusOptions) SetVaultIds(vaultIds []int64) *GetBatchVaultRecoveryScanStatusOptions {
+	_options.VaultIds = vaultIds
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *GetBatchVaultRecoveryScanStatusOptions) SetHeaders(param map[string]string) *GetBatchVaultRecoveryScanStatusOptions {
+	options.Headers = param
+	return options
+}
+
+// GetBatchVaultsFailoverStatusOptions : The GetBatchVaultsFailoverStatus options.
+type GetBatchVaultsFailoverStatusOptions struct {
+	// Specifies the cloud environment type where the Backup and Recovery instance is used. Currently, only 'ibm' is
+	// supported for failovers.
+	CloudType *string `json:"cloudType" validate:"required"`
+
+	// Specifies the unique ids of the Backup and Recovery instances i.e. vaults for which the latest failover status is to
+	// be fetched.
+	VaultIds []int64 `json:"vaultIds" validate:"required"`
+
+	// Specifies the unique id of the tenant.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Allows users to set headers on API requests
+	Headers map[string]string
+}
+
+// Constants associated with the GetBatchVaultsFailoverStatusOptions.CloudType property.
+// Specifies the cloud environment type where the Backup and Recovery instance is used. Currently, only 'ibm' is
+// supported for failovers.
+const (
+	GetBatchVaultsFailoverStatusOptions_CloudType_Ibm = "ibm"
+)
+
+// NewGetBatchVaultsFailoverStatusOptions : Instantiate GetBatchVaultsFailoverStatusOptions
+func (*BackupRecoveryV1) NewGetBatchVaultsFailoverStatusOptions(cloudType string, vaultIds []int64, xIBMTenantID string) *GetBatchVaultsFailoverStatusOptions {
+	return &GetBatchVaultsFailoverStatusOptions{
+		CloudType:    core.StringPtr(cloudType),
+		VaultIds:     vaultIds,
+		XIBMTenantID: core.StringPtr(xIBMTenantID),
+	}
+}
+
+// SetCloudType : Allow user to set CloudType
+func (_options *GetBatchVaultsFailoverStatusOptions) SetCloudType(cloudType string) *GetBatchVaultsFailoverStatusOptions {
+	_options.CloudType = core.StringPtr(cloudType)
+	return _options
+}
+
+// SetVaultIds : Allow user to set VaultIds
+func (_options *GetBatchVaultsFailoverStatusOptions) SetVaultIds(vaultIds []int64) *GetBatchVaultsFailoverStatusOptions {
+	_options.VaultIds = vaultIds
+	return _options
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *GetBatchVaultsFailoverStatusOptions) SetXIBMTenantID(xIBMTenantID string) *GetBatchVaultsFailoverStatusOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *GetBatchVaultsFailoverStatusOptions) SetHeaders(param map[string]string) *GetBatchVaultsFailoverStatusOptions {
 	options.Headers = param
 	return options
 }
@@ -20197,6 +20779,59 @@ func UnmarshalIndexingPolicy(m map[string]json.RawMessage, result interface{}) (
 	return
 }
 
+// InitVaultsFailoverOptions : The InitVaultsFailover options.
+type InitVaultsFailoverOptions struct {
+	// Specifies the unique id of the tenant.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Specifies the type of the Backup and Recovery instance. Currently, only 'ibm' is supported.
+	CloudType *string `json:"cloudType" validate:"required"`
+
+	// Specifies the parameters specific to the Backup and Recovery instance. viz the vault.
+	FailoverRequestParams *FailoverRequestParams `json:"failoverRequestParams,omitempty"`
+
+	// Allows users to set headers on API requests
+	Headers map[string]string
+}
+
+// Constants associated with the InitVaultsFailoverOptions.CloudType property.
+// Specifies the type of the Backup and Recovery instance. Currently, only 'ibm' is supported.
+const (
+	InitVaultsFailoverOptions_CloudType_Ibm = "ibm"
+)
+
+// NewInitVaultsFailoverOptions : Instantiate InitVaultsFailoverOptions
+func (*BackupRecoveryV1) NewInitVaultsFailoverOptions(xIBMTenantID string, cloudType string) *InitVaultsFailoverOptions {
+	return &InitVaultsFailoverOptions{
+		XIBMTenantID: core.StringPtr(xIBMTenantID),
+		CloudType:    core.StringPtr(cloudType),
+	}
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *InitVaultsFailoverOptions) SetXIBMTenantID(xIBMTenantID string) *InitVaultsFailoverOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetCloudType : Allow user to set CloudType
+func (_options *InitVaultsFailoverOptions) SetCloudType(cloudType string) *InitVaultsFailoverOptions {
+	_options.CloudType = core.StringPtr(cloudType)
+	return _options
+}
+
+// SetFailoverRequestParams : Allow user to set FailoverRequestParams
+func (_options *InitVaultsFailoverOptions) SetFailoverRequestParams(failoverRequestParams *FailoverRequestParams) *InitVaultsFailoverOptions {
+	_options.FailoverRequestParams = failoverRequestParams
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *InitVaultsFailoverOptions) SetHeaders(param map[string]string) *InitVaultsFailoverOptions {
+	options.Headers = param
+	return options
+}
+
 // IsilonObjectParams : Specifies the common parameters for Isilon objects.
 type IsilonObjectParams struct {
 	// Specifies a list of NAS mount protocols supported by this object.
@@ -20408,7 +21043,7 @@ const (
 // The type of the entity for which the label filters are specified. Example: kPersistentVolumeClaim or kVirtualMachine.
 const (
 	KubernetesFilterParams_LabelFilterEntityType_Kpersistentvolumeclaim = "kPersistentVolumeClaim"
-	KubernetesFilterParams_LabelFilterEntityType_Kvirtualmachine = "kVirtualMachine"
+	KubernetesFilterParams_LabelFilterEntityType_Kvirtualmachine        = "kVirtualMachine"
 )
 
 // UnmarshalKubernetesFilterParams unmarshals an instance of KubernetesFilterParams from the specified map of raw messages.
@@ -21745,10 +22380,9 @@ const (
 )
 
 // NewKubernetesSourceRegistrationParams : Instantiate KubernetesSourceRegistrationParams (Generic Model Constructor)
-func (*BackupRecoveryV1) NewKubernetesSourceRegistrationParams(clientPrivateKey string, dataMoverImageLocation string, endpoint string, kubernetesDistribution string) (_model *KubernetesSourceRegistrationParams, err error) {
+func (*BackupRecoveryV1) NewKubernetesSourceRegistrationParams(clientPrivateKey string, endpoint string, kubernetesDistribution string) (_model *KubernetesSourceRegistrationParams, err error) {
 	_model = &KubernetesSourceRegistrationParams{
 		ClientPrivateKey:       core.StringPtr(clientPrivateKey),
-		DataMoverImageLocation: core.StringPtr(dataMoverImageLocation),
 		Endpoint:               core.StringPtr(endpoint),
 		KubernetesDistribution: core.StringPtr(kubernetesDistribution),
 	}
@@ -33023,6 +33657,144 @@ func UnmarshalRecoveryRequestParamsKubernetesParams(m map[string]json.RawMessage
 	return
 }
 
+// RecoveryScan : Specifies the details of a Recovery Scan.
+type RecoveryScan struct {
+	// Specifies the cloud type where the vault is registered for recovery scan. Currently, only 'ibm' is supported.
+	CloudType *string `json:"cloudType" validate:"required"`
+
+	// Specifies the parameters specific to the Backup and Recovery instance. which is the vault.
+	RecoveryScanRequestParams *RecoveryScanRequestParams `json:"recoveryScanRequestParams,omitempty"`
+
+	// Specifies the unique id of the recovery scan.
+	Uid *string `json:"uid,omitempty"`
+}
+
+// Constants associated with the RecoveryScan.CloudType property.
+// Specifies the cloud type where the vault is registered for recovery scan. Currently, only 'ibm' is supported.
+const (
+	RecoveryScan_CloudType_Ibm = "ibm"
+)
+
+// UnmarshalRecoveryScan unmarshals an instance of RecoveryScan from the specified map of raw messages.
+func UnmarshalRecoveryScan(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoveryScan)
+	err = core.UnmarshalPrimitive(m, "cloudType", &obj.CloudType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cloudType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "recoveryScanRequestParams", &obj.RecoveryScanRequestParams, UnmarshalRecoveryScanRequestParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "recoveryScanRequestParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uid", &obj.Uid)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoveryScanRequestParams : Specifies the parameters specific to the Backup and Recovery instance. which is the vault.
+type RecoveryScanRequestParams struct {
+	// Specifies the unique id of the IBM Cloud Backup and Recovery instance for which the recovery scan is to be
+	// initiated.
+	VaultID *int64 `json:"vaultId" validate:"required"`
+}
+
+// NewRecoveryScanRequestParams : Instantiate RecoveryScanRequestParams (Generic Model Constructor)
+func (*BackupRecoveryV1) NewRecoveryScanRequestParams(vaultID int64) (_model *RecoveryScanRequestParams, err error) {
+	_model = &RecoveryScanRequestParams{
+		VaultID: core.Int64Ptr(vaultID),
+	}
+	err = core.ValidateStruct(_model, "required parameters")
+	if err != nil {
+		err = core.SDKErrorf(err, "", "model-missing-required", common.GetComponentInfo())
+	}
+	return
+}
+
+// UnmarshalRecoveryScanRequestParams unmarshals an instance of RecoveryScanRequestParams from the specified map of raw messages.
+func UnmarshalRecoveryScanRequestParams(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoveryScanRequestParams)
+	err = core.UnmarshalPrimitive(m, "vaultId", &obj.VaultID)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "vaultId-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// RecoveryScanStatus : Specifies the status of a Recovery Scan.
+type RecoveryScanStatus struct {
+	// Specifies the end time of the recovery scan in microseconds since epoch.
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the error message if the recovery scan failed.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
+	// Specifies the start time of the recovery scan in microseconds since epoch.
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the current status of the recovery scan.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies the unique id of the recovery scan.
+	Uid *string `json:"uid,omitempty"`
+}
+
+// Constants associated with the RecoveryScanStatus.Status property.
+// Specifies the current status of the recovery scan.
+const (
+	RecoveryScanStatus_Status_Accepted             = "Accepted"
+	RecoveryScanStatus_Status_Canceled             = "Canceled"
+	RecoveryScanStatus_Status_Canceling            = "Canceling"
+	RecoveryScanStatus_Status_Failed               = "Failed"
+	RecoveryScanStatus_Status_Finalizing           = "Finalizing"
+	RecoveryScanStatus_Status_Legalhold            = "LegalHold"
+	RecoveryScanStatus_Status_Missed               = "Missed"
+	RecoveryScanStatus_Status_Onhold               = "OnHold"
+	RecoveryScanStatus_Status_Running              = "Running"
+	RecoveryScanStatus_Status_Skipped              = "Skipped"
+	RecoveryScanStatus_Status_Succeeded            = "Succeeded"
+	RecoveryScanStatus_Status_Succeededwithwarning = "SucceededWithWarning"
+)
+
+// UnmarshalRecoveryScanStatus unmarshals an instance of RecoveryScanStatus from the specified map of raw messages.
+func UnmarshalRecoveryScanStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(RecoveryScanStatus)
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "errorMessage", &obj.ErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uid", &obj.Uid)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
 // RecoveryTimeRangeInfo : Specifies a valid time range to which this object can be recovered.
 type RecoveryTimeRangeInfo struct {
 	// Specifies the end time of this time range.
@@ -37420,8 +38192,9 @@ const (
 
 // Constants associated with the SearchObjectsOptions.Environments property.
 const (
-	SearchObjectsOptions_Environments_Kphysical = "kPhysical"
-	SearchObjectsOptions_Environments_Ksql      = "kSQL"
+	SearchObjectsOptions_Environments_Kkubernetes = "kKubernetes"
+	SearchObjectsOptions_Environments_Kphysical   = "kPhysical"
+	SearchObjectsOptions_Environments_Ksql        = "kSQL"
 )
 
 // Constants associated with the SearchObjectsOptions.ProtectionTypes property.
@@ -37740,8 +38513,9 @@ const (
 
 // Constants associated with the SearchProtectedObjectsOptions.Environments property.
 const (
-	SearchProtectedObjectsOptions_Environments_Kphysical = "kPhysical"
-	SearchProtectedObjectsOptions_Environments_Ksql      = "kSQL"
+	SearchProtectedObjectsOptions_Environments_Kkubernetes = "kKubernetes"
+	SearchProtectedObjectsOptions_Environments_Kphysical   = "kPhysical"
+	SearchProtectedObjectsOptions_Environments_Ksql        = "kSQL"
 )
 
 // Constants associated with the SearchProtectedObjectsOptions.SnapshotActions property.
@@ -38637,8 +39411,9 @@ type SourceRegistrationResponseParams struct {
 // Constants associated with the SourceRegistrationResponseParams.Environment property.
 // Specifies the environment type of the Protection Source.
 const (
-	SourceRegistrationResponseParams_Environment_Kphysical = "kPhysical"
-	SourceRegistrationResponseParams_Environment_Ksql      = "kSQL"
+	SourceRegistrationResponseParams_Environment_Kkubernetes = "kKubernetes"
+	SourceRegistrationResponseParams_Environment_Kphysical   = "kPhysical"
+	SourceRegistrationResponseParams_Environment_Ksql        = "kSQL"
 )
 
 // Constants associated with the SourceRegistrationResponseParams.AuthenticationStatus property.
@@ -42244,6 +43019,9 @@ type UpdateProtectionGroupOptions struct {
 	// run if any is not impacted.
 	IsPaused *bool `json:"isPaused,omitempty"`
 
+	// A note from the current user explaining the reason for pausing future runs, if applicable.
+	PausedNote *string `json:"pausedNote,omitempty"`
+
 	// Specifies the advanced configuration for a protection job.
 	AdvancedConfigs []KeyValuePair `json:"advancedConfigs,omitempty"`
 
@@ -42388,6 +43166,12 @@ func (_options *UpdateProtectionGroupOptions) SetPauseInBlackouts(pauseInBlackou
 // SetIsPaused : Allow user to set IsPaused
 func (_options *UpdateProtectionGroupOptions) SetIsPaused(isPaused bool) *UpdateProtectionGroupOptions {
 	_options.IsPaused = core.BoolPtr(isPaused)
+	return _options
+}
+
+// SetPausedNote : Allow user to set PausedNote
+func (_options *UpdateProtectionGroupOptions) SetPausedNote(pausedNote string) *UpdateProtectionGroupOptions {
+	_options.PausedNote = core.StringPtr(pausedNote)
 	return _options
 }
 
@@ -44116,6 +44900,166 @@ func UnmarshalUsersDiscoveryParams(m map[string]json.RawMessage, result interfac
 	}
 	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
 	return
+}
+
+// VaultFailover : Specifies the details of a vault Failover.
+type VaultFailover struct {
+	// Specifies the type of the Backup and Recovery instance. Currently, only 'ibm' is supported.
+	CloudType *string `json:"cloudType" validate:"required"`
+
+	// Specifies the parameters specific to the Backup and Recovery instance. viz the vault.
+	FailoverRequestParams *FailoverRequestParams `json:"failoverRequestParams,omitempty"`
+
+	// Specifies the unique id of the failover.
+	Uid *string `json:"uid,omitempty"`
+}
+
+// Constants associated with the VaultFailover.CloudType property.
+// Specifies the type of the Backup and Recovery instance. Currently, only 'ibm' is supported.
+const (
+	VaultFailover_CloudType_Ibm = "ibm"
+)
+
+// UnmarshalVaultFailover unmarshals an instance of VaultFailover from the specified map of raw messages.
+func UnmarshalVaultFailover(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(VaultFailover)
+	err = core.UnmarshalPrimitive(m, "cloudType", &obj.CloudType)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "cloudType-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalModel(m, "failoverRequestParams", &obj.FailoverRequestParams, UnmarshalFailoverRequestParams)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "failoverRequestParams-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uid", &obj.Uid)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// VaultFailoverStatus : Specifies the status of a vault Failover.
+type VaultFailoverStatus struct {
+	// Specifies the end time of the failover in microseconds since epoch.
+	EndTimeUsecs *int64 `json:"endTimeUsecs,omitempty"`
+
+	// Specifies the error message if the vault failover failed.
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+
+	// Specifies the start time of the failover in microseconds since epoch.
+	StartTimeUsecs *int64 `json:"startTimeUsecs,omitempty"`
+
+	// Specifies the current status of the failover.
+	Status *string `json:"status,omitempty"`
+
+	// Specifies the unique id of the failover.
+	Uid *string `json:"uid,omitempty"`
+}
+
+// Constants associated with the VaultFailoverStatus.Status property.
+// Specifies the current status of the failover.
+const (
+	VaultFailoverStatus_Status_Accepted             = "Accepted"
+	VaultFailoverStatus_Status_Canceled             = "Canceled"
+	VaultFailoverStatus_Status_Canceling            = "Canceling"
+	VaultFailoverStatus_Status_Failed               = "Failed"
+	VaultFailoverStatus_Status_Finalizing           = "Finalizing"
+	VaultFailoverStatus_Status_Legalhold            = "LegalHold"
+	VaultFailoverStatus_Status_Missed               = "Missed"
+	VaultFailoverStatus_Status_Onhold               = "OnHold"
+	VaultFailoverStatus_Status_Running              = "Running"
+	VaultFailoverStatus_Status_Skipped              = "Skipped"
+	VaultFailoverStatus_Status_Succeeded            = "Succeeded"
+	VaultFailoverStatus_Status_Succeededwithwarning = "SucceededWithWarning"
+)
+
+// UnmarshalVaultFailoverStatus unmarshals an instance of VaultFailoverStatus from the specified map of raw messages.
+func UnmarshalVaultFailoverStatus(m map[string]json.RawMessage, result interface{}) (err error) {
+	obj := new(VaultFailoverStatus)
+	err = core.UnmarshalPrimitive(m, "endTimeUsecs", &obj.EndTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "endTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "errorMessage", &obj.ErrorMessage)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "errorMessage-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "startTimeUsecs", &obj.StartTimeUsecs)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "startTimeUsecs-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "status", &obj.Status)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "status-error", common.GetComponentInfo())
+		return
+	}
+	err = core.UnmarshalPrimitive(m, "uid", &obj.Uid)
+	if err != nil {
+		err = core.SDKErrorf(err, "", "uid-error", common.GetComponentInfo())
+		return
+	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
+	return
+}
+
+// VaultRecoveryScanOptions : The VaultRecoveryScan options.
+type VaultRecoveryScanOptions struct {
+	// Specifies the unique id of the tenant.
+	XIBMTenantID *string `json:"X-IBM-Tenant-Id" validate:"required"`
+
+	// Specifies the cloud type where the vault is registered for recovery scan. Currently, only 'ibm' is supported.
+	CloudType *string `json:"cloudType" validate:"required"`
+
+	// Specifies the parameters specific to the Backup and Recovery instance. which is the vault.
+	RecoveryScanRequestParams *RecoveryScanRequestParams `json:"recoveryScanRequestParams,omitempty"`
+
+	// Allows users to set headers on API requests
+	Headers map[string]string
+}
+
+// Constants associated with the VaultRecoveryScanOptions.CloudType property.
+// Specifies the cloud type where the vault is registered for recovery scan. Currently, only 'ibm' is supported.
+const (
+	VaultRecoveryScanOptions_CloudType_Ibm = "ibm"
+)
+
+// NewVaultRecoveryScanOptions : Instantiate VaultRecoveryScanOptions
+func (*BackupRecoveryV1) NewVaultRecoveryScanOptions(xIBMTenantID string, cloudType string) *VaultRecoveryScanOptions {
+	return &VaultRecoveryScanOptions{
+		XIBMTenantID: core.StringPtr(xIBMTenantID),
+		CloudType:    core.StringPtr(cloudType),
+	}
+}
+
+// SetXIBMTenantID : Allow user to set XIBMTenantID
+func (_options *VaultRecoveryScanOptions) SetXIBMTenantID(xIBMTenantID string) *VaultRecoveryScanOptions {
+	_options.XIBMTenantID = core.StringPtr(xIBMTenantID)
+	return _options
+}
+
+// SetCloudType : Allow user to set CloudType
+func (_options *VaultRecoveryScanOptions) SetCloudType(cloudType string) *VaultRecoveryScanOptions {
+	_options.CloudType = core.StringPtr(cloudType)
+	return _options
+}
+
+// SetRecoveryScanRequestParams : Allow user to set RecoveryScanRequestParams
+func (_options *VaultRecoveryScanOptions) SetRecoveryScanRequestParams(recoveryScanRequestParams *RecoveryScanRequestParams) *VaultRecoveryScanOptions {
+	_options.RecoveryScanRequestParams = recoveryScanRequestParams
+	return _options
+}
+
+// SetHeaders : Allow user to set Headers
+func (options *VaultRecoveryScanOptions) SetHeaders(param map[string]string) *VaultRecoveryScanOptions {
+	options.Headers = param
+	return options
 }
 
 // VlanParameters : Specifies VLAN parameters for the restore operation.

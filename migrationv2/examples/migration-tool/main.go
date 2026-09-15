@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/IBM/go-sdk-core/v5/core"
@@ -234,11 +235,14 @@ func monitorMigration(ctx context.Context, client *migrationv2.Client) {
 			}
 
 			// Print progress
-			fmt.Printf("\r[%s] Status: %-12s Progress: %3d%% | %s",
+			prog := "<nil>"
+			if backup.Progress != nil {
+				prog = fmt.Sprintf("%.0f%%", *backup.Progress)
+			}
+			fmt.Printf("\r[%s] Status: %-12s Progress: %s",
 				time.Now().Format("15:04:05"),
 				backup.Status,
-				backup.Progress,
-				backup.Message)
+				prog)
 
 			// Check if complete
 			if backup.Status == "completed" {
@@ -273,7 +277,7 @@ func monitorMigration(ctx context.Context, client *migrationv2.Client) {
 				time.Now().Format("15:04:05"),
 				restore.Status,
 				restore.Progress,
-				restore.Message)
+				strings.Join(restore.Messages, "; "))
 
 			// Check if complete
 			if restore.Status == "completed" {
@@ -338,7 +342,11 @@ func listResources(ctx context.Context, client *migrationv2.Client) {
 		}
 		fmt.Printf("Found %d backups for group %s:\n", len(backups), groupID)
 		for i, backup := range backups {
-			fmt.Printf("%d. %s (Status: %s, Progress: %d%%)\n", i+1, backup.BackupID, backup.Status, backup.Progress)
+			progress := "N/A"
+			if backup.Progress != nil {
+				progress = fmt.Sprintf("%.0f%%", *backup.Progress)
+			}
+			fmt.Printf("%d. %s (Status: %s, Progress: %s)\n", i+1, backup.BackupID, backup.Status, progress)
 		}
 
 	default:
@@ -397,9 +405,8 @@ func printBackupStatus(backup *types.BackupResult) {
 	} else {
 		fmt.Printf("  Progress:   N/A\n")
 	}
-	fmt.Printf("  Message:    %s\n", backup.Message)
 	fmt.Printf("  Started:    %s\n", backup.StartedAt.Format(time.RFC3339))
-	if !backup.CompletedAt.IsZero() {
+	if backup.CompletedAt != nil {
 		fmt.Printf("  Completed:  %s\n", backup.CompletedAt.Format(time.RFC3339))
 		duration := backup.CompletedAt.Sub(backup.StartedAt)
 		fmt.Printf("  Duration:   %s\n", duration.Round(time.Second))
@@ -409,7 +416,7 @@ func printBackupStatus(backup *types.BackupResult) {
 func printRestoreStatus(restore *types.RestoreResult) {
 	fmt.Printf("  Status:     %s\n", restore.Status)
 	fmt.Printf("  Progress:   %d%%\n", restore.Progress)
-	fmt.Printf("  Message:    %s\n", restore.Message)
+	fmt.Printf("  Messages:   %s\n", strings.Join(restore.Messages, "; "))
 	fmt.Printf("  Started:    %s\n", restore.StartedAt.Format(time.RFC3339))
 	if restore.CompletedAt != nil {
 		fmt.Printf("  Completed:  %s\n", restore.CompletedAt.Format(time.RFC3339))
@@ -485,10 +492,14 @@ func CreateBackupRun(ctx context.Context, client *migrationv2.Client) {
 	}
 	fmt.Println(backup.BackupID)
 	fmt.Println(backup.Status)
-	fmt.Println(backup.Progress)
+	if backup.Progress != nil {
+		fmt.Printf("%.0f%%\n", *backup.Progress)
+	}
 	fmt.Println(backup.ProtectionGroupID)
 	fmt.Println(backup.StartedAt)
-	fmt.Println(backup.CompletedAt)
+	if backup.CompletedAt != nil {
+		fmt.Println(backup.CompletedAt.Format(time.RFC3339))
+	}
 }
 
 func main() {

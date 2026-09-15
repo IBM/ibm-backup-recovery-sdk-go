@@ -342,6 +342,36 @@ func runBackup(ctx context.Context, client *migrationv2.Client, protectionGroupI
 	return backupID, nil
 }
 
+// GetBackup response shape (types.BackupResult):
+//
+//	{
+//	  "backupId":          "159354:1788883592073654",
+//	  "protectionGroupId": "2712860000048009:1757348677013:159354",
+//	  "status":            "Succeeded",          // Running | Succeeded | Failed | Canceled
+//	  "progress":          100.0,                // *float32, nil when progress API has no data
+//	  "startedAt":         "2026-09-07T13:06:32Z",
+//	  "completedAt":       "2026-09-07T13:08:04Z", // *time.Time, nil while still running
+//	  "namespaceProgress": [                     // populated from progress API while running
+//	    {
+//	      "namespaceName": "e2e-app-nginx",
+//	      "status":        "Finished",           // Active | Finished | FinishedWithError
+//	      "progress":      100                   // int 0-100; forced to 100 on Finished/Succeeded
+//	    },
+//	    {
+//	      "namespaceName": "e2e-app-busybox",
+//	      "status":        "Finished",
+//	      "progress":      100
+//	    }
+//	  ]
+//	}
+//
+// Notes:
+//   - progress is *float32 — always check for nil before dereferencing
+//   - completedAt is *time.Time — nil while the run is still active
+//   - namespaceProgress is empty for completed runs once the progress API
+//     window closes (404); poll GetBackup while running to capture it
+//   - For cloud-archival-direct (CAD) Kubernetes runs the API always returns
+//     objects=null; namespace data comes from the progress API instead
 func waitForBackupCompletion(ctx context.Context, client *migrationv2.Client, protectionGroupID, backupID string) error {
 	maxWait := 30 * time.Minute
 	pollInterval := 10 * time.Second
@@ -379,6 +409,38 @@ func runRestore(ctx context.Context, client *migrationv2.Client, dataSource *kub
 	return result.RestoreID, nil
 }
 
+// GetRestore response shape (types.RestoreResult):
+//
+//	{
+//	  "restoreId": "2712860000048009:1757348677013:159360",
+//	  "backupId":  "159354:1788883592073654",
+//	  "targetId":  6047,
+//	  "status":    "Succeeded",           // Accepted | Running | Succeeded | Failed | Canceled
+//	  "progress":  100,                   // int 0-100, averaged across all namespace progress values
+//	  "messages":  ["restored 2 PVCs"],   // top-level messages from the API (may be empty)
+//	  "startedAt": "2026-09-07T13:09:00Z",
+//	  "completedAt": "2026-09-07T13:18:30Z", // *time.Time, nil while still running
+//	  "namespaceProgress": [
+//	    {
+//	      "namespaceName": "e2e-app-nginx",
+//	      "status":        "Succeeded",    // Running | Succeeded | Failed
+//	      "progress":      100,            // int 0-100 from ProgressMonitors API
+//	      "messages":      ["restored 1 PVC"]  // per-namespace messages (may be empty)
+//	    },
+//	    {
+//	      "namespaceName": "e2e-app-busybox",
+//	      "status":        "Succeeded",
+//	      "progress":      100,
+//	      "messages":      []
+//	    }
+//	  ]
+//	}
+//
+// Notes:
+//   - progress is an int averaged across all namespace progress values
+//   - completedAt is *time.Time — nil while the restore is still active
+//   - messages (top-level) comes from the BRS Recovery API response
+//   - namespaceProgress[].messages comes from KubernetesRecoveryObjectParams.Messages
 func monitorRestore(ctx context.Context, client *migrationv2.Client, restoreID string) error {
 	maxWait := 30 * time.Minute
 	pollInterval := 10 * time.Second

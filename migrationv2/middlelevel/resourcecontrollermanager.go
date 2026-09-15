@@ -82,11 +82,14 @@ func (m *ResourceControllerManager) Initialize(ctx context.Context) error {
 	}
 
 	m.logger.Debug(ctx, "Creating resource controller client with authentication")
-	
-	// Create resource controller client with authentication
-	resourceControllerClient, err := resourcecontroller.NewResourceControllerV2(&resourcecontroller.ResourceControllerV2Options{
+
+	// Build options; URL is empty string when no override is set — the SDK then
+	// defaults to the production Resource Controller endpoint.
+	rcOptions := &resourcecontroller.ResourceControllerV2Options{
 		Authenticator: m.config.GetAuth(),
-	})
+		URL:           m.config.ResourceControllerEndpoint,
+	}
+	resourceControllerClient, err := resourcecontroller.NewResourceControllerV2(rcOptions)
 	if err != nil {
 		m.logger.Error(ctx, "Failed to create resource controller client", logger.Err(err))
 		return fmt.Errorf("failed to create resource controller client: %w", err)

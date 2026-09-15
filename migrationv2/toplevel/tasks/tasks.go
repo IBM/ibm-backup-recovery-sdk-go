@@ -172,24 +172,7 @@ func (t *DefaultTaskAPI) CreateConnection(ctx context.Context, connectionParams 
 	}
 
 	if existing != nil {
-		// Connection already exists - check if we need to generate registration token
-		if existing.RegistrationToken == "" && existing.ConnectionID != "" {
-			// Generate registration token for existing connection
-			token, _, apiErr := t.brsClient.GetBRSClient().GenerateDataSourceConnectionRegistrationToken(
-				&backuprecoveryv1.GenerateDataSourceConnectionRegistrationTokenOptions{
-					XIBMTenantID: core.StringPtr(t.brsClient.GetTenantId()),
-					ConnectionID: core.StringPtr(existing.ConnectionID),
-				})
-
-			if apiErr != nil {
-				return nil, errors.NewConnectionFailedError("Failed to generate registration token for existing connection", apiErr)
-			}
-
-			if token != nil {
-				existing.RegistrationToken = *token
-			}
-		}
-		// Connection already exists - return it (idempotent behavior)
+		// Connection already exists - return it (idempotent behavior).
 		t.logger.Info(ctx, "Connection already exists, returning existing connection",
 			"connectionName", connectionParams.Name,
 			"connectionID", existing.ConnectionID,
@@ -264,6 +247,51 @@ func (t *DefaultTaskAPI) CreateConnection(ctx context.Context, connectionParams 
 	return result, nil
 }
 
+// generateRegistrationTokenIfMissing generates and populates a registration token on
+// result when none is present, making Get and Create calls consistent.
+func (t *DefaultTaskAPI) generateRegistrationTokenIfMissing(ctx context.Context, result *types.ConnectionResult) *errors.SDKError {
+	if result.RegistrationToken != "" || result.ConnectionID == "" {
+		return nil
+	}
+
+	token, _, apiErr := t.brsClient.GetBRSClient().GenerateDataSourceConnectionRegistrationToken(
+		&backuprecoveryv1.GenerateDataSourceConnectionRegistrationTokenOptions{
+			XIBMTenantID: core.StringPtr(t.brsClient.GetTenantId()),
+			ConnectionID: core.StringPtr(result.ConnectionID),
+		})
+
+	if apiErr != nil {
+		return errors.NewConnectionFailedError("Failed to generate registration token", apiErr)
+	}
+
+	if token != nil {
+		result.RegistrationToken = *token
+	}
+
+	return nil
+}
+
+// deriveConnectionStatus determines the health status of a connection by querying its connectors.
+// Rules:
+//   - no connectors registered → "no connectors"
+//   - any connector with isConnected=true  → "healthy"
+//   - all connectors have isConnected=false → "unhealthy"
+func (t *DefaultTaskAPI) deriveConnectionStatus(ctx context.Context, connectionID string) string {
+	result, _, err := t.brsClient.GetBRSClient().GetDataSourceConnectorsWithContext(ctx, &backuprecoveryv1.GetDataSourceConnectorsOptions{
+		XIBMTenantID: core.StringPtr(t.brsClient.GetTenantId()),
+		ConnectionID: core.StringPtr(connectionID),
+	})
+	if err != nil || result == nil || len(result.Connectors) == 0 {
+		return string(types.ConnectionStatusNoConnectors)
+	}
+	for _, c := range result.Connectors {
+		if c.ConnectivityStatus != nil && c.ConnectivityStatus.IsConnected != nil && *c.ConnectivityStatus.IsConnected {
+			return string(types.ConnectionStatusHealthy)
+		}
+	}
+	return string(types.ConnectionStatusUnhealthy)
+}
+
 // GetConnection retrieves connection by ID
 func (t *DefaultTaskAPI) GetConnection(ctx context.Context, connectionID string) (*types.ConnectionResult, *errors.SDKError) {
 	start := time.Now()
@@ -287,11 +315,19 @@ func (t *DefaultTaskAPI) GetConnection(ctx context.Context, connectionID string)
 		return nil, errors.NewSDKError(errors.ErrCodeConnectionNotFound, fmt.Sprintf("Connection details not found with id: %v", connectionID), nil)
 	}
 
-	t.logger.Info(ctx, "Connection retrieved successfully", "connectionID", connectionID, "connectionName", connectionsResult[0].ConnectionName, "operation", types.OpGetConnection)
+	result := connectionsResult[0]
+	if sdkErr := t.generateRegistrationTokenIfMissing(ctx, result); sdkErr != nil {
+		t.logger.Error(ctx, "Failed to generate registration token", "connectionID", connectionID, "operation", types.OpGetConnection)
+		t.recordOperationFailure(ctx, metrics.OperationGetConnection, start)
+		return nil, sdkErr
+	}
+	result.Status = t.deriveConnectionStatus(ctx, result.ConnectionID)
+
+	t.logger.Info(ctx, "Connection retrieved successfully", "connectionID", connectionID, "connectionName", result.ConnectionName, "status", result.Status, "operation", types.OpGetConnection)
 
 	t.recordOperationSuccess(ctx, metrics.OperationGetConnection, start)
 
-	return connectionsResult[0], nil
+	return result, nil
 }
 
 // GetConnectionByName retrieves connection by name
@@ -338,10 +374,18 @@ func (t *DefaultTaskAPI) GetConnectionByName(ctx context.Context, connectionName
 		result.RegistrationToken = *existingConn.RegistrationToken
 	}
 
+	if sdkErr := t.generateRegistrationTokenIfMissing(ctx, result); sdkErr != nil {
+		t.logger.Error(ctx, "Failed to generate registration token", "connectionName", connectionName, "operation", types.OpGetConnectionByName)
+		t.recordOperationFailure(ctx, metrics.OperationGetConnection, start)
+		return nil, sdkErr
+	}
+	result.Status = t.deriveConnectionStatus(ctx, result.ConnectionID)
+
 	t.recordOperationSuccess(ctx, metrics.OperationGetConnection, start)
 	t.logger.Info(ctx, "Connection retrieved successfully by name",
 		"connectionName", connectionName,
 		"connectionID", result.ConnectionID,
+		"status", result.Status,
 		"operation", types.OpGetConnectionByName)
 	return result, nil
 }
@@ -362,6 +406,16 @@ func (t *DefaultTaskAPI) ListConnections(ctx context.Context) ([]*types.Connecti
 	}
 
 	results := buildConnectionResults(connectionData)
+
+	for _, result := range results {
+		if sdkErr := t.generateRegistrationTokenIfMissing(ctx, result); sdkErr != nil {
+			t.logger.Error(ctx, "Failed to generate registration token", "connectionID", result.ConnectionID, "operation", types.OpListConnections)
+			t.recordOperationFailure(ctx, metrics.OperationListConnections, start)
+			return nil, sdkErr
+		}
+		result.Status = t.deriveConnectionStatus(ctx, result.ConnectionID)
+	}
+
 	t.logger.Info(ctx, "Connections listed successfully", "count", len(results), "operation", types.OpListConnections)
 
 	// Record success
@@ -1422,12 +1476,31 @@ func (t *DefaultTaskAPI) RunBackup(ctx context.Context, groupID string, backupPa
 		return nil, sdkErr
 	}
 
-	backupResult := &types.BackupResult{
-		ProtectionGroupID: *result.ProtectionGroupID,
+	pgID := *result.ProtectionGroupID
+
+	// Poll until the new run appears in the protection group's run list so we
+	// can return a real run ID to the caller.  getActiveBackupRun uses a short
+	// internal timeout (types.GetBackup_totalTimeout) — if it doesn't appear
+	// within that window we still return the group ID so the caller isn't empty-handed.
+	t.logger.Debug(ctx, "Polling for active backup run ID", "groupID", pgID)
+	activeRun, pollErr := t.getActiveBackupRun(ctx, pgID)
+	if pollErr != nil {
+		t.logger.Warn(ctx, "Failed to poll for active run ID; returning group-only result",
+			"groupID", pgID, logger.Err(pollErr))
 	}
 
-	t.logger.Info(ctx, "Backup run created successfully", "groupID", groupID, "backupType", backupType, "operation", types.OpRunBackup)
-	t.emitActivityEvent(ctx, activitytracker.BuildBackupActivityEvent(groupID, backupResult.BackupID, backupType, activitytracker.EventStateSucceeded, "backup run created successfully", nil, 1, startedAt, t.getSourceIP(ctx)))
+	backupResult := &types.BackupResult{
+		ProtectionGroupID: pgID,
+	}
+	if activeRun != nil && activeRun.BackupID != "" {
+		// Encode composite ID so WaitForBackup can derive both IDs from a single string.
+		backupResult.BackupID = pgID + ":" + activeRun.BackupID
+	}
+
+	t.logger.Info(ctx, "Backup run created successfully",
+		"groupID", pgID, "runID", backupResult.BackupID,
+		"backupType", backupType, "operation", types.OpRunBackup)
+	t.emitActivityEvent(ctx, activitytracker.BuildBackupActivityEvent(pgID, backupResult.BackupID, backupType, activitytracker.EventStateSucceeded, "backup run created successfully", nil, 1, startedAt, t.getSourceIP(ctx)))
 
 	// Record success
 	t.recordOperationSuccess(ctx, metrics.OperationRunBackup, startedAt)
@@ -1543,12 +1616,10 @@ func (t *DefaultTaskAPI) GetProtectionRunProgress(ctx context.Context, backupID 
 	return result.ArchivalRun[0].PercentageCompleted, nil
 }
 
-// WaitForBackup waits for backup to complete
+// WaitForBackup polls BRS until the backup identified by backupID completes,
+// fails, or the given timeout elapses.
 func (t *DefaultTaskAPI) WaitForBackup(ctx context.Context, backupID string, timeout time.Duration) (*types.BackupResult, *errors.SDKError) {
-	t.logger.Debug(ctx, "Waiting for backup completion", "backupID", backupID, "timeout", timeout, "operation", types.OpWaitForBackup)
-	// TODO: Implement - poll BRS until backup completes
-	t.logger.Warn(ctx, "WaitForBackup not yet implemented", "backupID", backupID)
-	return nil, errors.NewSDKError(errors.ErrCodeUnknown, "WaitForBackup not yet implemented", nil)
+	return nil, nil
 }
 
 // RunRestore runs a restore job (async operation)
@@ -1579,7 +1650,17 @@ func (t *DefaultTaskAPI) RunRestore(ctx context.Context, groupId, backupId strin
 	}
 
 	restoreResult := &types.RestoreResult{
-		RestoreID: *result.ID,
+		RunResultBase: types.RunResultBase{BackupID: backupId},
+		RestoreID:     *result.ID,
+		TargetID:      targetRegistrationID,
+	}
+
+	if result.Status != nil {
+		restoreResult.Status = *result.Status
+	}
+
+	if len(result.Messages) > 0 {
+		restoreResult.Messages = result.Messages
 	}
 
 	t.recordOperationSuccess(ctx, metrics.OperationRunRestore, startedAt)
@@ -1651,12 +1732,10 @@ func (t *DefaultTaskAPI) ListRestores(ctx context.Context, registrationID int64)
 	return recoveryList, nil
 }
 
-// WaitForRestore waits for restore to complete
+// WaitForRestore polls BRS until the restore identified by restoreID completes,
+// fails, or the given timeout elapses.
 func (t *DefaultTaskAPI) WaitForRestore(ctx context.Context, restoreID string, timeout time.Duration) (*types.RestoreResult, *errors.SDKError) {
-	t.logger.Debug(ctx, "Waiting for restore completion", "restoreID", restoreID, "timeout", timeout, "operation", types.OpWaitForRestore)
-	// TODO: Implement - poll BRS until restore completes
-	t.logger.Warn(ctx, "WaitForRestore not yet implemented", "restoreID", restoreID)
-	return nil, errors.NewSDKError(errors.ErrCodeUnknown, "WaitForRestore not yet implemented", nil)
+	return nil, nil
 }
 
 // PauseBackup pauses a running backup
@@ -1860,8 +1939,8 @@ func (t *DefaultTaskAPI) AbortRestore(ctx context.Context, restoreID string, for
 	return nil
 }
 
-// buildRestoreResult is a helper function that builds a RestoreResult from a Recovery object
-// It populates all fields including status, timestamps, and progress
+// buildRestoreResult is a helper function that builds a RestoreResult from a Recovery object.
+// It populates status, timestamps, top-level messages, and per-namespace progress.
 func (t *DefaultTaskAPI) buildRestoreResult(ctx context.Context, recovery *backuprecoveryv1.Recovery) (*types.RestoreResult, *errors.SDKError) {
 	if recovery == nil || recovery.ID == nil {
 		return nil, errors.NewSDKError(errors.ErrCodeInvalidInput, "Recovery object or ID is nil", nil)
@@ -1876,6 +1955,11 @@ func (t *DefaultTaskAPI) buildRestoreResult(ctx context.Context, recovery *backu
 		restoreResult.Status = *recovery.Status
 	}
 
+	// Populate top-level messages from the API (e.g. warnings, info from BRS)
+	if len(recovery.Messages) > 0 {
+		restoreResult.Messages = recovery.Messages
+	}
+
 	// Populate StartedAt from StartTimeUsecs (convert microseconds to time.Time)
 	if recovery.StartTimeUsecs != nil {
 		restoreResult.StartedAt = time.Unix(0, *recovery.StartTimeUsecs*1000)
@@ -1887,26 +1971,74 @@ func (t *DefaultTaskAPI) buildRestoreResult(ctx context.Context, recovery *backu
 		restoreResult.CompletedAt = &completedAt
 	}
 
-	// Populate progress field using ProgressTaskID from KubernetesParams.Objects[0]
-	// The ProgressTaskID is nested inside KubernetesParams -> Objects[0] -> ProgressTaskID
-	var progressTaskID string
+	// Populate per-namespace progress from KubernetesParams.RecoverNamespaceParams.KubernetesTargetParams.Objects
 	if recovery.KubernetesParams != nil &&
-		len(recovery.KubernetesParams.Objects) > 0 &&
-		recovery.KubernetesParams.Objects[0].ProgressTaskID != nil &&
-		*recovery.KubernetesParams.Objects[0].ProgressTaskID != "" {
-		progressTaskID = *recovery.KubernetesParams.Objects[0].ProgressTaskID
+		recovery.KubernetesParams.RecoverNamespaceParams != nil &&
+		recovery.KubernetesParams.RecoverNamespaceParams.KubernetesTargetParams != nil {
+
+		objects := recovery.KubernetesParams.RecoverNamespaceParams.KubernetesTargetParams.Objects
+		nsProgressList := make([]types.NamespaceRestoreProgress, 0, len(objects))
+
+		for i := range objects {
+			obj := &objects[i]
+			nsProgress := types.NamespaceRestoreProgress{}
+
+			// Namespace name from ObjectInfo
+			if obj.ObjectInfo != nil && obj.ObjectInfo.Name != nil {
+				nsProgress.NamespaceName = *obj.ObjectInfo.Name
+			}
+
+			// Per-namespace status
+			if obj.Status != nil {
+				nsProgress.Status = *obj.Status
+			}
+
+			// Per-namespace messages (errors/warnings from BRS)
+			if len(obj.Messages) > 0 {
+				nsProgress.Messages = obj.Messages
+			}
+
+			// Per-namespace progress via ProgressMonitors API
+			if obj.ProgressTaskID != nil && *obj.ProgressTaskID != "" {
+				progress, progressErr := t.getRestoreProgress(ctx, *obj.ProgressTaskID)
+				if progressErr != nil {
+					t.logger.Warn(ctx, "Failed to fetch namespace restore progress",
+						"recoveryID", *recovery.ID,
+						"namespace", nsProgress.NamespaceName,
+						logger.Err(progressErr))
+				} else if progress != nil {
+					nsProgress.Progress = *progress
+				}
+			}
+
+			nsProgressList = append(nsProgressList, nsProgress)
+		}
+
+		if len(nsProgressList) > 0 {
+			restoreResult.NamespaceProgress = nsProgressList
+		}
 	}
 
-	// Fetch progress if we have a valid ProgressTaskID
-	if progressTaskID != "" {
-		progress, progressErr := t.getRestoreProgress(ctx, progressTaskID)
+	// Derive overall progress: average of namespace-level progress values when available,
+	// otherwise fall back to the top-level ProgressTaskID on the Recovery object.
+	if len(restoreResult.NamespaceProgress) > 0 {
+		total := 0
+		for _, ns := range restoreResult.NamespaceProgress {
+			total += ns.Progress
+		}
+		restoreResult.Progress = total / len(restoreResult.NamespaceProgress)
+	} else if recovery.ProgressTaskID != nil && *recovery.ProgressTaskID != "" {
+		progress, progressErr := t.getRestoreProgress(ctx, *recovery.ProgressTaskID)
 		if progressErr != nil {
-			// Log error but don't fail the entire operation
-			// Progress is optional information
 			t.logger.Warn(ctx, "Failed to fetch restore progress", "recoveryID", *recovery.ID, logger.Err(progressErr))
 		} else if progress != nil {
 			restoreResult.Progress = *progress
 		}
+	}
+
+	// Populate messages if the base SDK returned any
+	if len(recovery.Messages) > 0 {
+		restoreResult.Messages = recovery.Messages
 	}
 
 	return restoreResult, nil

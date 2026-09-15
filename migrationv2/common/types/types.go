@@ -99,29 +99,54 @@ type ProtectionGroupResult struct {
 	CreatedAt         time.Time `json:"createdAt"`
 }
 
-// BackupResult represents the result of a backup operation
-type BackupResult struct {
-	BackupID          string    `json:"backupId"`
-	ProtectionGroupID string    `json:"protectionGroupId"`
-	Status            string    `json:"status"`   // "running", "completed", "failed"
-	Progress          *float32  `json:"progress"` // 0-100
-	Message           string    `json:"message"`
-	Timestamp         time.Time `json:"timestamp"`
-	StartedAt         time.Time `json:"startedAt"`
-	CompletedAt       time.Time `json:"completedAt,omitempty"`
-}
-
-// RestoreResult represents the result of a restore operation
-type RestoreResult struct {
-	RestoreID   string     `json:"restoreId"`
+// RunResultBase holds fields common to all run results (backup and restore).
+type RunResultBase struct {
 	BackupID    string     `json:"backupId"`
-	TargetID    int64      `json:"targetId"`
-	Status      string     `json:"status"`   // "running", "completed", "failed"
-	Progress    int        `json:"progress"` // 0-100
-	Message     string     `json:"message"`
-	Timestamp   time.Time  `json:"timestamp"`
+	Status      string     `json:"status"`               // "Running", "Succeeded", "Failed", etc.
 	StartedAt   time.Time  `json:"startedAt"`
 	CompletedAt *time.Time `json:"completedAt,omitempty"`
+}
+
+// NamespaceProgressBase holds fields common to both per-namespace backup and restore progress.
+type NamespaceProgressBase struct {
+	NamespaceName string `json:"namespaceName"` // Kubernetes namespace name
+	Status        string `json:"status"`        // per-namespace status from the API
+}
+
+// ProgressWithMessages holds the progress percentage and optional messages,
+// shared between top-level run results and per-namespace progress entries.
+type ProgressWithMessages struct {
+	Progress int      `json:"progress"`          // 0-100
+	Messages []string `json:"messages,omitempty"` // informational/error messages
+}
+
+// BackupResult represents the result of a backup operation.
+type BackupResult struct {
+	RunResultBase
+	ProtectionGroupID string                    `json:"protectionGroupId"`
+	Progress          *float32                  `json:"progress"`                    // 0-100 overall (nil when not yet available)
+	NamespaceProgress []NamespaceBackupProgress `json:"namespaceProgress,omitempty"` // per-namespace progress
+}
+
+// NamespaceBackupProgress holds per-namespace backup progress and status.
+type NamespaceBackupProgress struct {
+	NamespaceProgressBase
+	Progress int `json:"progress"` // 0-100 from ProgressMonitors API
+}
+
+// RestoreResult represents the result of a restore operation.
+type RestoreResult struct {
+	RunResultBase
+	ProgressWithMessages
+	RestoreID         string                     `json:"restoreId"`
+	TargetID          int64                      `json:"targetId"`
+	NamespaceProgress []NamespaceRestoreProgress `json:"namespaceProgress,omitempty"` // per-namespace progress
+}
+
+// NamespaceRestoreProgress holds per-namespace restore progress and status.
+type NamespaceRestoreProgress struct {
+	NamespaceProgressBase
+	ProgressWithMessages
 }
 
 // WORKFLOW RESULT TYPES
@@ -261,6 +286,15 @@ const (
 )
 
 // ASYNC OPERATION TYPES
+
+// ConnectionStatus represents the health status of a connection derived from its connectors.
+type ConnectionStatus string
+
+const (
+	ConnectionStatusHealthy      ConnectionStatus = "HEALTHY"
+	ConnectionStatusUnhealthy    ConnectionStatus = "UNHEALTHY"
+	ConnectionStatusNoConnectors ConnectionStatus = "NO_CONNECTORS"
+)
 
 // OperationStatus represents the status of an async operation
 type OperationStatus string

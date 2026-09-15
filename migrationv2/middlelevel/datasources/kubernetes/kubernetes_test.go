@@ -793,9 +793,15 @@ func TestRunRestore(t *testing.T) {
 				mw.On("GetTenantId").Return("test-tenant-id")
 				mw.On("GetBRSClient").Return(mc)
 				snapshotID := "snapshot-123"
+				nsName := "test-namespace"
+				nsID := int64(1)
 				mockProtectionGroupRun := &backuprecoveryv1.ProtectionGroupRun{
 					Objects: []backuprecoveryv1.ObjectRunResult{
 						{
+							Object: &backuprecoveryv1.ObjectSummary{
+								Name: &nsName,
+								ID:   &nsID,
+							},
 							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
 								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
 									{
@@ -805,9 +811,9 @@ func TestRunRestore(t *testing.T) {
 							},
 						},
 					},
-				}
-				mc.On("GetProtectionGroupRun", mock.Anything).Return(mockProtectionGroupRun, &core.DetailedResponse{}, nil)
-			},
+					}
+					mc.On("GetProtectionGroupRun", mock.Anything).Return(mockProtectionGroupRun, &core.DetailedResponse{}, nil)
+				},
 			expectError: false,
 			validateResult: func(t *testing.T, result *backuprecoveryv1.CreateRecoveryOptions) {
 				assert.Equal(t, "test-restore", *result.Name)
@@ -919,9 +925,15 @@ func TestRunRestore(t *testing.T) {
 				mw.On("GetTenantId").Return("test-tenant-id")
 				mw.On("GetBRSClient").Return(mc)
 				snapshotID := "snapshot-456"
+				nsName := "test-namespace"
+				nsID := int64(1)
 				mockProtectionGroupRun := &backuprecoveryv1.ProtectionGroupRun{
 					Objects: []backuprecoveryv1.ObjectRunResult{
 						{
+							Object: &backuprecoveryv1.ObjectSummary{
+								Name: &nsName,
+								ID:   &nsID,
+							},
 							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
 								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
 									{
@@ -977,9 +989,15 @@ func TestRunRestore(t *testing.T) {
 				mw.On("GetTenantId").Return("test-tenant-id")
 				mw.On("GetBRSClient").Return(mc)
 				snapshotID := "snapshot-789"
+				nsName := "test-namespace"
+				nsID := int64(1)
 				mockProtectionGroupRun := &backuprecoveryv1.ProtectionGroupRun{
 					Objects: []backuprecoveryv1.ObjectRunResult{
 						{
+							Object: &backuprecoveryv1.ObjectSummary{
+								Name: &nsName,
+								ID:   &nsID,
+							},
 							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
 								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
 									{
@@ -2055,6 +2073,10 @@ func TestGetBackupRunSnapShotID(t *testing.T) {
 			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
 				Objects: []backuprecoveryv1.ObjectRunResult{
 					{
+						Object: &backuprecoveryv1.ObjectSummary{
+						Name: core.StringPtr("test-namespace"),
+						ID:   core.Int64Ptr(1),
+						},
 						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
 							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
 								{
@@ -2074,7 +2096,7 @@ func TestGetBackupRunSnapShotID(t *testing.T) {
 				Objects: []backuprecoveryv1.ObjectRunResult{},
 			},
 			expectError:           true,
-			expectedErrorContains: "No snapshotId found",
+			expectedErrorContains: "No objects found",
 		},
 	}
 
@@ -2288,18 +2310,22 @@ func TestInitializeKubernetesNamespaceParams(t *testing.T) {
 				},
 			},
 			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
-				Objects: []backuprecoveryv1.ObjectRunResult{
-					{
-						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
-							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
-								{
-									SnapshotID: core.StringPtr("snapshot-main"),
+					Objects: []backuprecoveryv1.ObjectRunResult{
+						{
+							Object: &backuprecoveryv1.ObjectSummary{
+							Name: core.StringPtr("test-namespace"),
+							ID:   core.Int64Ptr(1),
+							},
+							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+									{
+										SnapshotID: core.StringPtr("snapshot-main"),
+									},
 								},
 							},
 						},
 					},
 				},
-			},
 			mockError:            nil,
 			expectError:          false,
 			expectedResultLength: 2,

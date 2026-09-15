@@ -1719,11 +1719,27 @@ func TestRunBackup(t *testing.T) {
 					})).Return(&backuprecoveryv1.CreateProtectionGroupRunResponse{
 					ProtectionGroupID: core.StringPtr("group-1"),
 				}, nil, nil)
+				// getActiveBackupRun calls ListBackups → GetProtectionGroupRunsWithContext
+				mockWrapper.Client.On("GetProtectionGroupRunsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRunsResponse{
+						Runs: []backuprecoveryv1.ProtectionGroupRun{
+							minimalRun("run-1", "group-1", string(types.BackupRun_Status_Running)),
+						},
+					}, nil, nil)
+				// buildBackupRunResult calls GetProtectionRunProgressWithContext
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{
+						ArchivalRun: []backuprecoveryv1.ArchivalTargetProgressInfo{
+							{PercentageCompleted: core.Float32Ptr(float32(10))},
+						},
+					}, nil, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *types.BackupResult) {
 				assert.NotNil(t, result)
 				assert.Equal(t, "group-1", result.ProtectionGroupID)
+				// BackupID is composite "{groupID}:{runID}"
+				assert.Equal(t, "group-1:run-1", result.BackupID)
 			},
 		},
 	}
@@ -2234,6 +2250,8 @@ func TestGetConnection(t *testing.T) {
 							},
 						},
 					}, nil, nil)
+				mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *types.ConnectionResult) {
@@ -2306,15 +2324,19 @@ func TestListConnections(t *testing.T) {
 					&backuprecoveryv1.DataSourceConnectionList{
 						Connections: []backuprecoveryv1.DataSourceConnection{
 							{
-								ConnectionID:   core.StringPtr("conn-1"),
-								ConnectionName: core.StringPtr("connection-1"),
+								ConnectionID:      core.StringPtr("conn-1"),
+								ConnectionName:    core.StringPtr("connection-1"),
+								RegistrationToken: core.StringPtr("token-1"),
 							},
 							{
-								ConnectionID:   core.StringPtr("conn-2"),
-								ConnectionName: core.StringPtr("connection-2"),
+								ConnectionID:      core.StringPtr("conn-2"),
+								ConnectionName:    core.StringPtr("connection-2"),
+								RegistrationToken: core.StringPtr("token-2"),
 							},
 						},
 					}, nil, nil)
+				mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, results []*types.ConnectionResult) {
@@ -3034,21 +3056,23 @@ func TestCreateConnection(t *testing.T) {
 				Type: types.ConnectionType_VSI,
 			},
 			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
-				mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
-					&backuprecoveryv1.DataSourceConnectionList{
-						Connections: []backuprecoveryv1.DataSourceConnection{
-							{
-								ConnectionID:      core.StringPtr("existing-conn-123"),
-								ConnectionName:    core.StringPtr("test-connection"),
-								ConnectionEnvType: core.StringPtr("kPhysical"),
-								RegistrationToken: core.StringPtr("existing-token"),
+					mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
+						&backuprecoveryv1.DataSourceConnectionList{
+							Connections: []backuprecoveryv1.DataSourceConnection{
+								{
+									ConnectionID:      core.StringPtr("existing-conn-123"),
+									ConnectionName:    core.StringPtr("test-connection"),
+									ConnectionEnvType: core.StringPtr("kPhysical"),
+									RegistrationToken: core.StringPtr("existing-token"),
+								},
 							},
 						},
-					},
-					&core.DetailedResponse{StatusCode: 200},
-					nil,
-				).Once()
-			},
+						&core.DetailedResponse{StatusCode: 200},
+						nil,
+					).Once()
+					mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
+						&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
+				},
 			expectError: false,
 			validateResult: func(t *testing.T, result *types.ConnectionResult) {
 				assert.Equal(t, "existing-conn-123", result.ConnectionID)
@@ -3113,21 +3137,23 @@ func TestGetConnectionByName(t *testing.T) {
 			name:           "Success",
 			connectionName: "test-connection",
 			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
-				mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
-					&backuprecoveryv1.DataSourceConnectionList{
-						Connections: []backuprecoveryv1.DataSourceConnection{
-							{
-								ConnectionID:      core.StringPtr("conn-123"),
-								ConnectionName:    core.StringPtr("test-connection"),
-								ConnectionEnvType: core.StringPtr("kPhysical"),
-								RegistrationToken: core.StringPtr("token-123"),
+					mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
+						&backuprecoveryv1.DataSourceConnectionList{
+							Connections: []backuprecoveryv1.DataSourceConnection{
+								{
+									ConnectionID:      core.StringPtr("conn-123"),
+									ConnectionName:    core.StringPtr("test-connection"),
+									ConnectionEnvType: core.StringPtr("kPhysical"),
+									RegistrationToken: core.StringPtr("token-123"),
+								},
 							},
 						},
-					},
-					&core.DetailedResponse{StatusCode: 200},
-					nil,
-				).Once()
-			},
+						&core.DetailedResponse{StatusCode: 200},
+						nil,
+					).Once()
+					mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
+						&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
+				},
 			expectError: false,
 			validateResult: func(t *testing.T, result *types.ConnectionResult) {
 				assert.Equal(t, "conn-123", result.ConnectionID)
@@ -3817,6 +3843,662 @@ func TestRefreshRegistration(t *testing.T) {
 				assert.Nil(t, err)
 			}
 
+			mockWrapper.Client.AssertExpectations(t)
+		})
+	}
+}
+
+// =============================================================================
+// TESTS FOR RESTORE NAMESPACE-LEVEL PROGRESS AND MESSAGES (buildRestoreResult)
+// =============================================================================
+
+func TestGetRestore_NamespaceProgress(t *testing.T) {
+	tests := []struct {
+		name           string
+		restoreID      string
+		mockSetup      func(*MockBRSClientWrapper)
+		validateResult func(*testing.T, *types.RestoreResult)
+	}{
+		{
+			name:      "TopLevelMessages_Populated",
+			restoreID: "restore-msg",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				mockWrapper.Client.On("GetRecoveryByIDWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.Recovery{
+						ID:       core.StringPtr("restore-msg"),
+						Status:   core.StringPtr("Running"),
+						Messages: []string{"warning: disk nearly full", "info: resuming from checkpoint"},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.RestoreResult) {
+				assert.Equal(t, "restore-msg", result.RestoreID)
+				assert.Equal(t, "Running", result.Status)
+				assert.Equal(t, []string{"warning: disk nearly full", "info: resuming from checkpoint"}, result.Messages)
+				assert.Empty(t, result.NamespaceProgress)
+			},
+		},
+		{
+			name:      "NamespaceProgress_WithStatusAndMessages",
+			restoreID: "restore-ns",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				mockWrapper.Client.On("GetRecoveryByIDWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.Recovery{
+						ID:     core.StringPtr("restore-ns"),
+						Status: core.StringPtr("Running"),
+						KubernetesParams: &backuprecoveryv1.RecoveryKubernetesParams{
+							RecoveryAction: core.StringPtr("RecoverNamespaces"),
+							RecoverNamespaceParams: &backuprecoveryv1.RecoverKubernetesParamsRecoverNamespaceParams{
+								TargetEnvironment: core.StringPtr("kKubernetes"),
+								KubernetesTargetParams: &backuprecoveryv1.RecoverKubernetesNamespaceParamsKubernetesTargetParams{
+									Objects: []backuprecoveryv1.KubernetesRecoveryObjectParams{
+										{
+											SnapshotID: core.StringPtr("snap-1"),
+											ObjectInfo: &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{
+												Name: core.StringPtr("busybox-app"),
+											},
+											Status:   core.StringPtr("Succeeded"),
+											Messages: []string{"restored 42 PVCs"},
+										},
+										{
+											SnapshotID: core.StringPtr("snap-2"),
+											ObjectInfo: &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{
+												Name: core.StringPtr("nginx-prod"),
+											},
+											Status: core.StringPtr("Failed"),
+											Messages: []string{"failed to bind PVC: no storage class"},
+										},
+									},
+								},
+							},
+						},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.RestoreResult) {
+				assert.Equal(t, "restore-ns", result.RestoreID)
+				assert.Len(t, result.NamespaceProgress, 2)
+
+				assert.Equal(t, "busybox-app", result.NamespaceProgress[0].NamespaceName)
+				assert.Equal(t, "Succeeded", result.NamespaceProgress[0].Status)
+				assert.Equal(t, []string{"restored 42 PVCs"}, result.NamespaceProgress[0].Messages)
+
+				assert.Equal(t, "nginx-prod", result.NamespaceProgress[1].NamespaceName)
+				assert.Equal(t, "Failed", result.NamespaceProgress[1].Status)
+				assert.Equal(t, []string{"failed to bind PVC: no storage class"}, result.NamespaceProgress[1].Messages)
+			},
+		},
+		{
+			name:      "NamespaceProgress_WithProgressTaskID",
+			restoreID: "restore-prog",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				pct := float32(75)
+				mockWrapper.Client.On("GetRecoveryByIDWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.Recovery{
+						ID:     core.StringPtr("restore-prog"),
+						Status: core.StringPtr("Running"),
+						KubernetesParams: &backuprecoveryv1.RecoveryKubernetesParams{
+							RecoveryAction: core.StringPtr("RecoverNamespaces"),
+							RecoverNamespaceParams: &backuprecoveryv1.RecoverKubernetesParamsRecoverNamespaceParams{
+								TargetEnvironment: core.StringPtr("kKubernetes"),
+								KubernetesTargetParams: &backuprecoveryv1.RecoverKubernetesNamespaceParamsKubernetesTargetParams{
+									Objects: []backuprecoveryv1.KubernetesRecoveryObjectParams{
+										{
+											SnapshotID: core.StringPtr("snap-1"),
+											ObjectInfo: &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{
+												Name: core.StringPtr("myapp"),
+											},
+											Status:         core.StringPtr("Running"),
+											ProgressTaskID: core.StringPtr("task-myapp-1"),
+										},
+									},
+								},
+							},
+						},
+					}, nil, nil)
+				// Progress monitors returns 75%
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything,
+					mock.MatchedBy(func(opts *backuprecoveryv1.GetProgressMonitorsOptions) bool {
+						return len(opts.TaskPathVec) == 1 && opts.TaskPathVec[0] == "task-myapp-1"
+					})).Return(
+					&backuprecoveryv1.GetTasksResult{
+						ResultGroupVec: []backuprecoveryv1.GetTasksResultResultGroup{
+							{
+								TaskVec: []backuprecoveryv1.GetTasksResultResultGroupTask{
+									{
+										Progress: &backuprecoveryv1.TaskProgress{
+											PercentFinished: &pct,
+										},
+									},
+								},
+							},
+						},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.RestoreResult) {
+				assert.Equal(t, "restore-prog", result.RestoreID)
+				assert.Len(t, result.NamespaceProgress, 1)
+				assert.Equal(t, "myapp", result.NamespaceProgress[0].NamespaceName)
+				assert.Equal(t, "Running", result.NamespaceProgress[0].Status)
+				assert.Equal(t, 75, result.NamespaceProgress[0].Progress)
+				// Overall progress is averaged from namespace progress
+				assert.Equal(t, 75, result.Progress)
+			},
+		},
+		{
+			name:      "NamespaceProgress_ProgressMonitorError_IsWarningNotFatal",
+			restoreID: "restore-prog-err",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				mockWrapper.Client.On("GetRecoveryByIDWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.Recovery{
+						ID:     core.StringPtr("restore-prog-err"),
+						Status: core.StringPtr("Running"),
+						KubernetesParams: &backuprecoveryv1.RecoveryKubernetesParams{
+							RecoveryAction: core.StringPtr("RecoverNamespaces"),
+							RecoverNamespaceParams: &backuprecoveryv1.RecoverKubernetesParamsRecoverNamespaceParams{
+								TargetEnvironment: core.StringPtr("kKubernetes"),
+								KubernetesTargetParams: &backuprecoveryv1.RecoverKubernetesNamespaceParamsKubernetesTargetParams{
+									Objects: []backuprecoveryv1.KubernetesRecoveryObjectParams{
+										{
+											SnapshotID: core.StringPtr("snap-1"),
+											ObjectInfo: &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{
+												Name: core.StringPtr("myapp"),
+											},
+											Status:         core.StringPtr("Running"),
+											ProgressTaskID: core.StringPtr("task-err"),
+										},
+									},
+								},
+							},
+						},
+					}, nil, nil)
+				// GetProgressMonitors fails — should be a warn, not a fatal error
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything, mock.Anything).Return(
+					nil, nil, fmt.Errorf("progress monitor unavailable"))
+			},
+			validateResult: func(t *testing.T, result *types.RestoreResult) {
+				// Result is still returned despite progress error
+				assert.NotNil(t, result)
+				assert.Equal(t, "restore-prog-err", result.RestoreID)
+				assert.Len(t, result.NamespaceProgress, 1)
+				// Progress defaults to 0 when monitor call fails
+				assert.Equal(t, 0, result.NamespaceProgress[0].Progress)
+			},
+		},
+		{
+			name:      "OverallProgress_FallsBackToTopLevelProgressTaskID",
+			restoreID: "restore-toplevel-prog",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				pct := float32(50)
+				mockWrapper.Client.On("GetRecoveryByIDWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.Recovery{
+						ID:             core.StringPtr("restore-toplevel-prog"),
+						Status:         core.StringPtr("Running"),
+						ProgressTaskID: core.StringPtr("task-top"),
+						// No KubernetesParams — non-k8s restore, no namespace objects
+					}, nil, nil)
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything,
+					mock.MatchedBy(func(opts *backuprecoveryv1.GetProgressMonitorsOptions) bool {
+						return len(opts.TaskPathVec) == 1 && opts.TaskPathVec[0] == "task-top"
+					})).Return(
+					&backuprecoveryv1.GetTasksResult{
+						ResultGroupVec: []backuprecoveryv1.GetTasksResultResultGroup{
+							{
+								TaskVec: []backuprecoveryv1.GetTasksResultResultGroupTask{
+									{
+										Progress: &backuprecoveryv1.TaskProgress{
+											PercentFinished: &pct,
+										},
+									},
+								},
+							},
+						},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.RestoreResult) {
+				assert.Equal(t, "restore-toplevel-prog", result.RestoreID)
+				assert.Empty(t, result.NamespaceProgress)
+				assert.Equal(t, 50, result.Progress)
+			},
+		},
+		{
+			name:      "NamespaceProgress_AveragedForOverallProgress",
+			restoreID: "restore-avg",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				pct1 := float32(60)
+				pct2 := float32(40)
+				mockWrapper.Client.On("GetRecoveryByIDWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.Recovery{
+						ID:     core.StringPtr("restore-avg"),
+						Status: core.StringPtr("Running"),
+						KubernetesParams: &backuprecoveryv1.RecoveryKubernetesParams{
+							RecoveryAction: core.StringPtr("RecoverNamespaces"),
+							RecoverNamespaceParams: &backuprecoveryv1.RecoverKubernetesParamsRecoverNamespaceParams{
+								TargetEnvironment: core.StringPtr("kKubernetes"),
+								KubernetesTargetParams: &backuprecoveryv1.RecoverKubernetesNamespaceParamsKubernetesTargetParams{
+									Objects: []backuprecoveryv1.KubernetesRecoveryObjectParams{
+										{
+											SnapshotID:     core.StringPtr("snap-1"),
+											ObjectInfo:     &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{Name: core.StringPtr("ns-a")},
+											Status:         core.StringPtr("Running"),
+											ProgressTaskID: core.StringPtr("task-a"),
+										},
+										{
+											SnapshotID:     core.StringPtr("snap-2"),
+											ObjectInfo:     &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{Name: core.StringPtr("ns-b")},
+											Status:         core.StringPtr("Running"),
+											ProgressTaskID: core.StringPtr("task-b"),
+										},
+									},
+								},
+							},
+						},
+					}, nil, nil)
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything,
+					mock.MatchedBy(func(opts *backuprecoveryv1.GetProgressMonitorsOptions) bool {
+						return len(opts.TaskPathVec) == 1 && opts.TaskPathVec[0] == "task-a"
+					})).Return(
+					&backuprecoveryv1.GetTasksResult{
+						ResultGroupVec: []backuprecoveryv1.GetTasksResultResultGroup{{
+							TaskVec: []backuprecoveryv1.GetTasksResultResultGroupTask{{
+								Progress: &backuprecoveryv1.TaskProgress{PercentFinished: &pct1},
+							}},
+						}},
+					}, nil, nil)
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything,
+					mock.MatchedBy(func(opts *backuprecoveryv1.GetProgressMonitorsOptions) bool {
+						return len(opts.TaskPathVec) == 1 && opts.TaskPathVec[0] == "task-b"
+					})).Return(
+					&backuprecoveryv1.GetTasksResult{
+						ResultGroupVec: []backuprecoveryv1.GetTasksResultResultGroup{{
+							TaskVec: []backuprecoveryv1.GetTasksResultResultGroupTask{{
+								Progress: &backuprecoveryv1.TaskProgress{PercentFinished: &pct2},
+							}},
+						}},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.RestoreResult) {
+				assert.Len(t, result.NamespaceProgress, 2)
+				assert.Equal(t, 60, result.NamespaceProgress[0].Progress)
+				assert.Equal(t, 40, result.NamespaceProgress[1].Progress)
+				// (60+40)/2 = 50
+				assert.Equal(t, 50, result.Progress)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockWrapper := createMockBRSClientWrapper()
+			tt.mockSetup(mockWrapper)
+			taskAPI := NewTaskAPI(mockWrapper, createTestMockConfig())
+			ctx := context.Background()
+
+			result, err := taskAPI.GetRestore(ctx, tt.restoreID)
+
+			assert.Nil(t, err)
+			assert.NotNil(t, result)
+			if tt.validateResult != nil {
+				tt.validateResult(t, result)
+			}
+			mockWrapper.Client.AssertExpectations(t)
+		})
+	}
+}
+
+// =============================================================================
+// TESTS FOR BACKUP NAMESPACE-LEVEL PROGRESS AND MESSAGES (buildBackupRunResult)
+// =============================================================================
+
+func TestGetBackup_NamespaceProgress(t *testing.T) {
+	tests := []struct {
+		name           string
+		backupID       string
+		groupID        string
+		mockSetup      func(*MockBRSClientWrapper)
+		validateResult func(*testing.T, *types.BackupResult)
+	}{
+		{
+			name:     "NamespaceProgress_StatusAndWarnings",
+			backupID: "backup-ns",
+			groupID:  "group-1",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                core.StringPtr("backup-ns"),
+						ProtectionGroupID: core.StringPtr("group-1"),
+						Objects: []backuprecoveryv1.ObjectRunResult{
+							{
+								Object: &backuprecoveryv1.ObjectSummary{Name: core.StringPtr("frontend-ns")},
+								LocalSnapshotInfo: &backuprecoveryv1.BackupRun{
+									SnapshotInfo: &backuprecoveryv1.SnapshotInfo{
+										Status:        core.StringPtr("kSuccessful"),
+										StatusMessage: core.StringPtr("completed with minor warnings"),
+										Warnings:      []string{"PVC pvc-logs skipped: ReadWriteOnce"},
+									},
+								},
+							},
+							{
+								Object: &backuprecoveryv1.ObjectSummary{Name: core.StringPtr("backend-ns")},
+								LocalSnapshotInfo: &backuprecoveryv1.BackupRun{
+									SnapshotInfo: &backuprecoveryv1.SnapshotInfo{
+										Status: core.StringPtr("kFailed"),
+									},
+								},
+							},
+						},
+					}, nil, nil)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+					assert.Len(t, result.NamespaceProgress, 2)
+	
+					assert.Equal(t, "frontend-ns", result.NamespaceProgress[0].NamespaceName)
+					assert.Equal(t, "kSuccessful", result.NamespaceProgress[0].Status)
+	
+					assert.Equal(t, "backend-ns", result.NamespaceProgress[1].NamespaceName)
+					assert.Equal(t, "kFailed", result.NamespaceProgress[1].Status)
+				},
+		},
+		{
+			name:     "NamespaceProgress_WithProgressTaskID",
+			backupID: "backup-prog",
+			groupID:  "group-1",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				pct := float32(88)
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                core.StringPtr("backup-prog"),
+						ProtectionGroupID: core.StringPtr("group-1"),
+						Objects: []backuprecoveryv1.ObjectRunResult{
+							{
+								Object: &backuprecoveryv1.ObjectSummary{Name: core.StringPtr("myns")},
+								LocalSnapshotInfo: &backuprecoveryv1.BackupRun{
+									SnapshotInfo: &backuprecoveryv1.SnapshotInfo{
+										Status:         core.StringPtr("kInProgress"),
+										ProgressTaskID: core.StringPtr("task-backup-myns"),
+									},
+								},
+							},
+						},
+					}, nil, nil)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{}, nil, nil)
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything,
+					mock.MatchedBy(func(opts *backuprecoveryv1.GetProgressMonitorsOptions) bool {
+						return len(opts.TaskPathVec) == 1 && opts.TaskPathVec[0] == "task-backup-myns"
+					})).Return(
+					&backuprecoveryv1.GetTasksResult{
+						ResultGroupVec: []backuprecoveryv1.GetTasksResultResultGroup{{
+							TaskVec: []backuprecoveryv1.GetTasksResultResultGroupTask{{
+								Progress: &backuprecoveryv1.TaskProgress{PercentFinished: &pct},
+							}},
+						}},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+				assert.Len(t, result.NamespaceProgress, 1)
+				assert.Equal(t, "myns", result.NamespaceProgress[0].NamespaceName)
+				assert.Equal(t, "kInProgress", result.NamespaceProgress[0].Status)
+				assert.Equal(t, 88, result.NamespaceProgress[0].Progress)
+			},
+		},
+		{
+			name:     "NamespaceProgress_ProgressMonitorError_IsWarningNotFatal",
+			backupID: "backup-prog-err",
+			groupID:  "group-1",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                core.StringPtr("backup-prog-err"),
+						ProtectionGroupID: core.StringPtr("group-1"),
+						Objects: []backuprecoveryv1.ObjectRunResult{
+							{
+								Object: &backuprecoveryv1.ObjectSummary{Name: core.StringPtr("myns")},
+								LocalSnapshotInfo: &backuprecoveryv1.BackupRun{
+									SnapshotInfo: &backuprecoveryv1.SnapshotInfo{
+										Status:         core.StringPtr("kInProgress"),
+										ProgressTaskID: core.StringPtr("task-err"),
+									},
+								},
+							},
+						},
+					}, nil, nil)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{}, nil, nil)
+				mockWrapper.Client.On("GetProgressMonitorsWithContext", mock.Anything, mock.Anything).Return(
+					nil, nil, fmt.Errorf("monitor unavailable"))
+			},
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+				// Must still return a result — progress error is non-fatal
+				assert.NotNil(t, result)
+				assert.Equal(t, "backup-prog-err", result.BackupID)
+				assert.Len(t, result.NamespaceProgress, 1)
+				assert.Equal(t, 0, result.NamespaceProgress[0].Progress)
+			},
+		},
+		{
+			name:     "NoObjects_NoNamespaceProgress",
+			backupID: "backup-plain",
+			groupID:  "group-1",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                core.StringPtr("backup-plain"),
+						ProtectionGroupID: core.StringPtr("group-1"),
+					}, nil, nil)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+				assert.Equal(t, "backup-plain", result.BackupID)
+				assert.Empty(t, result.NamespaceProgress)
+			},
+		},
+		{
+			// RealWorldCloudArchivalRunning mirrors the exact response shape from a live
+			// BRS GET /protection-groups/{id}/runs/{runId} call:
+			//   id:                "206327:1788786384042187"
+			//   protectionGroupId: "6774032249995190:1753115492078:206327"
+			//   objects:           null        (no per-namespace objects yet)
+			//   archivalInfo.archivalTargetResults[0].status: "Running"
+			//   archivalInfo.archivalTargetResults[0].startTimeUsecs: 1788786384042187
+			//   isCloudArchivalDirect: true, environment: kKubernetes
+			name:     "RealWorldCloudArchivalRunning_NullObjects",
+			backupID: "206327:1788786384042187",
+			groupID:  "6774032249995190:1753115492078:206327",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				startUsecs := int64(1788786384042187)
+				targetID := int64(16522607)
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                    core.StringPtr("206327:1788786384042187"),
+						ProtectionGroupID:     core.StringPtr("6774032249995190:1753115492078:206327"),
+						IsCloudArchivalDirect: core.BoolPtr(true),
+						HasLocalSnapshot:      core.BoolPtr(true),
+						Environment:           core.StringPtr("kKubernetes"),
+						// Objects is nil — mirrors "objects": null in the real response
+						ArchivalInfo: &backuprecoveryv1.ArchivalRunSummary{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									TargetID:               &targetID,
+									ArchivalTaskID:         core.StringPtr("6774032249995190:1753115492078:24329558"),
+									TargetName:             core.StringPtr("ExtTarget-794118aa-5fae-46fd-bfb6-a41e5e310653"),
+									TargetType:             core.StringPtr("Cloud"),
+									UsageType:              core.StringPtr("Archival"),
+									OwnershipContext:       core.StringPtr("Local"),
+									RunType:                core.StringPtr("kRegular"),
+									StartTimeUsecs:         &startUsecs,
+									Status:                 core.StringPtr("Running"),
+									IndexingTaskID:         core.StringPtr("indexing_206327_206332"),
+									SuccessfulObjectsCount: core.Int64Ptr(0),
+									FailedObjectsCount:     core.Int64Ptr(0),
+								},
+							},
+						},
+					}, nil, nil)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+				assert.NotNil(t, result)
+				assert.Equal(t, "206327:1788786384042187", result.BackupID)
+				assert.Equal(t, "6774032249995190:1753115492078:206327", result.ProtectionGroupID)
+				assert.Equal(t, "Running", result.Status)
+				// startTimeUsecs present → StartedAt must be populated
+				assert.False(t, result.StartedAt.IsZero(), "StartedAt must be set from startTimeUsecs")
+				assert.Equal(t, time.UnixMicro(1788786384042187).UTC(), result.StartedAt.UTC())
+				// No endTimeUsecs → CompletedAt must be nil
+					assert.Nil(t, result.CompletedAt, "CompletedAt must be nil when endTimeUsecs is absent")
+				// objects=null → no namespace-level progress
+				assert.Empty(t, result.NamespaceProgress)
+				// No archival run progress data → Progress is nil
+				assert.Nil(t, result.Progress)
+			},
+		},
+		{
+				// CloudArchivalDirect_NamespaceProgress mirrors the real API response shape
+				// where isCloudArchivalDirect=true and objects[].archivalInfo is populated
+				// (no localSnapshotInfo).  Observed in production for environment=kKubernetes.
+				//
+				// Real response objects:
+				//   objects[0]: name="brs-migration",  archivalInfo.status="Running", progressTaskId="backup_206332_2/task_206340"
+				//   objects[1]: name="ibm-observe",    archivalInfo.status="Running", progressTaskId="backup_206332_1/task_206334"
+				name:     "CloudArchivalDirect_NamespaceProgress",
+					backupID: "206327:1788786384042187",
+					groupID:  "6774032249995190:1753115492078:206327",
+					mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+						startUsecs := int64(1788786384042187)
+						overallPct := float32(45.0)
+						nsPct1 := float32(32.67)
+						nsPct2 := float32(58.0)
+						mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+							&backuprecoveryv1.ProtectionGroupRun{
+								ID:                    core.StringPtr("206327:1788786384042187"),
+								ProtectionGroupID:     core.StringPtr("6774032249995190:1753115492078:206327"),
+								IsCloudArchivalDirect: core.BoolPtr(true),
+								HasLocalSnapshot:      core.BoolPtr(true),
+								Environment:           core.StringPtr("kKubernetes"),
+								ArchivalInfo: &backuprecoveryv1.ArchivalRunSummary{
+									ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+										{
+											StartTimeUsecs: &startUsecs,
+											Status:         core.StringPtr("Running"),
+										},
+									},
+								},
+								// objects=null — always the case for cloud-archival-direct runs
+								Objects: nil,
+							}, nil, nil)
+						// Progress API returns per-namespace objects (the real source of truth)
+						mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+							&backuprecoveryv1.GetProtectionRunProgressBody{
+								ArchivalRun: []backuprecoveryv1.ArchivalTargetProgressInfo{
+									{
+										Status:              core.StringPtr("Active"),
+										PercentageCompleted: &overallPct,
+										Objects: []backuprecoveryv1.ObjectProgressInfo{
+											{
+												Name:                core.StringPtr("e2e-app-nginx"),
+												Status:              core.StringPtr("Active"),
+												PercentageCompleted: &nsPct1,
+											},
+											{
+												Name:                core.StringPtr("e2e-app-busybox"),
+												Status:              core.StringPtr("Active"),
+												PercentageCompleted: &nsPct2,
+											},
+										},
+									},
+								},
+							}, nil, nil)
+					},
+					validateResult: func(t *testing.T, result *types.BackupResult) {
+						assert.NotNil(t, result)
+						assert.Equal(t, "Running", result.Status)
+						// Overall progress from ArchivalRun[0].PercentageCompleted
+						assert.NotNil(t, result.Progress)
+						assert.Equal(t, float32(45.0), *result.Progress)
+						// Per-namespace progress from ArchivalRun[0].Objects[]
+						assert.Len(t, result.NamespaceProgress, 2)
+	
+						assert.Equal(t, "e2e-app-nginx", result.NamespaceProgress[0].NamespaceName)
+						assert.Equal(t, "Active", result.NamespaceProgress[0].Status)
+						assert.Equal(t, 32, result.NamespaceProgress[0].Progress) // int(32.67) — Active, not forced to 100
+	
+						assert.Equal(t, "e2e-app-busybox", result.NamespaceProgress[1].NamespaceName)
+						assert.Equal(t, "Active", result.NamespaceProgress[1].Status)
+						assert.Equal(t, 58, result.NamespaceProgress[1].Progress) // Active, not forced to 100
+					},
+			},
+			{
+			// Validates that status=Finished forces progress=100 (server leaves PercentageCompleted=0 after completion)
+			name:     "CloudArchivalDirect_FinishedNamespace_Progress100",
+			backupID: "159354:1788883592073654",
+			groupID:  "2712860000048009:1757348677013:159354",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				startUsecs := int64(1788883592073654)
+				endUsecs := int64(1788883684808702)
+				overallPct := float32(100.0)
+				zeroPct := float32(0.0) // server returns 0 after completion
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                    core.StringPtr("159354:1788883592073654"),
+						ProtectionGroupID:     core.StringPtr("2712860000048009:1757348677013:159354"),
+						IsCloudArchivalDirect: core.BoolPtr(true),
+						ArchivalInfo: &backuprecoveryv1.ArchivalRunSummary{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{StartTimeUsecs: &startUsecs, EndTimeUsecs: &endUsecs, Status: core.StringPtr("Succeeded")},
+							},
+						},
+						Objects: nil,
+					}, nil, nil)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{
+						ArchivalRun: []backuprecoveryv1.ArchivalTargetProgressInfo{
+							{
+								Status:              core.StringPtr("Finished"),
+								PercentageCompleted: &overallPct,
+								Objects: []backuprecoveryv1.ObjectProgressInfo{
+									{Name: core.StringPtr("e2e-app-nginx"),   Status: core.StringPtr("Finished"), PercentageCompleted: &zeroPct},
+									{Name: core.StringPtr("e2e-app-busybox"), Status: core.StringPtr("Finished"), PercentageCompleted: &zeroPct},
+								},
+							},
+						},
+					}, nil, nil)
+			},
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+				assert.NotNil(t, result)
+				assert.Equal(t, "Succeeded", result.Status)
+				assert.Len(t, result.NamespaceProgress, 2)
+
+				assert.Equal(t, "e2e-app-nginx", result.NamespaceProgress[0].NamespaceName)
+				assert.Equal(t, "Finished", result.NamespaceProgress[0].Status)
+				assert.Equal(t, 100, result.NamespaceProgress[0].Progress) // forced to 100
+
+				assert.Equal(t, "e2e-app-busybox", result.NamespaceProgress[1].NamespaceName)
+				assert.Equal(t, "Finished", result.NamespaceProgress[1].Status)
+				assert.Equal(t, 100, result.NamespaceProgress[1].Progress) // forced to 100
+			},
+		},
+	}
+
+	// Reuse the time import already present in the file to avoid an unused import
+	_ = time.Now()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockWrapper := createMockBRSClientWrapper()
+			tt.mockSetup(mockWrapper)
+			taskAPI := NewTaskAPI(mockWrapper, createTestMockConfig())
+			ctx := context.Background()
+
+			result, err := taskAPI.GetBackup(ctx, tt.backupID, tt.groupID)
+
+			assert.Nil(t, err)
+			assert.NotNil(t, result)
+			if tt.validateResult != nil {
+				tt.validateResult(t, result)
+			}
 			mockWrapper.Client.AssertExpectations(t)
 		})
 	}

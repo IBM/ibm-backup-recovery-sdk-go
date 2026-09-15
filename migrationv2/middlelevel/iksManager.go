@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM-Cloud/container-services-go-sdk/kubernetesserviceapiv1"
 	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/k8"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/logger"
@@ -49,7 +48,6 @@ func NewIKSClient(containerEndpoint, containerEndpointType string, authenticator
 		return nil, fmt.Errorf("failed to initialize kube client: %v", err)
 	}
 
-	// Ensure metrics is never nil - use NoopMetrics if not provided
 	if m == nil {
 		m = metrics.NewNoop()
 	}
@@ -66,14 +64,40 @@ func NewIKSClient(containerEndpoint, containerEndpointType string, authenticator
 	}, nil
 }
 
+// iamAuthenticator validates that the authenticator is non-nil and is an
+// *core.IamAuthenticator, returning it ready to use.  A direct type assertion
+// without this check would panic on a nil or wrong-typed authenticator.
+func (c *IksManager) iamAuthenticator() (*core.IamAuthenticator, error) {
+	if c.authenticator == nil {
+		return nil, fmt.Errorf("authenticator is not configured")
+	}
+	iamAuth, ok := c.authenticator.(*core.IamAuthenticator)
+	if !ok {
+		return nil, fmt.Errorf("authenticator must be *core.IamAuthenticator, got %T", c.authenticator)
+	}
+	return iamAuth, nil
+}
+
 func (c *IksManager) ApplyRBACAndGetKubeconfig(clusterName string) ([]byte, error) {
 	ctx := context.Background()
 	start := time.Now()
 	c.logger.Info(ctx, "Applying RBAC and retrieving kubeconfig", "clusterName", clusterName, "endpointType", c.endpointType)
 
-	endpoint := "/v2/applyRBACAndGetKubeconfig"
-	method := core.POST
+	// Obtain bearer token via the authenticator (IAM token exchange).
+	iamAuth, err := c.iamAuthenticator()
+	if err != nil {
+		c.logger.Error(ctx, "Invalid authenticator", logger.Err(err), "clusterName", clusterName)
+		c.recordApplyRBACMetrics(ctx, time.Since(start), "failure")
+		return nil, err
+	}
+	bearerToken, err := iamAuth.GetToken()
+	if err != nil {
+		c.logger.Error(ctx, "Failed to obtain IAM bearer token", logger.Err(err), "clusterName", clusterName)
+		c.recordApplyRBACMetrics(ctx, time.Since(start), "failure")
+		return nil, fmt.Errorf("failed to obtain IAM bearer token: %v", err)
+	}
 
+	endpoint := "/v2/applyRBACAndGetKubeconfig"
 	payload := map[string]interface{}{
 		"cluster":      clusterName,
 		"admin":        true,
@@ -81,8 +105,8 @@ func (c *IksManager) ApplyRBACAndGetKubeconfig(clusterName string) ([]byte, erro
 		"endpointType": c.endpointType,
 	}
 
-	builder := core.NewRequestBuilder(method)
-	builder.WithContext(context.Background())
+	builder := core.NewRequestBuilder(core.POST)
+	builder.WithContext(ctx)
 
 	if _, err := builder.SetBodyContentJSON(payload); err != nil {
 		c.logger.Error(ctx, "Failed to set request body", logger.Err(err), "clusterName", clusterName)
@@ -95,7 +119,7 @@ func (c *IksManager) ApplyRBACAndGetKubeconfig(clusterName string) ([]byte, erro
 	}
 
 	builder.AddHeader("Accept", "text/yaml")
-	builder.AddHeader("Authorization", fmt.Sprintf("Bearer %s", c.iksClient.Options.Authenticator.(*core.IamAuthenticator).ApiKey))
+	builder.AddHeader("Authorization", "Bearer "+bearerToken)
 
 	request, err := builder.Build()
 	if err != nil {
@@ -103,9 +127,6 @@ func (c *IksManager) ApplyRBACAndGetKubeconfig(clusterName string) ([]byte, erro
 		return nil, fmt.Errorf("failed to build request: %v", err)
 	}
 
-	c.logger.Debug(ctx, "Sending request to IKS API", "endpoint", endpoint, "clusterName", clusterName)
-
-	// Record IBM Cloud Container Service call metric
 	c.metrics.IncCounter(ctx, metrics.MetricIBMCloudContainerServiceCallsTotal,
 		metrics.Label{Key: "accountId", Value: c.accountID},
 	)
@@ -116,53 +137,28 @@ func (c *IksManager) ApplyRBACAndGetKubeconfig(clusterName string) ([]byte, erro
 
 	if err != nil {
 		c.logger.Error(ctx, "IKS API request failed", logger.Err(err), "clusterName", clusterName)
-		// Record failed operation
-		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-			metrics.Label{Key: "status", Value: "failure"},
-			metrics.Label{Key: "accountId", Value: c.accountID},
-		)
-		c.metrics.RecordDuration(ctx, metrics.MetricOperationDuration, duration,
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-			metrics.Label{Key: "accountId", Value: c.accountID},
-		)
-		return nil, fmt.Errorf("request failed: %v", err)
+		c.recordApplyRBACMetrics(ctx, duration, "failure")
+		errMsg := strings.ToLower(err.Error())
+		if strings.Contains(errMsg, "not found") {
+			return nil, fmt.Errorf("cluster '%s' not found. Please verify the cluster name and ensure it exists in your account", clusterName)
+		}
+		if strings.Contains(errMsg, "unauthorized") || strings.Contains(errMsg, "forbidden") {
+			return nil, fmt.Errorf("authentication failed for cluster '%s'. Please verify your API key has access to this cluster", clusterName)
+		}
+		return nil, fmt.Errorf("failed to access cluster '%s': %v", clusterName, err)
 	}
-
-	defer func() {
-		rawBody.Close()
-	}()
+	defer rawBody.Close()
 
 	body, err := io.ReadAll(rawBody)
 	if err != nil {
 		c.logger.Error(ctx, "Failed to read response body", logger.Err(err), "clusterName", clusterName)
-		// Record failed operation
-		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-			metrics.Label{Key: "status", Value: "failure"},
-			metrics.Label{Key: "accountId", Value: c.accountID},
-		)
-		c.metrics.RecordDuration(ctx, metrics.MetricOperationDuration, duration,
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-			metrics.Label{Key: "accountId", Value: c.accountID},
-		)
+		c.recordApplyRBACMetrics(ctx, duration, "failure")
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	if response.StatusCode != http.StatusOK {
 		c.logger.Error(ctx, "IKS API returned error", "statusCode", response.StatusCode, "clusterName", clusterName, "response", string(body))
-		// Record failed operation
-		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-			metrics.Label{Key: "status", Value: "failure"},
-			metrics.Label{Key: "accountId", Value: c.accountID},
-		)
-		c.metrics.RecordDuration(ctx, metrics.MetricOperationDuration, duration,
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-			metrics.Label{Key: "accountId", Value: c.accountID},
-		)
-
-		// Provide user-friendly error messages based on status code
+		c.recordApplyRBACMetrics(ctx, duration, "failure")
 		switch response.StatusCode {
 		case http.StatusNotFound:
 			return nil, fmt.Errorf("cluster '%s' not found. Please verify the cluster name and ensure it exists in your account", clusterName)
@@ -173,19 +169,21 @@ func (c *IksManager) ApplyRBACAndGetKubeconfig(clusterName string) ([]byte, erro
 		}
 	}
 
-	// Record successful operation
+	c.recordApplyRBACMetrics(ctx, duration, "success")
+	c.logger.Info(ctx, "Successfully retrieved kubeconfig", "clusterName", clusterName, "configSize", len(body))
+	return body, nil
+}
+
+func (c *IksManager) recordApplyRBACMetrics(ctx context.Context, duration time.Duration, status string) {
 	c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 		metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
-		metrics.Label{Key: "status", Value: "success"},
+		metrics.Label{Key: "status", Value: status},
 		metrics.Label{Key: "accountId", Value: c.accountID},
 	)
 	c.metrics.RecordDuration(ctx, metrics.MetricOperationDuration, duration,
 		metrics.Label{Key: "operation", Value: metrics.OperationIKSApplyRBAC},
 		metrics.Label{Key: "accountId", Value: c.accountID},
 	)
-
-	c.logger.Info(ctx, "Successfully retrieved kubeconfig", "clusterName", clusterName, "configSize", len(body))
-	return body, nil
 }
 
 // GetKubeApi retrieves the Kubernetes clientset and REST configuration.
@@ -194,32 +192,9 @@ func (c *IksManager) GetKubeApi(clusterName string) (*kubernetes.Clientset, *res
 	start := time.Now()
 	c.logger.Info(ctx, "Getting Kubernetes API client", "clusterName", clusterName, "operation", "GetKubeApi")
 
-	_, err := kubernetesserviceapiv1.NewKubernetesServiceApiV1(
-		&kubernetesserviceapiv1.KubernetesServiceApiV1Options{
-			Authenticator: c.authenticator,
-		},
-	)
-	if err != nil {
-		c.logger.Error(ctx, "Failed to create Kubernetes service API client", logger.Err(err), "clusterName", clusterName)
-		// Record failed operation
-		duration := time.Since(start)
-		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
-			metrics.Label{Key: "accountId", Value: c.accountID},
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSGetKubeApi},
-			metrics.Label{Key: "status", Value: "failure"},
-		)
-		c.metrics.RecordDuration(ctx, metrics.MetricOperationDuration, duration,
-			metrics.Label{Key: "accountId", Value: c.accountID},
-			metrics.Label{Key: "operation", Value: metrics.OperationIKSGetKubeApi},
-		)
-		return nil, nil, err
-	}
-
-	c.logger.Debug(ctx, "Fetching kubeconfig for cluster", "clusterName", clusterName)
 	kubeconfig, err := c.ApplyRBACAndGetKubeconfig(clusterName)
 	if err != nil {
 		c.logger.Error(ctx, "Failed to get kubeconfig", logger.Err(err), "clusterName", clusterName)
-		// Record failed operation
 		duration := time.Since(start)
 		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 			metrics.Label{Key: "accountId", Value: c.accountID},
@@ -230,7 +205,6 @@ func (c *IksManager) GetKubeApi(clusterName string) (*kubernetes.Clientset, *res
 			metrics.Label{Key: "accountId", Value: c.accountID},
 			metrics.Label{Key: "operation", Value: metrics.OperationIKSGetKubeApi},
 		)
-
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "Not Found") || strings.Contains(errMsg, "not found") {
 			return nil, nil, fmt.Errorf("cluster '%s' not found", clusterName)
@@ -238,11 +212,9 @@ func (c *IksManager) GetKubeApi(clusterName string) (*kubernetes.Clientset, *res
 		return nil, nil, fmt.Errorf("failed to get kubeconfig for cluster '%s': %v", clusterName, err)
 	}
 
-	c.logger.Debug(ctx, "Creating REST config from kubeconfig", "clusterName", clusterName)
 	restConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig)
 	if err != nil {
 		c.logger.Error(ctx, "Failed to load REST config", logger.Err(err), "clusterName", clusterName)
-		// Record failed operation
 		duration := time.Since(start)
 		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 			metrics.Label{Key: "accountId", Value: c.accountID},
@@ -256,11 +228,9 @@ func (c *IksManager) GetKubeApi(clusterName string) (*kubernetes.Clientset, *res
 		return nil, nil, fmt.Errorf("failed to load REST config: %v", err)
 	}
 
-	c.logger.Debug(ctx, "Creating Kubernetes clientset", "clusterName", clusterName)
 	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		c.logger.Error(ctx, "Failed to create Kubernetes client", logger.Err(err), "clusterName", clusterName)
-		// Record failed operation
 		duration := time.Since(start)
 		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 			metrics.Label{Key: "accountId", Value: c.accountID},
@@ -274,7 +244,6 @@ func (c *IksManager) GetKubeApi(clusterName string) (*kubernetes.Clientset, *res
 		return nil, nil, fmt.Errorf("failed to create Kubernetes client: %v", err)
 	}
 
-	// Record successful operation
 	duration := time.Since(start)
 	c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 		metrics.Label{Key: "accountId", Value: c.accountID},
@@ -290,7 +259,7 @@ func (c *IksManager) GetKubeApi(clusterName string) (*kubernetes.Clientset, *res
 	return clientSet, restConfig, nil
 }
 
-// GetClusterBearerToken retrieves the bearer token for the cluster
+// GetClusterBearerToken retrieves the bearer token for the cluster.
 func (c *IksManager) GetClusterBearerToken(clientSet *kubernetes.Clientset) (string, error) {
 	ctx := context.Background()
 	start := time.Now()
@@ -301,7 +270,6 @@ func (c *IksManager) GetClusterBearerToken(clientSet *kubernetes.Clientset) (str
 
 	if err != nil {
 		c.logger.Error(ctx, "Failed to get cluster bearer token", logger.Err(err))
-		// Record failed operation
 		c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 			metrics.Label{Key: "accountId", Value: c.accountID},
 			metrics.Label{Key: "operation", Value: metrics.OperationIKSGetBearerToken},
@@ -314,7 +282,6 @@ func (c *IksManager) GetClusterBearerToken(clientSet *kubernetes.Clientset) (str
 		return "", err
 	}
 
-	// Record successful operation
 	c.metrics.IncCounter(ctx, metrics.MetricOperationTotal,
 		metrics.Label{Key: "accountId", Value: c.accountID},
 		metrics.Label{Key: "operation", Value: metrics.OperationIKSGetBearerToken},

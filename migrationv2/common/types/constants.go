@@ -37,6 +37,7 @@ const (
 	BackupRun_Status_Running              BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Running
 	BackupRun_Status_Canceling            BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Canceling
 	BackupRun_Status_Canceled             BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Canceled
+	BackupRun_Status_Failed               BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Failed
 	BackupRun_Status_Missed               BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Missed
 	BackupRun_Status_Succeeded            BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Succeeded
 	BackupRun_Status_SucceededWithWarning BackupRun_StatusType = backuprecoveryv1.ArchivalTargetResult_Status_Succeededwithwarning
