@@ -811,9 +811,9 @@ func TestRunRestore(t *testing.T) {
 							},
 						},
 					},
-					}
-					mc.On("GetProtectionGroupRun", mock.Anything).Return(mockProtectionGroupRun, &core.DetailedResponse{}, nil)
-				},
+				}
+				mc.On("GetProtectionGroupRun", mock.Anything).Return(mockProtectionGroupRun, &core.DetailedResponse{}, nil)
+			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *backuprecoveryv1.CreateRecoveryOptions) {
 				assert.Equal(t, "test-restore", *result.Name)
@@ -2074,8 +2074,8 @@ func TestGetBackupRunSnapShotID(t *testing.T) {
 				Objects: []backuprecoveryv1.ObjectRunResult{
 					{
 						Object: &backuprecoveryv1.ObjectSummary{
-						Name: core.StringPtr("test-namespace"),
-						ID:   core.Int64Ptr(1),
+							Name: core.StringPtr("test-namespace"),
+							ID:   core.Int64Ptr(1),
 						},
 						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
 							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
@@ -2310,22 +2310,22 @@ func TestInitializeKubernetesNamespaceParams(t *testing.T) {
 				},
 			},
 			mockProtectionRun: &backuprecoveryv1.ProtectionGroupRun{
-					Objects: []backuprecoveryv1.ObjectRunResult{
-						{
-							Object: &backuprecoveryv1.ObjectSummary{
+				Objects: []backuprecoveryv1.ObjectRunResult{
+					{
+						Object: &backuprecoveryv1.ObjectSummary{
 							Name: core.StringPtr("test-namespace"),
 							ID:   core.Int64Ptr(1),
-							},
-							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
-								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
-									{
-										SnapshotID: core.StringPtr("snapshot-main"),
-									},
+						},
+						ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									SnapshotID: core.StringPtr("snapshot-main"),
 								},
 							},
 						},
 					},
 				},
+			},
 			mockError:            nil,
 			expectError:          false,
 			expectedResultLength: 2,

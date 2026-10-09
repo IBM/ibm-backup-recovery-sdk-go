@@ -46,15 +46,6 @@ type HelmClient interface {
 	Install(actionConfig *action.Configuration, config *HelmInstallConfig) (*releasev1.Release, error)
 }
 
-// RegistryClient interface abstracts registry operations
-type RegistryClient interface {
-	// Login logs into a container registry
-	Login(host string, username, password string) error
-
-	// Logout logs out from a container registry
-	Logout(host string) error
-}
-
 // HelmRegistryClientWrapper wraps the actual Helm registry client
 type HelmRegistryClientWrapper struct {
 	client *registry.Client
@@ -67,16 +58,6 @@ func NewHelmRegistryClient() (*HelmRegistryClientWrapper, error) {
 		return nil, err
 	}
 	return &HelmRegistryClientWrapper{client: client}, nil
-}
-
-// Login logs into a container registry
-func (w *HelmRegistryClientWrapper) Login(host string, username, password string) error {
-	return w.client.Login(host, registry.LoginOptBasicAuth(username, password))
-}
-
-// Logout logs out from a container registry
-func (w *HelmRegistryClientWrapper) Logout(host string) error {
-	return w.client.Logout(host)
 }
 
 // GetClient returns the underlying registry client

@@ -53,7 +53,7 @@ type ConnectorDeployer interface {
 	SetDeployContext(ctx ConnectorDeployContext)
 
 	// Deploy deploys the connector to the target DataSource
-	Deploy(ctx context.Context, registraionToken string) (*ConnectorResult, error)
+	Deploy(ctx context.Context, registrationToken string) (*ConnectorResult, error)
 
 	// GetStatus retrieves the current status of the connector
 	GetStatus(ctx context.Context, connectorID string) (string, error)

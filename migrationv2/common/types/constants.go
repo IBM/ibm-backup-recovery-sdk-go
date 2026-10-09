@@ -214,11 +214,14 @@ const (
 	// Helper Operations
 	OpBuildBackupRunResult = "buildBackupRunResult"
 	OpGetRestoreProgress   = "getRestoreProgress"
+	// MetaInfo Operations
+	OpGetMetaInfo = "GetMetaInfo"
 )
 
 // Kubernetes DataSource Operation Names
 const (
-	OpRegisterSourceParams     = "RegisterSourceParams"
-	OpCreateProtectionGroupK8s = "CreateProtectionGroup"
-	OpRunRestoreK8s            = "RunRestore"
+	OpRegisterSourceParams      = "RegisterSourceParams"
+	OpCreateProtectionGroupK8s  = "CreateProtectionGroup"
+	OpRunRestoreK8s             = "RunRestore"
+	OpConstructMetaInfoK8s      = "ConstructMetaInfoOptions"
 )

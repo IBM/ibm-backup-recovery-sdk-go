@@ -1794,6 +1794,186 @@ func (t *DefaultTaskAPI) ResumeBackup(ctx context.Context, backupID, groupID str
 	return nil
 }
 
+// GetMetaInfo retrieves snapshot meta-info for Kubernetes objects in a backup run or directly specified snapshots
+func (t *DefaultTaskAPI) GetMetaInfo(ctx context.Context, params *types.MetaInfoParams) ([]*types.MetaInfoResult, *errors.SDKError) {
+	startedAt := time.Now()
+	if params == nil {
+		t.logger.Error(ctx, "MetaInfo params cannot be nil", "operation", types.OpGetMetaInfo)
+		t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+		return nil, errors.NewInvalidConfigError("meta info params cannot be nil", nil)
+	}
+	if params.GroupID == "" {
+		t.logger.Error(ctx, "GroupID is required for GetMetaInfo", "operation", types.OpGetMetaInfo)
+		t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+		return nil, errors.NewInvalidConfigError("groupID is mandatory for GetMetaInfo", nil)
+	}
+
+	env := backuprecoveryv1.ConstructMetaInfoOptions_Environment_Kkubernetes
+	type metaReqItem struct {
+		options   *backuprecoveryv1.ConstructMetaInfoOptions
+		namespace string
+	}
+	var items []metaReqItem
+
+	// 1. Direct SnapshotIDs provided
+	if len(params.SnapshotIDs) > 0 {
+		for _, snapID := range params.SnapshotIDs {
+			if snapID == "" {
+				continue
+			}
+			opt := &backuprecoveryv1.ConstructMetaInfoOptions{
+				SnapshotID:   core.StringPtr(snapID),
+				Environment:  core.StringPtr(env),
+				XIBMTenantID: core.StringPtr(t.brsClient.GetTenantId()),
+			}
+			items = append(items, metaReqItem{options: opt})
+		}
+		if len(items) == 0 {
+			t.logger.Error(ctx, "No valid snapshot IDs provided", "operation", types.OpGetMetaInfo)
+			t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+			return nil, errors.NewInvalidConfigError("no valid snapshot IDs provided", nil)
+		}
+	} else {
+		// 2. Resolve via Backup Run (BackupID provided or latest run fetched)
+		var run backuprecoveryv1.ProtectionGroupRun
+		if params.BackupID != "" {
+			getRunOpts := &backuprecoveryv1.GetProtectionGroupRunOptions{
+				XIBMTenantID:         core.StringPtr(t.brsClient.GetTenantId()),
+				RunID:                core.StringPtr(params.BackupID),
+				ID:                   core.StringPtr(params.GroupID),
+				IncludeObjectDetails: core.BoolPtr(true),
+			}
+			backupRun, _, err := t.brsClient.GetBRSClient().GetProtectionGroupRunWithContext(ctx, getRunOpts)
+			if err != nil {
+				t.logger.Error(ctx, "Failed to fetch protection group run", logger.Err(err), "backupID", params.BackupID, "groupID", params.GroupID, "operation", types.OpGetMetaInfo)
+				t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+				return nil, errors.NewTaskFailedError("failed to fetch protection group run "+params.BackupID, err)
+			}
+			if backupRun == nil {
+				t.logger.Error(ctx, "No protection group run found", "backupID", params.BackupID, "groupID", params.GroupID, "operation", types.OpGetMetaInfo)
+				t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+				return nil, errors.NewTaskFailedError(fmt.Sprintf("no protection group run found for runId: %s under groupId: %s", params.BackupID, params.GroupID), nil)
+			}
+			run = *backupRun
+		} else {
+			getRunsOpts := &backuprecoveryv1.GetProtectionGroupRunsOptions{
+				XIBMTenantID:         core.StringPtr(t.brsClient.GetTenantId()),
+				ID:                   core.StringPtr(params.GroupID),
+				IncludeObjectDetails: core.BoolPtr(true),
+			}
+			runsResp, _, err := t.brsClient.GetBRSClient().GetProtectionGroupRunsWithContext(ctx, getRunsOpts)
+			if err != nil {
+				t.logger.Error(ctx, "Failed to fetch protection group runs", logger.Err(err), "groupID", params.GroupID, "operation", types.OpGetMetaInfo)
+				t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+				return nil, errors.NewTaskFailedError("failed to fetch protection group runs for groupId "+params.GroupID, err)
+			}
+			if runsResp == nil || len(runsResp.Runs) == 0 {
+				t.logger.Error(ctx, "No protection group runs found", "groupID", params.GroupID, "operation", types.OpGetMetaInfo)
+				t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+				return nil, errors.NewTaskFailedError("no protection group runs found for groupId "+params.GroupID, nil)
+			}
+			run = runsResp.Runs[0]
+		}
+
+		if len(run.Objects) == 0 {
+			t.logger.Error(ctx, "No objects found in protection group run", "groupID", params.GroupID, "operation", types.OpGetMetaInfo)
+			t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+			return nil, errors.NewTaskFailedError("no objects found in protection group run for groupId "+params.GroupID, nil)
+		}
+
+		for _, obj := range run.Objects {
+			// In v1, the primary archival target (index 0) is queried for snapshot meta-info.
+			// TODO: Support multi-target archival query if multiple archival targets are configured.
+			if obj.ArchivalInfo == nil || len(obj.ArchivalInfo.ArchivalTargetResults) == 0 || obj.ArchivalInfo.ArchivalTargetResults[0].SnapshotID == nil {
+				continue
+			}
+
+			snapID := *obj.ArchivalInfo.ArchivalTargetResults[0].SnapshotID
+			var nsName string
+			var objID int64
+			if obj.Object != nil {
+				if obj.Object.Name != nil {
+					nsName = *obj.Object.Name
+				}
+				if obj.Object.ID != nil {
+					objID = *obj.Object.ID
+				}
+			}
+
+			opt := &backuprecoveryv1.ConstructMetaInfoOptions{
+				SnapshotID:   core.StringPtr(snapID),
+				Environment:  core.StringPtr(env),
+				XIBMTenantID: core.StringPtr(t.brsClient.GetTenantId()),
+			}
+			if objID != 0 {
+				opt.KubernetesParams = &backuprecoveryv1.ConstructMetaInfoRequestKubernetesParams{
+					ObjectID: core.Int64Ptr(objID),
+				}
+			}
+
+			items = append(items, metaReqItem{
+				options:   opt,
+				namespace: nsName,
+			})
+		}
+
+		if len(items) == 0 {
+			t.logger.Error(ctx, "No valid snapshots found in group", "groupID", params.GroupID, "operation", types.OpGetMetaInfo)
+			t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+			return nil, errors.NewTaskFailedError("no valid snapshots found for group "+params.GroupID, nil)
+		}
+	}
+
+	results := make([]*types.MetaInfoResult, 0, len(items))
+	for _, item := range items {
+		snapID := ""
+		if item.options != nil && item.options.SnapshotID != nil {
+			snapID = *item.options.SnapshotID
+		}
+
+		t.logger.Debug(ctx, "Calling ConstructMetaInfo for snapshot", "snapshotID", snapID, "namespace", item.namespace, "operation", types.OpGetMetaInfo)
+		respResult, _, reqErr := t.brsClient.GetBRSClient().ConstructMetaInfoWithContext(ctx, item.options)
+		if reqErr != nil {
+			t.logger.Error(ctx, "Failed to fetch meta info for snapshot", logger.Err(reqErr), "snapshotID", snapID, "operation", types.OpGetMetaInfo)
+			t.recordOperationFailure(ctx, metrics.OperationGetMetaInfo, startedAt)
+			return nil, errors.NewTaskFailedError("failed to fetch meta info for snapshot "+snapID, reqErr)
+		}
+
+		metaResult := &types.MetaInfoResult{
+			SnapshotID: snapID,
+			Namespace:  item.namespace,
+		}
+
+		if respResult != nil {
+			if respResult.Environment != nil {
+				metaResult.Environment = *respResult.Environment
+			}
+			if respResult.KubernetesParams != nil {
+				k8sRes := &types.KubernetesMetaInfoResult{
+					BackedUpPvcs:      respResult.KubernetesParams.BackedUpPvcs,
+					BackedUpResources: respResult.KubernetesParams.BackedUpResources,
+					ExcludedResources: respResult.KubernetesParams.ExcludedResources,
+					IncludedResources: respResult.KubernetesParams.IncludedResources,
+					QuiesceRuleStatus: respResult.KubernetesParams.QuiesceRuleStatus,
+				}
+				if respResult.KubernetesParams.BackedUpResourceCount != nil {
+					k8sRes.BackedUpResourceCount = *respResult.KubernetesParams.BackedUpResourceCount
+				}
+				if respResult.KubernetesParams.IncludesClusterScopedResources != nil {
+					k8sRes.IncludesClusterScopedResources = *respResult.KubernetesParams.IncludesClusterScopedResources
+				}
+				metaResult.KubernetesParams = k8sRes
+			}
+		}
+
+		results = append(results, metaResult)
+	}
+
+	t.logger.Info(ctx, "Snapshot meta info retrieved successfully", "groupID", params.GroupID, "count", len(results), "operation", types.OpGetMetaInfo)
+	t.recordOperationSuccess(ctx, metrics.OperationGetMetaInfo, startedAt)
+	return results, nil
+}
+
 // AbortBackup aborts a running backup
 func (t *DefaultTaskAPI) AbortBackup(ctx context.Context, backupID, groupID string, force bool) *errors.SDKError {
 	startedAt := time.Now()

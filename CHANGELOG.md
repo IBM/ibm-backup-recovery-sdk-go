@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.5.1
+
+### Content
+
+#### Defects
+
+* Internal fixes and improvements
+
 ## 1.5.0
 
 ### Content

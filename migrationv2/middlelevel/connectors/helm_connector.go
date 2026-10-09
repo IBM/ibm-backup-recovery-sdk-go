@@ -17,11 +17,14 @@ import (
 	backuprecoveryv1 "github.com/IBM/ibm-backup-recovery-sdk-go/backuprecoveryv1"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/config"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/errors"
+	"strings"
+
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/logger"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/metrics"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/middlelevel"
 	"helm.sh/helm/v4/pkg/action"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -53,11 +56,6 @@ type HelmKubeConnectorConfig struct {
 
 	ChartReference string `json:"chartReference,omitempty"`
 
-	// RegistryHost is the OCI registry used to pull the Helm chart (e.g. "icr.io").
-	// Only required when AuthMethod=APIKey. The SDK logs in to this registry using
-	// the ApiKey from AuthConfig before installing the chart.
-	RegistryHost string `json:"registryHost,omitempty"`
-
 	WaitTillDeploy bool `json:"waitTillDeploy,omitempty"` // defaults to false
 
 	// OperatorVersion specifies the operator version (for Operator connector)
@@ -81,6 +79,14 @@ type HelmKubeConnectorConfig struct {
 
 	// ServiceAccount specifies the service account to use
 	ServiceAccount string `json:"serviceAccount,omitempty"`
+
+	// ImagePullSecrets specifies the list of secret names for pulling images (e.g. ["all-icr-io"])
+	// Defaults to ["all-icr-io"] if not specified.
+	ImagePullSecrets []string `json:"imagePullSecrets,omitempty"`
+
+	// SCCEnabled specifies whether OpenShift Security Context Constraints (SCC) is enabled.
+	// Defaults to false if not specified.
+	SCCEnabled *bool `json:"sccEnabled,omitempty"`
 
 	// CustomValues allows passing additional Helm values or operator config
 	CustomValues map[string]interface{} `json:"customValues,omitempty"`
@@ -200,10 +206,7 @@ type HelmConnector struct {
 	namespace       string
 	releaseName     string
 	chartRepo       string
-	chartName       string
 	chartVersion    string
-	kubeconfig      string
-	clusterContext  string
 	ImagePullPolicy string
 	replicas        int32
 	clientSet       kubernetes.Interface
@@ -211,7 +214,6 @@ type HelmConnector struct {
 	iksClient       *middlelevel.IksManager
 	config          *HelmKubeConnectorConfig
 	helmClient      HelmClient
-	registryClient  RegistryClient
 	logger          logger.Logger
 
 	// deployCtx is injected by the task layer via SetDeployContext before Deploy.
@@ -270,17 +272,10 @@ func NewHelmConnector(kubernetesConnectorConfig *HelmKubeConnectorConfig) (*Helm
 	// Create Helm client
 	helmClient := NewDefaultHelmClient(restConfig, kubernetesConnectorConfig.Namespace)
 
-	// Create registry client
-	registryClient, err := NewHelmRegistryClient()
-	if err != nil {
-		return nil, err
-	}
-
 	return &HelmConnector{
 		namespace:       kubernetesConnectorConfig.Namespace,
 		releaseName:     config.DefaultIfEmpty(kubernetesConnectorConfig.ReleaseName, "brs-connector"),
 		chartRepo:       config.DefaultIfEmpty(kubernetesConnectorConfig.ChartReference, "oci://icr.io/ext/brs/brs-ds-connector-chart"),
-		chartName:       config.DefaultIfEmpty(kubernetesConnectorConfig.ChartName, "brs-connector"),
 		chartVersion:    kubernetesConnectorConfig.ChartVersion,
 		ImagePullPolicy: config.DefaultIfEmpty(kubernetesConnectorConfig.ImagePullPolicy, "IfNotPresent"),
 		config:          kubernetesConnectorConfig,
@@ -290,7 +285,6 @@ func NewHelmConnector(kubernetesConnectorConfig *HelmKubeConnectorConfig) (*Helm
 		iksClient:       iksClientInstance,
 		logger:          log,
 		helmClient:      helmClient,
-		registryClient:  registryClient,
 	}, nil
 }
 
@@ -367,6 +361,9 @@ func (h *HelmConnector) resolveChartRef(ctx context.Context) {
 			}
 			chartRef := registryHost + namespace + repository
 			if chartRef != "" {
+				if !strings.HasPrefix(chartRef, "oci://") {
+					chartRef = "oci://" + chartRef
+				}
 				h.chartRepo = chartRef
 				h.logger.Info(ctx, "Resolved chart reference from BRS metadata",
 					"platformType", platformType, "chartRef", chartRef)
@@ -389,6 +386,10 @@ func (h *HelmConnector) resolveChartRef(ctx context.Context) {
 
 // Deploy deploys the Helm-based connector to Kubernetes cluster
 func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*ConnectorResult, error) {
+	if h.deployed {
+		return nil, fmt.Errorf("connector is already deployed in namespace %q; call Delete first", h.namespace)
+	}
+
 	h.logger.Info(ctx, "Starting Helm connector deployment",
 		"namespace", h.namespace,
 		"releaseName", h.releaseName,
@@ -407,6 +408,10 @@ func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*
 	// Step 1: Ensure namespace exists
 	h.logger.Debug(ctx, "Checking if namespace exists", "namespace", h.namespace)
 	if _, err := h.clientSet.CoreV1().Namespaces().Get(ctx, h.namespace, v1.GetOptions{}); err != nil {
+		if !k8serrors.IsNotFound(err) {
+			h.logger.Error(ctx, "Failed to check namespace existence", logger.Err(err), "namespace", h.namespace)
+			return nil, fmt.Errorf("failed to check namespace %q: %w", h.namespace, err)
+		}
 		h.logger.Info(ctx, "Namespace not found, creating new namespace", "namespace", h.namespace)
 		_, err = h.clientSet.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
 			ObjectMeta: v1.ObjectMeta{Name: h.namespace},
@@ -428,7 +433,7 @@ func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*
 		return nil, err
 	}
 
-	// Step 3: Login to the cluster
+	// Step 3: Wire registry client into action config
 	h.logger.Debug(ctx, "Setting up registry client for Helm chart repository")
 	if err := h.setupRegistryClient(actionConfig); err != nil {
 		h.logger.Error(ctx, "Failed to setup registry client", logger.Err(err))
@@ -436,12 +441,30 @@ func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*
 	}
 
 	// Step 4: Prepare values
+	// Default image pull secrets to ["all-icr-io"] if not configured
+	imagePullSecrets := h.config.ImagePullSecrets
+	if len(imagePullSecrets) == 0 {
+		imagePullSecrets = []string{"all-icr-io"}
+	}
+
+	// Default SCC to false if not configured
+	sccEnabled := false
+	if h.config.SCCEnabled != nil {
+		sccEnabled = *h.config.SCCEnabled
+	}
+
 	values := map[string]interface{}{
 		"secrets": map[string]interface{}{
 			"registrationToken": registrationToken,
 		},
 		"image": map[string]interface{}{
 			"pullPolicy": h.ImagePullPolicy,
+		},
+		"imagePullSecrets": imagePullSecrets,
+		"deploymentPlatform": map[string]interface{}{
+			"rocp": map[string]interface{}{
+				"sccEnabled": sccEnabled,
+			},
 		},
 		"replicaCount":     h.replicas,
 		"fullnameOverride": h.releaseName,
@@ -536,7 +559,7 @@ func (h *HelmConnector) Deploy(ctx context.Context, registrationToken string) (*
 		return nil, err
 	}
 
-	// Step 7: Build result
+	// Step 6: Build result
 	result := &ConnectorResult{
 		Status:    "deployed",
 		Message:   fmt.Sprintf("Deployed in namespace %s", release.Namespace),
@@ -611,33 +634,16 @@ func (h *HelmConnector) Delete(ctx context.Context, connectorID string) error {
 }
 
 func (h *HelmConnector) setupRegistryClient(actionConfig *action.Configuration) error {
-	auth := h.config.AuthConfig
-
-	switch auth.GetAuthMethod() {
-
-	case AuthMethodAPIKey:
-		cfg, ok := auth.(*KubernetesAuthConfig)
-		if !ok {
-			return errors.NewInvalidConfigError("invalid kubernetes auth configuration", nil)
-		}
-
-		registryHost := h.config.RegistryHost
-		if registryHost == "" {
-			registryHost = "icr.io" // default IBM Container Registry
-		}
-		if err := h.registryClient.Login(registryHost, "iamapikey", cfg.ApiKey); err != nil {
+	switch h.config.AuthConfig.GetAuthMethod() {
+	case AuthMethodAPIKey, AuthMethodToken:
+		regClient, err := NewHelmRegistryClient()
+		if err != nil {
 			return err
 		}
-
-		// Set the registry client in action config
-		if wrapper, ok := h.registryClient.(*HelmRegistryClientWrapper); ok {
-			actionConfig.RegistryClient = wrapper.GetClient()
-		}
+		actionConfig.RegistryClient = regClient.GetClient()
 		return nil
-
-	case AuthMethodToken:
+	case AuthMethodKubeconfig:
 		return nil
-
 	default:
 		return errors.NewInvalidConfigError("unsupported auth method", nil)
 	}

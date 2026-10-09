@@ -66,4 +66,3 @@ func TestGetInstanceId(t *testing.T) {
 		})
 	}
 }
-

@@ -143,6 +143,7 @@ func (m *mockDataSource) RunRestore(ctx context.Context, groupID, backupID strin
 	return &backuprecoveryv1.CreateRecoveryOptions{}, nil
 }
 
+
 func minimalProtectionPolicyResponse(id, name string, retention int64) *backuprecoveryv1.ProtectionPolicyResponse {
 	return &backuprecoveryv1.ProtectionPolicyResponse{
 		ID:   core.StringPtr(id),
@@ -3056,23 +3057,23 @@ func TestCreateConnection(t *testing.T) {
 				Type: types.ConnectionType_VSI,
 			},
 			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
-					mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
-						&backuprecoveryv1.DataSourceConnectionList{
-							Connections: []backuprecoveryv1.DataSourceConnection{
-								{
-									ConnectionID:      core.StringPtr("existing-conn-123"),
-									ConnectionName:    core.StringPtr("test-connection"),
-									ConnectionEnvType: core.StringPtr("kPhysical"),
-									RegistrationToken: core.StringPtr("existing-token"),
-								},
+				mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.DataSourceConnectionList{
+						Connections: []backuprecoveryv1.DataSourceConnection{
+							{
+								ConnectionID:      core.StringPtr("existing-conn-123"),
+								ConnectionName:    core.StringPtr("test-connection"),
+								ConnectionEnvType: core.StringPtr("kPhysical"),
+								RegistrationToken: core.StringPtr("existing-token"),
 							},
 						},
-						&core.DetailedResponse{StatusCode: 200},
-						nil,
-					).Once()
-					mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
-						&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
-				},
+					},
+					&core.DetailedResponse{StatusCode: 200},
+					nil,
+				).Once()
+				mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
+			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *types.ConnectionResult) {
 				assert.Equal(t, "existing-conn-123", result.ConnectionID)
@@ -3137,23 +3138,23 @@ func TestGetConnectionByName(t *testing.T) {
 			name:           "Success",
 			connectionName: "test-connection",
 			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
-					mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
-						&backuprecoveryv1.DataSourceConnectionList{
-							Connections: []backuprecoveryv1.DataSourceConnection{
-								{
-									ConnectionID:      core.StringPtr("conn-123"),
-									ConnectionName:    core.StringPtr("test-connection"),
-									ConnectionEnvType: core.StringPtr("kPhysical"),
-									RegistrationToken: core.StringPtr("token-123"),
-								},
+				mockWrapper.Client.On("GetDataSourceConnectionsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.DataSourceConnectionList{
+						Connections: []backuprecoveryv1.DataSourceConnection{
+							{
+								ConnectionID:      core.StringPtr("conn-123"),
+								ConnectionName:    core.StringPtr("test-connection"),
+								ConnectionEnvType: core.StringPtr("kPhysical"),
+								RegistrationToken: core.StringPtr("token-123"),
 							},
 						},
-						&core.DetailedResponse{StatusCode: 200},
-						nil,
-					).Once()
-					mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
-						&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
-				},
+					},
+					&core.DetailedResponse{StatusCode: 200},
+					nil,
+				).Once()
+				mockWrapper.Client.On("GetDataSourceConnectorsWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.DataSourceConnectorList{Connectors: []backuprecoveryv1.DataSourceConnector{}}, &core.DetailedResponse{}, nil)
+			},
 			expectError: false,
 			validateResult: func(t *testing.T, result *types.ConnectionResult) {
 				assert.Equal(t, "conn-123", result.ConnectionID)
@@ -3904,7 +3905,7 @@ func TestGetRestore_NamespaceProgress(t *testing.T) {
 											ObjectInfo: &backuprecoveryv1.CommonRecoverObjectSnapshotParamsObjectInfo{
 												Name: core.StringPtr("nginx-prod"),
 											},
-											Status: core.StringPtr("Failed"),
+											Status:   core.StringPtr("Failed"),
 											Messages: []string{"failed to bind PVC: no storage class"},
 										},
 									},
@@ -4190,14 +4191,14 @@ func TestGetBackup_NamespaceProgress(t *testing.T) {
 					&backuprecoveryv1.GetProtectionRunProgressBody{}, nil, nil)
 			},
 			validateResult: func(t *testing.T, result *types.BackupResult) {
-					assert.Len(t, result.NamespaceProgress, 2)
-	
-					assert.Equal(t, "frontend-ns", result.NamespaceProgress[0].NamespaceName)
-					assert.Equal(t, "kSuccessful", result.NamespaceProgress[0].Status)
-	
-					assert.Equal(t, "backend-ns", result.NamespaceProgress[1].NamespaceName)
-					assert.Equal(t, "kFailed", result.NamespaceProgress[1].Status)
-				},
+				assert.Len(t, result.NamespaceProgress, 2)
+
+				assert.Equal(t, "frontend-ns", result.NamespaceProgress[0].NamespaceName)
+				assert.Equal(t, "kSuccessful", result.NamespaceProgress[0].Status)
+
+				assert.Equal(t, "backend-ns", result.NamespaceProgress[1].NamespaceName)
+				assert.Equal(t, "kFailed", result.NamespaceProgress[1].Status)
+			},
 		},
 		{
 			name:     "NamespaceProgress_WithProgressTaskID",
@@ -4348,7 +4349,7 @@ func TestGetBackup_NamespaceProgress(t *testing.T) {
 				assert.False(t, result.StartedAt.IsZero(), "StartedAt must be set from startTimeUsecs")
 				assert.Equal(t, time.UnixMicro(1788786384042187).UTC(), result.StartedAt.UTC())
 				// No endTimeUsecs → CompletedAt must be nil
-					assert.Nil(t, result.CompletedAt, "CompletedAt must be nil when endTimeUsecs is absent")
+				assert.Nil(t, result.CompletedAt, "CompletedAt must be nil when endTimeUsecs is absent")
 				// objects=null → no namespace-level progress
 				assert.Empty(t, result.NamespaceProgress)
 				// No archival run progress data → Progress is nil
@@ -4356,81 +4357,81 @@ func TestGetBackup_NamespaceProgress(t *testing.T) {
 			},
 		},
 		{
-				// CloudArchivalDirect_NamespaceProgress mirrors the real API response shape
-				// where isCloudArchivalDirect=true and objects[].archivalInfo is populated
-				// (no localSnapshotInfo).  Observed in production for environment=kKubernetes.
-				//
-				// Real response objects:
-				//   objects[0]: name="brs-migration",  archivalInfo.status="Running", progressTaskId="backup_206332_2/task_206340"
-				//   objects[1]: name="ibm-observe",    archivalInfo.status="Running", progressTaskId="backup_206332_1/task_206334"
-				name:     "CloudArchivalDirect_NamespaceProgress",
-					backupID: "206327:1788786384042187",
-					groupID:  "6774032249995190:1753115492078:206327",
-					mockSetup: func(mockWrapper *MockBRSClientWrapper) {
-						startUsecs := int64(1788786384042187)
-						overallPct := float32(45.0)
-						nsPct1 := float32(32.67)
-						nsPct2 := float32(58.0)
-						mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
-							&backuprecoveryv1.ProtectionGroupRun{
-								ID:                    core.StringPtr("206327:1788786384042187"),
-								ProtectionGroupID:     core.StringPtr("6774032249995190:1753115492078:206327"),
-								IsCloudArchivalDirect: core.BoolPtr(true),
-								HasLocalSnapshot:      core.BoolPtr(true),
-								Environment:           core.StringPtr("kKubernetes"),
-								ArchivalInfo: &backuprecoveryv1.ArchivalRunSummary{
-									ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
-										{
-											StartTimeUsecs: &startUsecs,
-											Status:         core.StringPtr("Running"),
-										},
-									},
+			// CloudArchivalDirect_NamespaceProgress mirrors the real API response shape
+			// where isCloudArchivalDirect=true and objects[].archivalInfo is populated
+			// (no localSnapshotInfo).  Observed in production for environment=kKubernetes.
+			//
+			// Real response objects:
+			//   objects[0]: name="brs-migration",  archivalInfo.status="Running", progressTaskId="backup_206332_2/task_206340"
+			//   objects[1]: name="ibm-observe",    archivalInfo.status="Running", progressTaskId="backup_206332_1/task_206334"
+			name:     "CloudArchivalDirect_NamespaceProgress",
+			backupID: "206327:1788786384042187",
+			groupID:  "6774032249995190:1753115492078:206327",
+			mockSetup: func(mockWrapper *MockBRSClientWrapper) {
+				startUsecs := int64(1788786384042187)
+				overallPct := float32(45.0)
+				nsPct1 := float32(32.67)
+				nsPct2 := float32(58.0)
+				mockWrapper.Client.On("GetProtectionGroupRunWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.ProtectionGroupRun{
+						ID:                    core.StringPtr("206327:1788786384042187"),
+						ProtectionGroupID:     core.StringPtr("6774032249995190:1753115492078:206327"),
+						IsCloudArchivalDirect: core.BoolPtr(true),
+						HasLocalSnapshot:      core.BoolPtr(true),
+						Environment:           core.StringPtr("kKubernetes"),
+						ArchivalInfo: &backuprecoveryv1.ArchivalRunSummary{
+							ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+								{
+									StartTimeUsecs: &startUsecs,
+									Status:         core.StringPtr("Running"),
 								},
-								// objects=null — always the case for cloud-archival-direct runs
-								Objects: nil,
-							}, nil, nil)
-						// Progress API returns per-namespace objects (the real source of truth)
-						mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
-							&backuprecoveryv1.GetProtectionRunProgressBody{
-								ArchivalRun: []backuprecoveryv1.ArchivalTargetProgressInfo{
+							},
+						},
+						// objects=null — always the case for cloud-archival-direct runs
+						Objects: nil,
+					}, nil, nil)
+				// Progress API returns per-namespace objects (the real source of truth)
+				mockWrapper.Client.On("GetProtectionRunProgressWithContext", mock.Anything, mock.Anything).Return(
+					&backuprecoveryv1.GetProtectionRunProgressBody{
+						ArchivalRun: []backuprecoveryv1.ArchivalTargetProgressInfo{
+							{
+								Status:              core.StringPtr("Active"),
+								PercentageCompleted: &overallPct,
+								Objects: []backuprecoveryv1.ObjectProgressInfo{
 									{
+										Name:                core.StringPtr("e2e-app-nginx"),
 										Status:              core.StringPtr("Active"),
-										PercentageCompleted: &overallPct,
-										Objects: []backuprecoveryv1.ObjectProgressInfo{
-											{
-												Name:                core.StringPtr("e2e-app-nginx"),
-												Status:              core.StringPtr("Active"),
-												PercentageCompleted: &nsPct1,
-											},
-											{
-												Name:                core.StringPtr("e2e-app-busybox"),
-												Status:              core.StringPtr("Active"),
-												PercentageCompleted: &nsPct2,
-											},
-										},
+										PercentageCompleted: &nsPct1,
+									},
+									{
+										Name:                core.StringPtr("e2e-app-busybox"),
+										Status:              core.StringPtr("Active"),
+										PercentageCompleted: &nsPct2,
 									},
 								},
-							}, nil, nil)
-					},
-					validateResult: func(t *testing.T, result *types.BackupResult) {
-						assert.NotNil(t, result)
-						assert.Equal(t, "Running", result.Status)
-						// Overall progress from ArchivalRun[0].PercentageCompleted
-						assert.NotNil(t, result.Progress)
-						assert.Equal(t, float32(45.0), *result.Progress)
-						// Per-namespace progress from ArchivalRun[0].Objects[]
-						assert.Len(t, result.NamespaceProgress, 2)
-	
-						assert.Equal(t, "e2e-app-nginx", result.NamespaceProgress[0].NamespaceName)
-						assert.Equal(t, "Active", result.NamespaceProgress[0].Status)
-						assert.Equal(t, 32, result.NamespaceProgress[0].Progress) // int(32.67) — Active, not forced to 100
-	
-						assert.Equal(t, "e2e-app-busybox", result.NamespaceProgress[1].NamespaceName)
-						assert.Equal(t, "Active", result.NamespaceProgress[1].Status)
-						assert.Equal(t, 58, result.NamespaceProgress[1].Progress) // Active, not forced to 100
-					},
+							},
+						},
+					}, nil, nil)
 			},
-			{
+			validateResult: func(t *testing.T, result *types.BackupResult) {
+				assert.NotNil(t, result)
+				assert.Equal(t, "Running", result.Status)
+				// Overall progress from ArchivalRun[0].PercentageCompleted
+				assert.NotNil(t, result.Progress)
+				assert.Equal(t, float32(45.0), *result.Progress)
+				// Per-namespace progress from ArchivalRun[0].Objects[]
+				assert.Len(t, result.NamespaceProgress, 2)
+
+				assert.Equal(t, "e2e-app-nginx", result.NamespaceProgress[0].NamespaceName)
+				assert.Equal(t, "Active", result.NamespaceProgress[0].Status)
+				assert.Equal(t, 32, result.NamespaceProgress[0].Progress) // int(32.67) — Active, not forced to 100
+
+				assert.Equal(t, "e2e-app-busybox", result.NamespaceProgress[1].NamespaceName)
+				assert.Equal(t, "Active", result.NamespaceProgress[1].Status)
+				assert.Equal(t, 58, result.NamespaceProgress[1].Progress) // Active, not forced to 100
+			},
+		},
+		{
 			// Validates that status=Finished forces progress=100 (server leaves PercentageCompleted=0 after completion)
 			name:     "CloudArchivalDirect_FinishedNamespace_Progress100",
 			backupID: "159354:1788883592073654",
@@ -4459,7 +4460,7 @@ func TestGetBackup_NamespaceProgress(t *testing.T) {
 								Status:              core.StringPtr("Finished"),
 								PercentageCompleted: &overallPct,
 								Objects: []backuprecoveryv1.ObjectProgressInfo{
-									{Name: core.StringPtr("e2e-app-nginx"),   Status: core.StringPtr("Finished"), PercentageCompleted: &zeroPct},
+									{Name: core.StringPtr("e2e-app-nginx"), Status: core.StringPtr("Finished"), PercentageCompleted: &zeroPct},
 									{Name: core.StringPtr("e2e-app-busybox"), Status: core.StringPtr("Finished"), PercentageCompleted: &zeroPct},
 								},
 							},
@@ -4500,6 +4501,185 @@ func TestGetBackup_NamespaceProgress(t *testing.T) {
 				tt.validateResult(t, result)
 			}
 			mockWrapper.Client.AssertExpectations(t)
+		})
+	}
+}
+
+// =============================================================================
+// GetMetaInfo Tests
+// =============================================================================
+
+func TestGetMetaInfo(t *testing.T) {
+	tests := []struct {
+		name          string
+		params        *types.MetaInfoParams
+		setupMocks    func(m *testmockrs.MockBRSClient)
+		expectedLen   int
+		expectedError string
+	}{
+		{
+			name:          "NilParams",
+			params:        nil,
+			expectedError: "meta info params cannot be nil",
+		},
+		{
+			name:          "MissingGroupID",
+			params:        &types.MetaInfoParams{GroupID: ""},
+			expectedError: "groupID is mandatory for GetMetaInfo",
+		},
+		{
+			name: "DirectSnapshotIDs_Success",
+			params: &types.MetaInfoParams{
+				GroupID:     "group-1",
+				SnapshotIDs: []string{"snap-1", "snap-2"},
+			},
+			setupMocks: func(m *testmockrs.MockBRSClient) {
+				m.On("ConstructMetaInfoWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.ConstructMetaInfoOptions) bool {
+					return *opts.SnapshotID == "snap-1"
+				})).Return(&backuprecoveryv1.ConstructMetaInfoResult{
+					Environment: core.StringPtr("kKubernetes"),
+					KubernetesParams: &backuprecoveryv1.ConstructMetaInfoResultKubernetesParams{
+						BackedUpResourceCount: core.Int64Ptr(10),
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+
+				m.On("ConstructMetaInfoWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.ConstructMetaInfoOptions) bool {
+					return *opts.SnapshotID == "snap-2"
+				})).Return(&backuprecoveryv1.ConstructMetaInfoResult{
+					Environment: core.StringPtr("kKubernetes"),
+					KubernetesParams: &backuprecoveryv1.ConstructMetaInfoResultKubernetesParams{
+						BackedUpResourceCount: core.Int64Ptr(20),
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+			},
+			expectedLen: 2,
+		},
+		{
+			name: "BackupIDProvided_Success",
+			params: &types.MetaInfoParams{
+				GroupID:  "group-1",
+				BackupID: "backup-1",
+			},
+			setupMocks: func(m *testmockrs.MockBRSClient) {
+				m.On("GetProtectionGroupRunWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.GetProtectionGroupRunOptions) bool {
+					return *opts.RunID == "backup-1" && *opts.ID == "group-1"
+				})).Return(&backuprecoveryv1.ProtectionGroupRun{
+					Objects: []backuprecoveryv1.ObjectRunResult{
+						{
+							Object: &backuprecoveryv1.ObjectSummary{
+								Name: core.StringPtr("ns-1"),
+								ID:   core.Int64Ptr(101),
+							},
+							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+									{SnapshotID: core.StringPtr("snap-ns-1")},
+								},
+							},
+						},
+						{
+							Object: &backuprecoveryv1.ObjectSummary{
+								Name: core.StringPtr("ns-2"),
+								ID:   core.Int64Ptr(102),
+							},
+							ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+								ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+									{SnapshotID: core.StringPtr("snap-ns-2")},
+								},
+							},
+						},
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+
+				m.On("ConstructMetaInfoWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.ConstructMetaInfoOptions) bool {
+					return *opts.SnapshotID == "snap-ns-1"
+				})).Return(&backuprecoveryv1.ConstructMetaInfoResult{
+					Environment: core.StringPtr("kKubernetes"),
+					KubernetesParams: &backuprecoveryv1.ConstructMetaInfoResultKubernetesParams{
+						BackedUpResourceCount: core.Int64Ptr(10),
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+
+				m.On("ConstructMetaInfoWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.ConstructMetaInfoOptions) bool {
+					return *opts.SnapshotID == "snap-ns-2"
+				})).Return(&backuprecoveryv1.ConstructMetaInfoResult{
+					Environment: core.StringPtr("kKubernetes"),
+					KubernetesParams: &backuprecoveryv1.ConstructMetaInfoResultKubernetesParams{
+						BackedUpResourceCount: core.Int64Ptr(20),
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+			},
+			expectedLen: 2,
+		},
+		{
+			name: "NoBackupID_LatestRun_Success",
+			params: &types.MetaInfoParams{
+				GroupID: "group-1",
+			},
+			setupMocks: func(m *testmockrs.MockBRSClient) {
+				m.On("GetProtectionGroupRunsWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.GetProtectionGroupRunsOptions) bool {
+					return *opts.ID == "group-1"
+				})).Return(&backuprecoveryv1.ProtectionGroupRunsResponse{
+					Runs: []backuprecoveryv1.ProtectionGroupRun{
+						{
+							Objects: []backuprecoveryv1.ObjectRunResult{
+								{
+									Object: &backuprecoveryv1.ObjectSummary{
+										Name: core.StringPtr("latest-ns"),
+										ID:   core.Int64Ptr(201),
+									},
+									ArchivalInfo: &backuprecoveryv1.ArchivalRun{
+										ArchivalTargetResults: []backuprecoveryv1.ArchivalTargetResult{
+											{SnapshotID: core.StringPtr("snap-latest")},
+										},
+									},
+								},
+							},
+						},
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+
+				m.On("ConstructMetaInfoWithContext", mock.Anything, mock.MatchedBy(func(opts *backuprecoveryv1.ConstructMetaInfoOptions) bool {
+					return *opts.SnapshotID == "snap-latest"
+				})).Return(&backuprecoveryv1.ConstructMetaInfoResult{
+					Environment: core.StringPtr("kKubernetes"),
+					KubernetesParams: &backuprecoveryv1.ConstructMetaInfoResultKubernetesParams{
+						BackedUpResourceCount: core.Int64Ptr(30),
+					},
+				}, &core.DetailedResponse{StatusCode: 200}, nil)
+			},
+			expectedLen: 1,
+		},
+		{
+			name: "BRSClientError",
+			params: &types.MetaInfoParams{
+				GroupID:     "group-1",
+				SnapshotIDs: []string{"snap-fail"},
+			},
+			setupMocks: func(m *testmockrs.MockBRSClient) {
+				m.On("ConstructMetaInfoWithContext", mock.Anything, mock.Anything).
+					Return((*backuprecoveryv1.ConstructMetaInfoResult)(nil), &core.DetailedResponse{StatusCode: 500}, fmt.Errorf("BRS internal error"))
+			},
+			expectedError: "failed to fetch meta info for snapshot snap-fail",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockWrapper := createMockBRSClientWrapper()
+			if tt.setupMocks != nil {
+				tt.setupMocks(mockWrapper.Client)
+			}
+			taskAPI := NewTaskAPI(mockWrapper, createTestMockConfig())
+
+			result, err := taskAPI.GetMetaInfo(context.Background(), tt.params)
+			if tt.expectedError != "" {
+				assert.NotNil(t, err)
+				assert.Contains(t, err.Message, tt.expectedError)
+				assert.Nil(t, result)
+			} else {
+				assert.Nil(t, err)
+				assert.Len(t, result, tt.expectedLen)
+			}
 		})
 	}
 }

@@ -183,7 +183,6 @@ func deployConnector(ctx context.Context, client *migrationv2.Client, connection
 		ReleaseName:           "brs-connector",
 		ChartName:             "ibm-backup-recovery-agent",
 		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		RegistryHost:          "icr.io",
 		WaitTillDeploy:        true,
 		ConnectorType:         connectors.ConnectorTypeHelm,
 		AuthConfig: &connectors.KubernetesAuthConfig{

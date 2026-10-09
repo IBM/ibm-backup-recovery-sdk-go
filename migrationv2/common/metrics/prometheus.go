@@ -92,6 +92,7 @@ const (
 	OperationResumeBackup = "resume_backup"
 	OperationAbortBackup  = "abort_backup"
 	OperationAbortRestore = "abort_restore"
+	OperationGetMetaInfo  = "get_meta_info"
 )
 
 // OperationStatus represents the status of an operation.

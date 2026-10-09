@@ -97,4 +97,3 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 		})
 	}
 }
-

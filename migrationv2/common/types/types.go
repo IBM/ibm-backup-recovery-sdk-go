@@ -102,7 +102,7 @@ type ProtectionGroupResult struct {
 // RunResultBase holds fields common to all run results (backup and restore).
 type RunResultBase struct {
 	BackupID    string     `json:"backupId"`
-	Status      string     `json:"status"`               // "Running", "Succeeded", "Failed", etc.
+	Status      string     `json:"status"` // "Running", "Succeeded", "Failed", etc.
 	StartedAt   time.Time  `json:"startedAt"`
 	CompletedAt *time.Time `json:"completedAt,omitempty"`
 }
@@ -116,7 +116,7 @@ type NamespaceProgressBase struct {
 // ProgressWithMessages holds the progress percentage and optional messages,
 // shared between top-level run results and per-namespace progress entries.
 type ProgressWithMessages struct {
-	Progress int      `json:"progress"`          // 0-100
+	Progress int      `json:"progress"`           // 0-100
 	Messages []string `json:"messages,omitempty"` // informational/error messages
 }
 
@@ -483,10 +483,10 @@ type ProtectionSetting struct {
 	// Add protection settings fields as needed
 	RetentionDays int64 `json:"retentionDays,omitempty"`
 	// StartTime    string     `yaml:"startTime,omitempty"`
-	EndDate          string `yaml:"endDate,omitempty"`
-	CSISnapshot      bool   `yaml:"CSISnapshot,omitempty"`
-	Labels           Labels `yaml:"labels,omitempty"`
-	PauseFutureRuns  bool   `yaml:"pauseFutureRuns,omitempty" json:"pauseFutureRuns,omitempty"`
+	EndDate         string `yaml:"endDate,omitempty"`
+	CSISnapshot     bool   `yaml:"CSISnapshot,omitempty"`
+	Labels          Labels `yaml:"labels,omitempty"`
+	PauseFutureRuns bool   `yaml:"pauseFutureRuns,omitempty" json:"pauseFutureRuns,omitempty"`
 }
 
 type Labels struct {
@@ -877,6 +877,40 @@ type StorageClassMapping struct {
 // RestoreParams holds INPUT parameters for running a restore on VpcVsi
 type PhysicalRestoreParams struct {
 	Files string `json:"files"` // files to include
+}
+
+// MetaInfoParams represents parameters for retrieving snapshot meta-info.
+// GroupID is mandatory.
+// If BackupID is not provided, the SDK automatically resolves the most recent backup run for that GroupID.
+// Note: In v1, snapshot meta-info is retrieved from the primary archival target (index 0) of each protected object.
+type MetaInfoParams struct {
+	// Mandatory Protection Group ID
+	GroupID string `json:"groupId"`
+
+	// Optional Backup / Run ID. If omitted, the latest/most recent run is fetched.
+	BackupID string `json:"backupId,omitempty"`
+
+	// Direct Snapshot ID(s) if already known
+	SnapshotIDs []string `json:"snapshotIds,omitempty"`
+}
+
+// MetaInfoResult represents the meta-info for a single snapshot / namespace
+type MetaInfoResult struct {
+	SnapshotID       string                    `json:"snapshotId"`
+	Namespace        string                    `json:"namespace,omitempty"`
+	Environment      string                    `json:"environment,omitempty"`
+	KubernetesParams *KubernetesMetaInfoResult `json:"kubernetesParams,omitempty"`
+}
+
+// KubernetesMetaInfoResult holds the parsed Kubernetes snapshot metadata
+type KubernetesMetaInfoResult struct {
+	BackedUpPvcs                   []backuprecoveryv1.KubernetesPvcInfo        `json:"backedUpPvcs,omitempty"`
+	BackedUpResourceCount          int64                                       `json:"backedUpResourceCount,omitempty"`
+	BackedUpResources              []backuprecoveryv1.ResourceInfo             `json:"backedUpResources,omitempty"`
+	ExcludedResources              []string                                    `json:"excludedResources,omitempty"`
+	IncludedResources              []string                                    `json:"includedResources,omitempty"`
+	IncludesClusterScopedResources bool                                        `json:"includesClusterScopedResources,omitempty"`
+	QuiesceRuleStatus              []backuprecoveryv1.KubernetesHookRuleStatus `json:"quiesceRuleStatus,omitempty"`
 }
 
 // RestoreLabels defines label-based filtering for restore

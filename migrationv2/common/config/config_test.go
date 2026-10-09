@@ -315,4 +315,3 @@ func TestConfigSetters(t *testing.T) {
 		})
 	}
 }
-

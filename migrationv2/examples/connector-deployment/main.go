@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2"
 	"github.com/IBM/ibm-backup-recovery-sdk-go/migrationv2/common/config"
@@ -29,9 +30,20 @@ func initializeClient(ctx context.Context) (*migrationv2.Client, error) {
 	cfg := config.DefaultConfig().
 		WithRegion(getEnv("IBM_REGION", "us-south")).
 		WithAPIKey(apiKey).
-		WithBRSInstanceName(getEnv("BRS_INSTANCE_NAME", "brs-instance")).
 		WithResourceGroupID(getEnv("RESOURCE_GROUP_ID", "default"))
-	// WithAccountID is required only when metrics or activity tracking are enabled.
+
+	if crn := getEnv("BRS_INSTANCE_CRN", ""); crn != "" {
+		cfg.WithBRSInstanceCRN(crn)
+	} else {
+		cfg.WithBRSInstanceName(getEnv("BRS_INSTANCE_NAME", "brs-instance"))
+	}
+
+	if iam := getEnv("IAM_ENDPOINT", ""); iam != "" {
+		cfg.WithIAMEndpoint(iam)
+	}
+	if rc := getEnv("RESOURCE_CONTROLLER_ENDPOINT", ""); rc != "" {
+		cfg.WithResourceControllerEndpoint(rc)
+	}
 
 	return migrationv2.NewClient(ctx, cfg)
 }
@@ -52,20 +64,24 @@ func deployBasicHelmConnector(ctx context.Context) {
 		log.Fatalf("Failed to initialize client: %v", err)
 	}
 
+	sccEnabled := true // Required for OpenShift (ROKS) clusters
 	connectorConfig := &connectors.HelmKubeConnectorConfig{
-		ClusterName:           getEnv("CLUSTER_NAME", "my-cluster"),
-		ContainerEndpoint:     "https://containers.cloud.ibm.com/global",
+		ClusterName:           getEnv("CLUSTER_NAME", "mig-bhanu-test-cluster"),
+		ContainerEndpoint:     getEnv("CONTAINER_ENDPOINT", "https://containers.cloud.ibm.com/global"),
 		ContainerEndpointType: "public",
-		Namespace:             "brs-connector",
-		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
-		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		RegistryHost:          "icr.io",
+		Namespace:             getEnv("CONNECTOR_NAMESPACE", fmt.Sprintf("brs-connector-%d", time.Now().Unix())),
+		ReleaseName:           getEnv("RELEASE_NAME", fmt.Sprintf("brs-connector-%d", time.Now().Unix())),
+		ChartVersion:          getEnv("CHART_VERSION", "7.3.13-release-20260917-27d89876"),
+		ChartReference:        getEnv("CHART_REFERENCE", "oci://icr.io/brs-charts/brs-ds-connector-chart"),
+		ImagePullSecrets:      []string{"all-icr-io"}, // Pull secret configured explicitly (default is ["all-icr-io"])
+		SCCEnabled:            &sccEnabled,            // Enables SCC for OpenShift (default is false)
+		WaitTillDeploy:        true,
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 		AuthConfig: &connectors.KubernetesAuthConfig{
 			ApiKey:     getEnv("IBM_API_KEY", ""),
 			AuthMethod: connectors.AuthMethodAPIKey,
-			IamURL:     "https://iam.cloud.ibm.com",
+			IamURL:     getEnv("IAM_ENDPOINT", "https://iam.cloud.ibm.com"),
 		},
 	}
 
@@ -74,20 +90,21 @@ func deployBasicHelmConnector(ctx context.Context) {
 		log.Fatalf("Failed to create connector deployer: %v", err)
 	}
 
+	connName := getEnv("CONNECTION_NAME", fmt.Sprintf("helm-connection-%d", time.Now().Unix()))
 	connParam := &types.ConnectionParams{
-		Name: "basic-helm-connection",
+		Name: connName,
 		Type: types.ConnectionType_ROKS_CLASSIC, // User-friendly constant
 	}
 
-	connectionResult, err := client.TaskAPI.CreateConnection(ctx, connParam)
-	if err != nil {
-		log.Fatalf("Failed to create connection: %v", err)
+	connectionResult, sdkErr := client.TaskAPI.CreateConnection(ctx, connParam)
+	if sdkErr != nil {
+		log.Fatalf("Failed to create connection: %v", sdkErr)
 	}
 	fmt.Printf("✓ Connection created: %s\n", connectionResult.ConnectionID)
 
-	connectorResult, err := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
-	if err != nil {
-		log.Fatalf("Failed to deploy connector: %v", err)
+	connectorResult, sdkErr := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
+	if sdkErr != nil {
+		log.Fatalf("Failed to deploy connector: %v", sdkErr)
 	}
 
 	fmt.Printf("✓ Helm connector deployed: %s\n", connectorResult.ConnectorID)
@@ -108,9 +125,8 @@ func deployWithNodeSelector(ctx context.Context) {
 		ContainerEndpoint:     "https://containers.cloud.ibm.com/global",
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector-nodeselector",
-		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartVersion:          getEnv("CHART_VERSION", "7.3.13-release-20260917-27d89876"),
 		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 
@@ -138,14 +154,14 @@ func deployWithNodeSelector(ctx context.Context) {
 		Type: types.ConnectionType_ROKS_CLASSIC, // User-friendly constant
 	}
 
-	connectionResult, err := client.TaskAPI.CreateConnection(ctx, connParam)
-	if err != nil {
-		log.Fatalf("Failed to create connection: %v", err)
+	connectionResult, sdkErr := client.TaskAPI.CreateConnection(ctx, connParam)
+	if sdkErr != nil {
+		log.Fatalf("Failed to create connection: %v", sdkErr)
 	}
 
-	connectorResult, err := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
-	if err != nil {
-		log.Fatalf("Failed to deploy connector: %v", err)
+	connectorResult, sdkErr := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
+	if sdkErr != nil {
+		log.Fatalf("Failed to deploy connector: %v", sdkErr)
 	}
 
 	fmt.Printf("✓ Connector deployed with NodeSelector: %s\n", connectorResult.ConnectorID)
@@ -165,9 +181,8 @@ func deployWithTolerations(ctx context.Context) {
 		ContainerEndpoint:     "https://containers.cloud.ibm.com/global",
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector-tolerations",
-		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartVersion:          getEnv("CHART_VERSION", "7.3.13-release-20260917-27d89876"),
 		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 
@@ -205,14 +220,14 @@ func deployWithTolerations(ctx context.Context) {
 		Type: types.ConnectionType_ROKS_CLASSIC, // User-friendly constant
 	}
 
-	connectionResult, err := client.TaskAPI.CreateConnection(ctx, connParam)
-	if err != nil {
-		log.Fatalf("Failed to create connection: %v", err)
+	connectionResult, sdkErr := client.TaskAPI.CreateConnection(ctx, connParam)
+	if sdkErr != nil {
+		log.Fatalf("Failed to create connection: %v", sdkErr)
 	}
 
-	connectorResult, err := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
-	if err != nil {
-		log.Fatalf("Failed to deploy connector: %v", err)
+	connectorResult, sdkErr := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
+	if sdkErr != nil {
+		log.Fatalf("Failed to deploy connector: %v", sdkErr)
 	}
 
 	fmt.Printf("✓ Connector deployed with Tolerations: %s\n", connectorResult.ConnectorID)
@@ -232,9 +247,8 @@ func deployWithResources(ctx context.Context) {
 		ContainerEndpoint:     "https://containers.cloud.ibm.com/global",
 		ContainerEndpointType: "public",
 		Namespace:             "brs-connector-resources",
-		ChartVersion:          getEnv("CHART_VERSION", "7.2.18-release-20260226-49768040"),
+		ChartVersion:          getEnv("CHART_VERSION", "7.3.13-release-20260917-27d89876"),
 		ChartReference:        "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		RegistryHost:          "icr.io",
 		Replicas:              1,
 		ImagePullPolicy:       "Always",
 
@@ -288,14 +302,14 @@ func deployWithResources(ctx context.Context) {
 		Type: types.ConnectionType_ROKS_CLASSIC, // User-friendly constant
 	}
 
-	connectionResult, err := client.TaskAPI.CreateConnection(ctx, connParam)
-	if err != nil {
-		log.Fatalf("Failed to create connection: %v", err)
+	connectionResult, sdkErr := client.TaskAPI.CreateConnection(ctx, connParam)
+	if sdkErr != nil {
+		log.Fatalf("Failed to create connection: %v", sdkErr)
 	}
 
-	connectorResult, err := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
-	if err != nil {
-		log.Fatalf("Failed to deploy connector: %v", err)
+	connectorResult, sdkErr := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
+	if sdkErr != nil {
+		log.Fatalf("Failed to deploy connector: %v", sdkErr)
 	}
 
 	fmt.Printf("✓ Connector deployed with Resources: %s\n", connectorResult.ConnectorID)
@@ -334,14 +348,14 @@ func deployVSIWithSSHKey(ctx context.Context) {
 		Type: types.ConnectionType_VSI, // User-friendly constant
 	}
 
-	connectionResult, err := client.TaskAPI.CreateConnection(ctx, connParam)
-	if err != nil {
-		log.Fatalf("Failed to create connection: %v", err)
+	connectionResult, sdkErr := client.TaskAPI.CreateConnection(ctx, connParam)
+	if sdkErr != nil {
+		log.Fatalf("Failed to create connection: %v", sdkErr)
 	}
 
-	connectorResult, err := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
-	if err != nil {
-		log.Fatalf("Failed to deploy connector: %v", err)
+	connectorResult, sdkErr := client.TaskAPI.DeployConnector(ctx, connector, connectionResult)
+	if sdkErr != nil {
+		log.Fatalf("Failed to deploy connector: %v", sdkErr)
 	}
 
 	fmt.Printf("✓ Agent connector deployed: %s\n", connectorResult.ConnectorID)
@@ -371,6 +385,7 @@ func validateAuthConfigs() {
 
 	k8sAuth1 := &connectors.KubernetesAuthConfig{
 		AuthMethod:     connectors.AuthMethodKubeconfig,
+		IamURL:         "https://iam.cloud.ibm.com",
 		KubeconfigPath: "/path/to/kubeconfig",
 	}
 	if err := k8sAuth1.Validate(); err != nil {
@@ -425,20 +440,37 @@ func main() {
 		fmt.Println("To run deployment examples, set:")
 		fmt.Println("  export IBM_API_KEY='your-api-key'")
 		fmt.Println("  export CLUSTER_NAME='your-cluster-name'")
-		fmt.Println("  export CHART_VERSION='7.2.18-release-20260226-49768040'")
+		fmt.Println("  export CHART_VERSION='7.3.13-release-20260917-27d89876'")
+		fmt.Println("  export EXAMPLE='1' (options: 1, 2, 3, 4, 5, or all)")
 		fmt.Println("\n==============================================")
 		fmt.Println("Examples completed!")
 		fmt.Println("==============================================")
 		return
 	}
 
-	// Uncomment the examples you want to run:
-	// ctx := context.Background()
-	// deployBasicHelmConnector(ctx)
-	// deployWithNodeSelector(ctx)
-	// deployWithTolerations(ctx)
-	// deployWithResources(ctx)
-	// deployVSIWithSSHKey(ctx)
+	exampleChoice := getEnv("EXAMPLE", "1")
+	ctx := context.Background()
+
+	switch exampleChoice {
+	case "1":
+		deployBasicHelmConnector(ctx)
+	case "2":
+		deployWithNodeSelector(ctx)
+	case "3":
+		deployWithTolerations(ctx)
+	case "4":
+		deployWithResources(ctx)
+	case "5":
+		deployVSIWithSSHKey(ctx)
+	case "all":
+		deployBasicHelmConnector(ctx)
+		deployWithNodeSelector(ctx)
+		deployWithTolerations(ctx)
+		deployWithResources(ctx)
+		deployVSIWithSSHKey(ctx)
+	default:
+		fmt.Printf("\n⚠️  Unknown EXAMPLE=%q. Valid options: 1, 2, 3, 4, 5, all\n", exampleChoice)
+	}
 
 	fmt.Println("\n==============================================")
 	fmt.Println("Examples completed!")

@@ -23,13 +23,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"helm.sh/helm/v4/pkg/action"
-	"helm.sh/helm/v4/pkg/registry"
 	releasev1 "helm.sh/helm/v4/pkg/release/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 // MockIksManager implements middlelevel.IksManagerInterface for testing
@@ -419,7 +421,6 @@ func TestNewConnector(t *testing.T) {
 				ReleaseName:           "test-release",
 				ChartName:             "test-chart",
 				ChartReference:        "oci://icr.io/test/chart",
-				RegistryHost:          "icr.io",
 				ImagePullPolicy:       "IfNotPresent",
 				AuthConfig: &KubernetesAuthConfig{
 					AuthMethod: AuthMethodAPIKey,
@@ -464,7 +465,6 @@ func TestNewConnector(t *testing.T) {
 				ReleaseName:           "my-connector",
 				ChartName:             "my-chart",
 				ChartReference:        "oci://my-registry/my-chart",
-				RegistryHost:          "my-registry",
 				WaitTillDeploy:        true,
 				ImagePullPolicy:       "Always",
 				AuthConfig: &KubernetesAuthConfig{
@@ -940,7 +940,6 @@ func TestConfig_CreateDeployer(t *testing.T) {
 				StorageClass:          "ibmc-block-silver",
 				Replicas:              1,
 				ConnectorType:         ConnectorTypeHelm,
-				RegistryHost:          "icr.io",
 				AuthConfig: &KubernetesAuthConfig{
 					AuthMethod: AuthMethodAPIKey,
 					IamURL:     "https://iam.cloud.ibm.com",
@@ -1098,25 +1097,6 @@ func (m *MockHelmClient) Install(actionConfig *action.Configuration, config *Hel
 	return args.Get(0).(*releasev1.Release), args.Error(1)
 }
 
-type MockRegistryClient struct {
-	mock.Mock
-	client *registry.Client
-}
-
-func (m *MockRegistryClient) Login(host string, username, password string) error {
-	args := m.Called(host, username, password)
-	return args.Error(0)
-}
-
-func (m *MockRegistryClient) Logout(host string) error {
-	args := m.Called(host)
-	return args.Error(0)
-}
-
-func (m *MockRegistryClient) GetClient() *registry.Client {
-	return m.client
-}
-
 func TestDeploy_Success(t *testing.T) {
 	fakeClientSet := fake.NewSimpleClientset()
 	ns := &corev1.Namespace{
@@ -1140,15 +1120,10 @@ func TestDeploy_Success(t *testing.T) {
 		Namespace: "test-namespace",
 	}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
 		chartRepo:       "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		chartName:       "brs-connector",
 		ImagePullPolicy: "IfNotPresent",
 		replicas:        1,
 		clientSet:       fakeClientSet,
@@ -1157,16 +1132,14 @@ func TestDeploy_Success(t *testing.T) {
 			Namespace:      "test-namespace",
 			ClusterName:    "test-cluster",
 			WaitTillDeploy: false,
-			RegistryHost:   "icr.io",
 			AuthConfig: &KubernetesAuthConfig{
 				AuthMethod: AuthMethodAPIKey,
 				IamURL:     "https://iam.cloud.ibm.com",
 				ApiKey:     "test-api-key",
 			},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -1177,7 +1150,6 @@ func TestDeploy_Success(t *testing.T) {
 	assert.Contains(t, result.Message, "test-namespace")
 	assert.True(t, connector.deployed)
 	mockHelmClient.AssertExpectations(t)
-	mockRegistryClient.AssertExpectations(t)
 }
 
 func TestDeploy_WithStorageClass(t *testing.T) {
@@ -1204,15 +1176,10 @@ func TestDeploy_WithStorageClass(t *testing.T) {
 		Namespace: "test-namespace",
 	}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
 		chartRepo:       "oci://icr.io/ext/brs/brs-ds-connector-chart",
-		chartName:       "brs-connector",
 		ImagePullPolicy: "IfNotPresent",
 		replicas:        1,
 		clientSet:       fakeClientSet,
@@ -1222,16 +1189,14 @@ func TestDeploy_WithStorageClass(t *testing.T) {
 			ClusterName:    "test-cluster",
 			StorageClass:   "ibmc-block-silver",
 			WaitTillDeploy: false,
-			RegistryHost:   "icr.io",
 			AuthConfig: &KubernetesAuthConfig{
 				AuthMethod: AuthMethodAPIKey,
 				IamURL:     "https://iam.cloud.ibm.com",
 				ApiKey:     "test-api-key",
 			},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -1239,21 +1204,17 @@ func TestDeploy_WithStorageClass(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	mockHelmClient.AssertExpectations(t)
-	mockRegistryClient.AssertExpectations(t)
 }
-
-
-
 
 func TestDeploy_Errors(t *testing.T) {
 	tests := []struct {
 		name          string
-		setupMocks    func() (*HelmConnector, *MockHelmClient, *MockRegistryClient)
+		setupMocks    func() (*HelmConnector, *MockHelmClient)
 		errorContains string
 	}{
 		{
 			name: "AuthValidationError",
-			setupMocks: func() (*HelmConnector, *MockHelmClient, *MockRegistryClient) {
+			setupMocks: func() (*HelmConnector, *MockHelmClient) {
 				connector := &HelmConnector{
 					config: &HelmKubeConnectorConfig{
 						AuthConfig: &KubernetesAuthConfig{
@@ -1262,13 +1223,13 @@ func TestDeploy_Errors(t *testing.T) {
 					},
 					logger: logger.NewNoOpLogger(),
 				}
-				return connector, nil, nil
+				return connector, nil
 			},
 			errorContains: "",
 		},
 		{
 			name: "HelmInitError",
-			setupMocks: func() (*HelmConnector, *MockHelmClient, *MockRegistryClient) {
+			setupMocks: func() (*HelmConnector, *MockHelmClient) {
 				fakeClientSet := fake.NewSimpleClientset()
 				ns := &corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1285,7 +1246,6 @@ func TestDeploy_Errors(t *testing.T) {
 					clientSet:  fakeClientSet,
 					restConfig: &rest.Config{},
 					config: &HelmKubeConnectorConfig{
-						RegistryHost: "icr.io",
 						AuthConfig: &KubernetesAuthConfig{
 							AuthMethod: AuthMethodAPIKey,
 							IamURL:     "https://iam.cloud.ibm.com",
@@ -1296,51 +1256,13 @@ func TestDeploy_Errors(t *testing.T) {
 					logger:     logger.NewNoop(),
 				}
 
-				return connector, mockHelmClient, nil
+				return connector, mockHelmClient
 			},
 			errorContains: "helm init failed",
 		},
 		{
-			name: "RegistryLoginError",
-			setupMocks: func() (*HelmConnector, *MockHelmClient, *MockRegistryClient) {
-				fakeClientSet := fake.NewSimpleClientset()
-				ns := &corev1.Namespace{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-namespace",
-					},
-				}
-				_, _ = fakeClientSet.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
-
-				mockHelmClient := new(MockHelmClient)
-				mockHelmClient.On("Init", mock.Anything, "test-namespace").Return(nil)
-
-				mockRegistryClient := new(MockRegistryClient)
-				mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(fmt.Errorf("login failed"))
-
-				connector := &HelmConnector{
-					namespace:  "test-namespace",
-					clientSet:  fakeClientSet,
-					restConfig: &rest.Config{},
-					config: &HelmKubeConnectorConfig{
-						RegistryHost: "icr.io",
-						AuthConfig: &KubernetesAuthConfig{
-							AuthMethod: AuthMethodAPIKey,
-							IamURL:     "https://iam.cloud.ibm.com",
-							ApiKey:     "test-api-key",
-						},
-					},
-					helmClient:     mockHelmClient,
-					registryClient: mockRegistryClient,
-					logger:         logger.NewNoop(),
-				}
-
-				return connector, mockHelmClient, mockRegistryClient
-			},
-			errorContains: "login failed",
-		},
-		{
 			name: "LocateChartError",
-			setupMocks: func() (*HelmConnector, *MockHelmClient, *MockRegistryClient) {
+			setupMocks: func() (*HelmConnector, *MockHelmClient) {
 				fakeClientSet := fake.NewSimpleClientset()
 				ns := &corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1353,35 +1275,29 @@ func TestDeploy_Errors(t *testing.T) {
 				mockHelmClient.On("Init", mock.Anything, "test-namespace").Return(nil)
 				mockHelmClient.On("Install", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("chart not found"))
 
-				mockRegistryClient := new(MockRegistryClient)
-				mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-				mockRegistryClient.client = &registry.Client{}
-
 				connector := &HelmConnector{
 					namespace:  "test-namespace",
 					chartRepo:  "oci://icr.io/ext/brs/brs-ds-connector-chart",
 					clientSet:  fakeClientSet,
 					restConfig: &rest.Config{},
 					config: &HelmKubeConnectorConfig{
-						RegistryHost: "icr.io",
 						AuthConfig: &KubernetesAuthConfig{
 							AuthMethod: AuthMethodAPIKey,
 							IamURL:     "https://iam.cloud.ibm.com",
 							ApiKey:     "test-api-key",
 						},
 					},
-					helmClient:     mockHelmClient,
-					registryClient: mockRegistryClient,
-					logger:         logger.NewNoop(),
+					helmClient: mockHelmClient,
+					logger:     logger.NewNoop(),
 				}
 
-				return connector, mockHelmClient, mockRegistryClient
+				return connector, mockHelmClient
 			},
 			errorContains: "chart not found",
 		},
 		{
 			name: "InstallError",
-			setupMocks: func() (*HelmConnector, *MockHelmClient, *MockRegistryClient) {
+			setupMocks: func() (*HelmConnector, *MockHelmClient) {
 				fakeClientSet := fake.NewSimpleClientset()
 				ns := &corev1.Namespace{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1394,10 +1310,6 @@ func TestDeploy_Errors(t *testing.T) {
 				mockHelmClient.On("Init", mock.Anything, "test-namespace").Return(nil)
 				mockHelmClient.On("Install", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("install failed"))
 
-				mockRegistryClient := new(MockRegistryClient)
-				mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-				mockRegistryClient.client = &registry.Client{}
-
 				connector := &HelmConnector{
 					namespace:   "test-namespace",
 					releaseName: "brs-connector",
@@ -1405,18 +1317,16 @@ func TestDeploy_Errors(t *testing.T) {
 					clientSet:   fakeClientSet,
 					restConfig:  &rest.Config{},
 					config: &HelmKubeConnectorConfig{
-						RegistryHost: "icr.io",
 						AuthConfig: &KubernetesAuthConfig{
 							AuthMethod: AuthMethodAPIKey,
 							IamURL:     "https://iam.cloud.ibm.com",
 							ApiKey:     "test-api-key",
 						},
 					},
-					helmClient:     mockHelmClient,
-					registryClient: mockRegistryClient,
-					logger:         logger.NewNoOpLogger(),
+					helmClient: mockHelmClient,
+					logger:     logger.NewNoOpLogger(),
 				}
-				return connector, mockHelmClient, mockRegistryClient
+				return connector, mockHelmClient
 			},
 			errorContains: "install failed",
 		},
@@ -1424,7 +1334,7 @@ func TestDeploy_Errors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			connector, mockHelmClient, mockRegistryClient := tt.setupMocks()
+			connector, mockHelmClient := tt.setupMocks()
 
 			result, err := connector.Deploy(context.Background(), "test-token")
 
@@ -1436,9 +1346,6 @@ func TestDeploy_Errors(t *testing.T) {
 
 			if mockHelmClient != nil {
 				mockHelmClient.AssertExpectations(t)
-			}
-			if mockRegistryClient != nil {
-				mockRegistryClient.AssertExpectations(t)
 			}
 		})
 	}
@@ -1551,15 +1458,10 @@ func TestDeploy_Scheduling(t *testing.T) {
 				Namespace: "test-namespace",
 			}, nil)
 
-			mockRegistryClient := new(MockRegistryClient)
-			mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-			mockRegistryClient.client = &registry.Client{}
-
 			connector := &HelmConnector{
 				namespace:       "test-namespace",
 				releaseName:     "brs-connector",
 				chartRepo:       "oci://icr.io/ext/brs/brs-ds-connector-chart",
-				chartName:       "brs-connector",
 				ImagePullPolicy: "IfNotPresent",
 				replicas:        1,
 				clientSet:       fakeClientSet,
@@ -1578,9 +1480,8 @@ func TestDeploy_Scheduling(t *testing.T) {
 						ApiKey:     "test-api-key",
 					},
 				},
-				helmClient:     mockHelmClient,
-				registryClient: mockRegistryClient,
-				logger:         logger.NewNoOpLogger(),
+				helmClient: mockHelmClient,
+				logger:     logger.NewNoOpLogger(),
 			}
 
 			result, err := connector.Deploy(context.Background(), "test-token")
@@ -1590,7 +1491,6 @@ func TestDeploy_Scheduling(t *testing.T) {
 			assert.Contains(t, result.Message, "test-namespace")
 			assert.True(t, connector.deployed)
 			mockHelmClient.AssertExpectations(t)
-			mockRegistryClient.AssertExpectations(t)
 		})
 	}
 }
@@ -1603,7 +1503,20 @@ func TestSetupRegistry(t *testing.T) {
 		errorContains string
 	}{
 		{
-			name: "TokenAuth_NoOp",
+			name: "APIKey_Success",
+			connector: &HelmConnector{
+				config: &HelmKubeConnectorConfig{
+					AuthConfig: &KubernetesAuthConfig{
+						AuthMethod: AuthMethodAPIKey,
+						IamURL:     "https://iam.cloud.ibm.com",
+						ApiKey:     "test-api-key",
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "TokenAuth_Success",
 			connector: &HelmConnector{
 				config: &HelmKubeConnectorConfig{
 					AuthConfig: &KubernetesAuthConfig{
@@ -1614,16 +1527,28 @@ func TestSetupRegistry(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "InvalidAuthConfig",
+			name: "KubeconfigAuth_Success",
 			connector: &HelmConnector{
 				config: &HelmKubeConnectorConfig{
-					AuthConfig: &VSIAuthConfig{ // Wrong auth config type
-						AuthMethod: AuthMethodAPIKey,
+					AuthConfig: &KubernetesAuthConfig{
+						AuthMethod:     AuthMethodKubeconfig,
+						KubeconfigPath: "/path/to/kubeconfig",
+					},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "UnsupportedAuthMethod",
+			connector: &HelmConnector{
+				config: &HelmKubeConnectorConfig{
+					AuthConfig: &VSIAuthConfig{
+						AuthMethod: AuthMethodSSHKey,
 					},
 				},
 			},
 			expectError:   true,
-			errorContains: "invalid kubernetes auth configuration",
+			errorContains: "unsupported auth method",
 		},
 	}
 
@@ -1644,64 +1569,20 @@ func TestSetupRegistry(t *testing.T) {
 }
 
 func TestRegistryClient(t *testing.T) {
-	tests := []struct {
-		name         string
-		testFunc     func(t *testing.T)
-		expectError  bool
-		validateFunc func(t *testing.T, wrapper *HelmRegistryClientWrapper, err error)
-	}{
-		{
-			name: "NewHelmRegistryClient_Success",
-			testFunc: func(t *testing.T) {
-				client, err := NewHelmRegistryClient()
-				assert.NoError(t, err)
-				assert.NotNil(t, client)
-				assert.NotNil(t, client.client)
-			},
-		},
-		{
-			name: "GetClient",
-			testFunc: func(t *testing.T) {
-				regClient, _ := registry.NewClient()
-				wrapper := &HelmRegistryClientWrapper{
-					client: regClient,
-				}
-				result := wrapper.GetClient()
-				assert.Equal(t, regClient, result)
-			},
-		},
-		{
-			name: "Login_WrapperStructure",
-			testFunc: func(t *testing.T) {
-				wrapper, err := NewHelmRegistryClient()
-				assert.NoError(t, err)
-				assert.NotNil(t, wrapper)
-				assert.NotNil(t, wrapper.client)
-			},
-		},
-		{
-			name: "Logout_NoError",
-			testFunc: func(t *testing.T) {
-				wrapper, _ := NewHelmRegistryClient()
-				err := wrapper.Logout("test-host")
-				_ = err
-			},
-		},
-		{
-			name: "Login_Error",
-			testFunc: func(t *testing.T) {
-				wrapper, _ := NewHelmRegistryClient()
-				err := wrapper.Login("invalid-host", "user", "pass")
-				assert.Error(t, err)
-			},
-		},
-	}
+	t.Run("NewHelmRegistryClient_Success", func(t *testing.T) {
+		client, err := NewHelmRegistryClient()
+		assert.NoError(t, err)
+		assert.NotNil(t, client)
+		assert.NotNil(t, client.client)
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.testFunc(t)
-		})
-	}
+	t.Run("GetClient", func(t *testing.T) {
+		client, err := NewHelmRegistryClient()
+		assert.NoError(t, err)
+		result := client.GetClient()
+		assert.NotNil(t, result)
+		assert.Equal(t, client.client, result)
+	})
 }
 
 func TestHelmClient(t *testing.T) {
@@ -1777,10 +1658,6 @@ func TestDeploy_AutoCreatesNamespace(t *testing.T) {
 	mockHelmClient.On("Install", mock.Anything, mock.Anything).
 		Return(&releasev1.Release{Name: "brs-connector", Namespace: "new-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "new-namespace",
 		releaseName:     "brs-connector",
@@ -1790,14 +1667,12 @@ func TestDeploy_AutoCreatesNamespace(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "new-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "new-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -1811,7 +1686,43 @@ func TestDeploy_AutoCreatesNamespace(t *testing.T) {
 	assert.Equal(t, "new-namespace", ns.Name)
 
 	mockHelmClient.AssertExpectations(t)
-	mockRegistryClient.AssertExpectations(t)
+}
+
+func TestDeploy_NamespaceGetError_Non404_FailsDeploy(t *testing.T) {
+	// When Namespace Get returns a non-404 error (e.g. 403 Forbidden), Deploy must fail immediately.
+	fakeClientSet := fake.NewSimpleClientset()
+	fakeClientSet.PrependReactor("get", "namespaces", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, nil, apierrors.NewForbidden(corev1.Resource("namespaces"), "test-namespace", fmt.Errorf("forbidden"))
+	})
+
+	mockHelmClient := new(MockHelmClient)
+
+	connector := &HelmConnector{
+		namespace:       "test-namespace",
+		releaseName:     "brs-connector",
+		chartRepo:       "oci://icr.io/ext/brs/brs-ds-connector-chart",
+		ImagePullPolicy: "IfNotPresent",
+		replicas:        1,
+		clientSet:       fakeClientSet,
+		restConfig:      &rest.Config{},
+		config: &HelmKubeConnectorConfig{
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+		},
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
+	}
+
+	result, err := connector.Deploy(context.Background(), "test-token")
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "failed to check namespace \"test-namespace\"")
+	assert.Contains(t, err.Error(), "forbidden")
+
+	// Verify Helm Init / Install was never called
+	mockHelmClient.AssertNotCalled(t, "Init", mock.Anything, mock.Anything)
+	mockHelmClient.AssertNotCalled(t, "Install", mock.Anything, mock.Anything)
 }
 
 // ---------------------------------------------------------------------------
@@ -1830,10 +1741,6 @@ func TestDeploy_DeployedFlag_FalseOnError(t *testing.T) {
 	mockHelmClient.On("Init", mock.Anything, "test-namespace").Return(nil)
 	mockHelmClient.On("Install", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("install boom"))
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -1843,14 +1750,12 @@ func TestDeploy_DeployedFlag_FalseOnError(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -1877,10 +1782,6 @@ func TestDeploy_WaitTillDeploy_ForwardedToInstallConfig(t *testing.T) {
 		return cfg.Wait == true
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -1893,12 +1794,10 @@ func TestDeploy_WaitTillDeploy_ForwardedToInstallConfig(t *testing.T) {
 			Namespace:      "test-namespace",
 			ClusterName:    "test-cluster",
 			WaitTillDeploy: true,
-			RegistryHost:   "icr.io",
 			AuthConfig:     &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -1927,10 +1826,6 @@ func TestDeploy_CustomValues_OverrideBaseValues(t *testing.T) {
 			cfg.Values["extraKey"] == "extraVal"
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -1940,18 +1835,16 @@ func TestDeploy_CustomValues_OverrideBaseValues(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 			CustomValues: map[string]interface{}{
 				"replicaCount": 5,
 				"extraKey":     "extraVal",
 			},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -1961,10 +1854,11 @@ func TestDeploy_CustomValues_OverrideBaseValues(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Deploy — default RegistryHost fallback ("icr.io") when field is empty
+// Deploy — ImagePullSecrets and SCCEnabled configuration
 // ---------------------------------------------------------------------------
 
-func TestDeploy_DefaultRegistryHost_Fallback(t *testing.T) {
+func TestDeploy_ImagePullSecrets_And_SCCEnabled(t *testing.T) {
+	sccTrue := true
 	fakeClientSet := fake.NewSimpleClientset()
 	_, _ = fakeClientSet.CoreV1().Namespaces().Create(
 		context.Background(),
@@ -1974,13 +1868,22 @@ func TestDeploy_DefaultRegistryHost_Fallback(t *testing.T) {
 
 	mockHelmClient := new(MockHelmClient)
 	mockHelmClient.On("Init", mock.Anything, "test-namespace").Return(nil)
-	mockHelmClient.On("Install", mock.Anything, mock.Anything).
-		Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
-
-	mockRegistryClient := new(MockRegistryClient)
-	// RegistryHost is empty — setupRegistryClient must default to "icr.io"
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
+	mockHelmClient.On("Install", mock.Anything, mock.MatchedBy(func(cfg *HelmInstallConfig) bool {
+		secrets, ok := cfg.Values["imagePullSecrets"].([]string)
+		if !ok || len(secrets) != 2 || secrets[0] != "custom-secret-1" || secrets[1] != "custom-secret-2" {
+			return false
+		}
+		deployPlatform, ok := cfg.Values["deploymentPlatform"].(map[string]interface{})
+		if !ok {
+			return false
+		}
+		rocp, ok := deployPlatform["rocp"].(map[string]interface{})
+		if !ok {
+			return false
+		}
+		scc, ok := rocp["sccEnabled"].(bool)
+		return ok && scc == true
+	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
@@ -1991,20 +1894,34 @@ func TestDeploy_DefaultRegistryHost_Fallback(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "", // intentionally empty
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:        "test-namespace",
+			ClusterName:      "test-cluster",
+			ImagePullSecrets: []string{"custom-secret-1", "custom-secret-2"},
+			SCCEnabled:       &sccTrue,
+			AuthConfig:       &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	mockRegistryClient.AssertExpectations(t) // Login must have been called with "icr.io"
+	mockHelmClient.AssertExpectations(t)
+}
+
+func TestDeploy_AlreadyDeployed_ReturnsError(t *testing.T) {
+	connector := &HelmConnector{
+		namespace:   "test-namespace",
+		releaseName: "brs-connector",
+		deployed:    true,
+		logger:      logger.NewNoop(),
+	}
+
+	result, err := connector.Deploy(context.Background(), "test-token")
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "connector is already deployed")
 }
 
 // ---------------------------------------------------------------------------
@@ -2031,10 +1948,6 @@ func TestDeploy_Resources_RequestsOnly(t *testing.T) {
 		return hasRequests && !hasLimits
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -2044,18 +1957,16 @@ func TestDeploy_Resources_RequestsOnly(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 			Resources: &ResourceRequirements{
 				Requests: &ResourceList{CPU: "250m", Memory: "256Mi"},
 				Limits:   nil, // no limits
 			},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -2085,10 +1996,6 @@ func TestDeploy_Resources_LimitsOnly(t *testing.T) {
 		return !hasRequests && hasLimits
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -2098,18 +2005,16 @@ func TestDeploy_Resources_LimitsOnly(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 			Resources: &ResourceRequirements{
 				Requests: nil, // no requests
 				Limits:   &ResourceList{CPU: "1000m", Memory: "1Gi"},
 			},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -2135,10 +2040,6 @@ func TestDeploy_Resources_EmptySubfields_Omitted(t *testing.T) {
 		return !hasResources
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -2148,18 +2049,16 @@ func TestDeploy_Resources_EmptySubfields_Omitted(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 			Resources: &ResourceRequirements{
 				Requests: &ResourceList{CPU: "", Memory: ""},
 				Limits:   &ResourceList{CPU: "", Memory: ""},
 			},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 	}
 
 	result, err := connector.Deploy(context.Background(), "test-token")
@@ -2199,43 +2098,6 @@ func TestDelete_Success(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// setupRegistryClient — HelmRegistryClientWrapper wires actionConfig.RegistryClient
-// ---------------------------------------------------------------------------
-
-func TestSetupRegistryClient_WiresActionConfig(t *testing.T) {
-	regWrapper, err := NewHelmRegistryClient()
-	assert.NoError(t, err)
-
-	connector := &HelmConnector{
-		config: &HelmKubeConnectorConfig{
-			RegistryHost: "icr.io",
-			AuthConfig: &KubernetesAuthConfig{
-				AuthMethod: AuthMethodAPIKey,
-				IamURL:     "https://iam.cloud.ibm.com",
-				ApiKey:     "test-api-key",
-			},
-		},
-		registryClient: &mockWrapperRegistryClient{HelmRegistryClientWrapper: regWrapper},
-		logger:         logger.NewNoop(),
-	}
-
-	actionConfig := &action.Configuration{}
-	// Login will fail (no real registry) but RegistryClient wiring happens before Login,
-	// so we only care that the path is exercised without a nil-dereference.
-	_ = connector.setupRegistryClient(actionConfig)
-}
-
-// mockWrapperRegistryClient wraps HelmRegistryClientWrapper and makes Login a no-op
-// so we can verify the actionConfig.RegistryClient wiring branch is reached.
-type mockWrapperRegistryClient struct {
-	*HelmRegistryClientWrapper
-}
-
-func (m *mockWrapperRegistryClient) Login(host, username, password string) error {
-	return nil // skip actual registry call
-}
-
-// ---------------------------------------------------------------------------
 // MockBRSClientWrapper — minimal implementation of BRSClientWrapperInterface
 // used by resolveChartRef unit tests.
 // ---------------------------------------------------------------------------
@@ -2245,10 +2107,10 @@ type mockBRSWrapper struct {
 	tenantID string
 }
 
-func (m *mockBRSWrapper) GetTenantId() string                                     { return m.tenantID }
-func (m *mockBRSWrapper) GetBRSClient() backuprecoveryv1.BRSClientInterface       { return m.client }
-func (m *mockBRSWrapper) GetRegion() string                                        { return "us-south" }
-func (m *mockBRSWrapper) GetCRN() string                                           { return "crn:test" }
+func (m *mockBRSWrapper) GetTenantId() string                               { return m.tenantID }
+func (m *mockBRSWrapper) GetBRSClient() backuprecoveryv1.BRSClientInterface { return m.client }
+func (m *mockBRSWrapper) GetRegion() string                                 { return "us-south" }
+func (m *mockBRSWrapper) GetCRN() string                                    { return "crn:test" }
 
 // mockBRSClientForMetadata stubs only GetConnectorMetadata; all other methods
 // are provided by embeddedNoOpBRSClient so the interface is satisfied.
@@ -2276,13 +2138,13 @@ func (m *mockBRSClientForMetadata) GetConnectorMetadataWithContext(
 type noOpBRSClient struct{}
 
 func (n *noOpBRSClient) Clone() *backuprecoveryv1.BackupRecoveryV1 { return nil }
-func (n *noOpBRSClient) SetServiceURL(url string) error             { return nil }
-func (n *noOpBRSClient) GetServiceURL() string                      { return "" }
-func (n *noOpBRSClient) SetDefaultHeaders(h http.Header)            {}
-func (n *noOpBRSClient) SetEnableGzipCompression(bool)              {}
-func (n *noOpBRSClient) GetEnableGzipCompression() bool             { return false }
-func (n *noOpBRSClient) EnableRetries(int, time.Duration)           {}
-func (n *noOpBRSClient) DisableRetries()                            {}
+func (n *noOpBRSClient) SetServiceURL(url string) error            { return nil }
+func (n *noOpBRSClient) GetServiceURL() string                     { return "" }
+func (n *noOpBRSClient) SetDefaultHeaders(h http.Header)           {}
+func (n *noOpBRSClient) SetEnableGzipCompression(bool)             {}
+func (n *noOpBRSClient) GetEnableGzipCompression() bool            { return false }
+func (n *noOpBRSClient) EnableRetries(int, time.Duration)          {}
+func (n *noOpBRSClient) DisableRetries()                           {}
 
 func (n *noOpBRSClient) DownloadAgent(*backuprecoveryv1.DownloadAgentOptions) (io.ReadCloser, *core.DetailedResponse, error) {
 	return nil, nil, nil
@@ -2648,15 +2510,15 @@ func TestSetDeployContext(t *testing.T) {
 
 func TestResolveChartRef(t *testing.T) {
 	tests := []struct {
-		name              string
-		configChartRef    string // config.ChartReference — user-provided or ""
-		configChartVer    string // config.ChartVersion   — user-provided or ""
-		platformType      string
-		metadataResult    *backuprecoveryv1.ConnectorMetadata
-		metadataErr       error
-		noBRSClient       bool
-		wantChartRepo     string
-		wantChartVersion  string
+		name             string
+		configChartRef   string // config.ChartReference — user-provided or ""
+		configChartVer   string // config.ChartVersion   — user-provided or ""
+		platformType     string
+		metadataResult   *backuprecoveryv1.ConnectorMetadata
+		metadataErr      error
+		noBRSClient      bool
+		wantChartRepo    string
+		wantChartVersion string
 	}{
 		{
 			name:           "BothUserProvided_SkipsAPICall",
@@ -2664,99 +2526,100 @@ func TestResolveChartRef(t *testing.T) {
 			configChartVer: "1.2.3",
 			platformType:   "kRoksVpc",
 			// metadataResult left nil — if the API were called it would be a nil deref.
-			// baseConnector() sets h.chartRepo to the default OCI ref; because the API
-			// call is skipped entirely, h.chartRepo stays at that default value.
-			// h.chartVersion starts as "" and is also unchanged.
-			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
+			// When user provides chartRef, h.chartRepo is preserved as the user-provided value.
+			// Note: wantChartVersion is "" because resolveChartRef modifies h.chartVersion in-place
+			// only when resolving from metadata; in actual deployment, h.config.ChartVersion is used
+			// by NewHelmConnector/Deploy, while baseConnector() initialized h.chartVersion to "".
+			wantChartRepo:    "oci://my-reg/my-chart",
 			wantChartVersion: "",
 		},
 		{
-			name:           "NoBRSClient_SkipsAPICall",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kRoksVpc",
-			noBRSClient:    true,
+			name:             "NoBRSClient_SkipsAPICall",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kRoksVpc",
+			noBRSClient:      true,
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart", // fallback unchanged
 			wantChartVersion: "",
 		},
 		{
-			name:           "EmptyPlatformType_SkipsAPICall",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "",
-			metadataResult: makeMetadata("kRoksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.0"),
+			name:             "EmptyPlatformType_SkipsAPICall",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "",
+			metadataResult:   makeMetadata("kRoksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.0"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "",
 		},
 		{
-			name:           "APIError_FallsBackToStatic",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kRoksVpc",
-			metadataErr:    fmt.Errorf("BRS unavailable"),
+			name:             "APIError_FallsBackToStatic",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kRoksVpc",
+			metadataErr:      fmt.Errorf("BRS unavailable"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "",
 		},
 		{
-			name:           "NoMatchingPlatformType_FallsBackToStatic",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kRoksVpc",
-			metadataResult: makeMetadata("kIksClassic", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.0"),
+			name:             "NoMatchingPlatformType_FallsBackToStatic",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kRoksVpc",
+			metadataResult:   makeMetadata("kIksClassic", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.0"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "",
 		},
 		{
-			name:           "BothEmpty_ResolvesFromMetadata",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kRoksVpc",
-			metadataResult: makeMetadata("kRoksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
+			name:             "BothEmpty_ResolvesFromMetadata",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kRoksVpc",
+			metadataResult:   makeMetadata("kRoksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "7.3.12",
 		},
 		{
-			name:           "UserProvidedRef_OnlyVersionResolved",
-			configChartRef: "oci://my-reg/my-chart",
-			configChartVer: "",
-			platformType:   "kRoksVpc",
-			metadataResult: makeMetadata("kRoksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
-			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart", // h.chartRepo stays as initialised in baseConnector
+			name:             "UserProvidedRef_OnlyVersionResolved",
+			configChartRef:   "oci://my-reg/my-chart",
+			configChartVer:   "",
+			platformType:     "kRoksVpc",
+			metadataResult:   makeMetadata("kRoksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
+			wantChartRepo:    "oci://my-reg/my-chart",
 			wantChartVersion: "7.3.12",
 		},
 		{
-			name:           "UserProvidedVersion_OnlyRepoResolved",
-			configChartRef: "",
-			configChartVer: "1.0.0",
-			platformType:   "kRoksVpc",
-			metadataResult: makeMetadata("kRoksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
+			name:             "UserProvidedVersion_OnlyRepoResolved",
+			configChartRef:   "",
+			configChartVer:   "1.0.0",
+			platformType:     "kRoksVpc",
+			metadataResult:   makeMetadata("kRoksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "", // h.chartVersion stays as "" (config.ChartVersion check blocks overwrite)
 		},
 		{
-			name:           "AllFourPlatformTypes_kIksClassic",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kIksClassic",
-			metadataResult: makeMetadata("kIksClassic", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
+			name:             "AllFourPlatformTypes_kIksClassic",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kIksClassic",
+			metadataResult:   makeMetadata("kIksClassic", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "7.3.12",
 		},
 		{
-			name:           "AllFourPlatformTypes_kIksVpc",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kIksVpc",
-			metadataResult: makeMetadata("kIksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
+			name:             "AllFourPlatformTypes_kIksVpc",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kIksVpc",
+			metadataResult:   makeMetadata("kIksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "7.3.12",
 		},
 		{
-			name:           "AllFourPlatformTypes_kRoksClassic",
-			configChartRef: "",
-			configChartVer: "",
-			platformType:   "kRoksClassic",
-			metadataResult: makeMetadata("kRoksClassic", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
+			name:             "AllFourPlatformTypes_kRoksClassic",
+			configChartRef:   "",
+			configChartVer:   "",
+			platformType:     "kRoksClassic",
+			metadataResult:   makeMetadata("kRoksClassic", "icr.io/", "ext", "brs/brs-ds-connector-chart", "7.3.12"),
 			wantChartRepo:    "oci://icr.io/ext/brs/brs-ds-connector-chart",
 			wantChartVersion: "7.3.12",
 		},
@@ -2789,6 +2652,9 @@ func TestResolveChartRef(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := baseConnector()
+			if tt.configChartRef != "" {
+				h.chartRepo = tt.configChartRef
+			}
 			h.config.ChartReference = tt.configChartRef
 			h.config.ChartVersion = tt.configChartVer
 
@@ -2832,10 +2698,6 @@ func TestDeploy_ResolvesChartFromMetadata(t *testing.T) {
 		return cfg.ChartRef == resolvedRef && cfg.Version == resolvedTag
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -2847,19 +2709,17 @@ func TestDeploy_ResolvesChartFromMetadata(t *testing.T) {
 		config: &HelmKubeConnectorConfig{
 			Namespace:      "test-namespace",
 			ClusterName:    "test-cluster",
-			RegistryHost:   "icr.io",
 			ChartReference: "", // empty → resolve from metadata
 			ChartVersion:   "", // empty → resolve from metadata
 			AuthConfig:     &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 		deployCtx: ConnectorDeployContext{
 			BRSClient: &mockBRSWrapper{
 				tenantID: "test-tenant",
 				client: &mockBRSClientForMetadata{
-					result: makeMetadata("kRoksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", resolvedTag),
+					result: makeMetadata("kRoksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", resolvedTag),
 				},
 			},
 			PlatformType: "kRoksVpc",
@@ -2894,10 +2754,6 @@ func TestDeploy_UserValuesNotOverriddenByMetadata(t *testing.T) {
 		return cfg.ChartRef == userRef && cfg.Version == userTag
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -2910,20 +2766,18 @@ func TestDeploy_UserValuesNotOverriddenByMetadata(t *testing.T) {
 		config: &HelmKubeConnectorConfig{
 			Namespace:      "test-namespace",
 			ClusterName:    "test-cluster",
-			RegistryHost:   "icr.io",
 			ChartReference: userRef, // user-provided → metadata must not overwrite
 			ChartVersion:   userTag, // user-provided → metadata must not overwrite
 			AuthConfig:     &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 		// BRSClient present but API result would give different values — must not win
 		deployCtx: ConnectorDeployContext{
 			BRSClient: &mockBRSWrapper{
 				tenantID: "test-tenant",
 				client: &mockBRSClientForMetadata{
-					result: makeMetadata("kRoksVpc", "oci://icr.io/", "ext", "brs/brs-ds-connector-chart", "999.0.0"),
+					result: makeMetadata("kRoksVpc", "icr.io/", "ext", "brs/brs-ds-connector-chart", "999.0.0"),
 				},
 			},
 			PlatformType: "kRoksVpc",
@@ -2957,10 +2811,6 @@ func TestDeploy_MetadataAPIError_ContinuesWithStatic(t *testing.T) {
 		return cfg.ChartRef == staticRef && cfg.Version == ""
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -2973,14 +2823,12 @@ func TestDeploy_MetadataAPIError_ContinuesWithStatic(t *testing.T) {
 		config: &HelmKubeConnectorConfig{
 			Namespace:      "test-namespace",
 			ClusterName:    "test-cluster",
-			RegistryHost:   "icr.io",
 			ChartReference: "",
 			ChartVersion:   "",
 			AuthConfig:     &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 		deployCtx: ConnectorDeployContext{
 			BRSClient: &mockBRSWrapper{
 				tenantID: "test-tenant",
@@ -3017,10 +2865,6 @@ func TestDeploy_NoBRSClient_ContinuesWithStatic(t *testing.T) {
 		return cfg.ChartRef == staticRef
 	})).Return(&releasev1.Release{Name: "brs-connector", Namespace: "test-namespace"}, nil)
 
-	mockRegistryClient := new(MockRegistryClient)
-	mockRegistryClient.On("Login", "icr.io", "iamapikey", "test-api-key").Return(nil)
-	mockRegistryClient.client = &registry.Client{}
-
 	connector := &HelmConnector{
 		namespace:       "test-namespace",
 		releaseName:     "brs-connector",
@@ -3030,14 +2874,12 @@ func TestDeploy_NoBRSClient_ContinuesWithStatic(t *testing.T) {
 		clientSet:       fakeClientSet,
 		restConfig:      &rest.Config{},
 		config: &HelmKubeConnectorConfig{
-			Namespace:    "test-namespace",
-			ClusterName:  "test-cluster",
-			RegistryHost: "icr.io",
-			AuthConfig:   &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
+			Namespace:   "test-namespace",
+			ClusterName: "test-cluster",
+			AuthConfig:  &KubernetesAuthConfig{AuthMethod: AuthMethodAPIKey, IamURL: "https://iam.cloud.ibm.com", ApiKey: "test-api-key"},
 		},
-		helmClient:     mockHelmClient,
-		registryClient: mockRegistryClient,
-		logger:         logger.NewNoop(),
+		helmClient: mockHelmClient,
+		logger:     logger.NewNoop(),
 		// deployCtx intentionally zero — no BRS client injected
 	}
 

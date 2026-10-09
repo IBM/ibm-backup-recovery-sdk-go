@@ -22,9 +22,9 @@ import (
 // TestNewResourceControllerManager covers constructor nil/non-nil outcomes.
 func TestNewResourceControllerManager(t *testing.T) {
 	tests := []struct {
-		name      string
-		cfg       *config.Config
-		wantNil   bool
+		name    string
+		cfg     *config.Config
+		wantNil bool
 	}{
 		{
 			name:    "nil config returns nil manager",
@@ -55,9 +55,9 @@ func TestNewResourceControllerManager(t *testing.T) {
 // TestGetClient covers nil-safety on GetClient before and after initialization.
 func TestGetClient(t *testing.T) {
 	tests := []struct {
-		name      string
-		setup     func() *ResourceControllerManager
-		wantNil   bool
+		name    string
+		setup   func() *ResourceControllerManager
+		wantNil bool
 	}{
 		{
 			name: "before Initialize returns nil without panic",
@@ -122,9 +122,9 @@ func TestGetBRSInstanceByName(t *testing.T) {
 			errorContains: "name cannot be empty",
 		},
 		{
-			name:         "uninitialized client returns error without panic",
-			instanceName: "test-instance",
-			setup:        func(m *ResourceControllerManager) {},
+			name:          "uninitialized client returns error without panic",
+			instanceName:  "test-instance",
+			setup:         func(m *ResourceControllerManager) {},
 			errorContains: "resource controller client is not initialized",
 		},
 		{
@@ -171,9 +171,9 @@ func TestGetBRSInstanceByCRN(t *testing.T) {
 			errorContains: "crn cannot be empty",
 		},
 		{
-			name:  "uninitialized client returns error without panic",
-			crn:   "crn:v1:bluemix:public:backup-recovery:us-south:a/acc:inst::",
-			setup: func(m *ResourceControllerManager) {},
+			name:          "uninitialized client returns error without panic",
+			crn:           "crn:v1:bluemix:public:backup-recovery:us-south:a/acc:inst::",
+			setup:         func(m *ResourceControllerManager) {},
 			errorContains: "resource controller client is not initialized",
 		},
 		{
@@ -203,4 +203,3 @@ func TestGetBRSInstanceByCRN(t *testing.T) {
 		})
 	}
 }
-

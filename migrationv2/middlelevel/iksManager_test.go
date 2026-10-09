@@ -124,10 +124,10 @@ func TestNewIKSClient(t *testing.T) {
 
 func TestApplyRBACAndGetKubeconfig(t *testing.T) {
 	tests := []struct {
-		name        string
-		handler     http.HandlerFunc
-		expectErr   bool
-		errContains string
+		name         string
+		handler      http.HandlerFunc
+		expectErr    bool
+		errContains  string
 		validateBody func(*testing.T, []byte)
 	}{
 		{

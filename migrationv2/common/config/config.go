@@ -23,12 +23,12 @@ import (
 // Config represents the SDK configuration
 type Config struct {
 	// IBM Cloud configuration
-	Region          string
-	APIKey          string
-	
+	Region string
+	APIKey string
+
 	// Exactly one of BRSInstanceName or BRSInstanceCRN must be provided.
-	BRSInstanceName string // Looked up by name; the instance must already exist in IBM Cloud
-	BRSInstanceCRN  string // Looked up by CRN (preferred — unambiguous and faster)
+	BRSInstanceName string          // Looked up by name; the instance must already exist in IBM Cloud
+	BRSInstanceCRN  string          // Looked up by CRN (preferred — unambiguous and faster)
 	BRSEndpointType BRSEndpointType // defaults to public
 	ResourceGroupID string
 

@@ -99,6 +99,13 @@ type TaskAPI interface {
 
 	//===================================================================
 	//
+	// META-INFO OPERATIONS
+	//
+	//===================================================================
+	GetMetaInfo(ctx context.Context, params *types.MetaInfoParams) ([]*types.MetaInfoResult, *errors.SDKError)
+
+	//===================================================================
+	//
 	// CONTROL OPERATIONS
 	//
 	//===================================================================
